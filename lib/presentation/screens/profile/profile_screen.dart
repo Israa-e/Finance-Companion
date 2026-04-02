@@ -237,17 +237,28 @@ class ProfileScreen extends StatelessWidget {
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<AuthCubit>().logout();
-            },
-            child: const Text('Logout'),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const Gap(8),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.expense,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.read<AuthCubit>().logout();
+                  },
+                  child: const Text('Logout'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -101,36 +101,103 @@ class GoalCard extends StatelessWidget {
 
   void _showAddSavings(BuildContext context, GoalModel goal) {
     final controller = TextEditingController();
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add to Savings'),
-        content: CustomTextField(
-          label: 'Amount',
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-          ],
-          hint: 'Amount',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final amount = double.tryParse(controller.text);
-              if (amount != null && amount > 0) {
-                context.read<GoalCubit>().addToSavings(goal.id, amount);
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      clipBehavior: Clip.antiAlias,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: Wrap(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(sheetContext).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.textHint,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const Gap(16),
+                    Text('Add to Savings', style: AppTextStyles.h3),
+                    const Gap(16),
+                    CustomTextField(
+                      label: 'Amount',
+                      controller: controller,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d{0,2}'),
+                        ),
+                      ],
+                      hint: 'Amount',
+                    ),
+                    const Gap(18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: AppColors.textHint,
+                              shadowColor: Colors.transparent,
+                              side: BorderSide(
+                                color: AppColors.textHint.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                            onPressed: () => Navigator.pop(sheetContext),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const Gap(12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final amount = double.tryParse(controller.text);
+                              if (amount != null && amount > 0) {
+                                context.read<GoalCubit>().addToSavings(
+                                  goal.id,
+                                  amount,
+                                );
+                                Navigator.pop(sheetContext);
+                              }
+                            },
+                            child: const Text('Add'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

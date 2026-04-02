@@ -93,42 +93,52 @@ class _AppNavigationState extends State<AppNavigation> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _NavItem(
-                icon: Iconsax.home,
-                label: 'Home',
-                index: 0,
-                current: _currentIndex,
-                onTap: _onTap,
+              Expanded(
+                child: _NavItem(
+                  icon: Iconsax.home,
+                  label: 'Home',
+                  index: 0,
+                  current: _currentIndex,
+                  onTap: _onTap,
+                ),
               ),
-              _NavItem(
-                icon: Iconsax.receipt,
-                label: 'Transactions',
-                index: 1,
-                current: _currentIndex,
-                onTap: _onTap,
+              Expanded(
+                child: _NavItem(
+                  icon: Iconsax.receipt,
+                  label: 'Transactions',
+                  index: 1,
+                  current: _currentIndex,
+                  onTap: _onTap,
+                ),
               ),
-              _NavItem(
-                icon: Iconsax.chart,
-                label: 'Goals',
-                index: 2,
-                current: _currentIndex,
-                onTap: _onTap,
+              Expanded(
+                child: _NavItem(
+                  icon: Iconsax.chart,
+                  label: 'Goals',
+                  index: 2,
+                  current: _currentIndex,
+                  onTap: _onTap,
+                ),
               ),
-              _NavItem(
-                icon: Iconsax.graph,
-                label: 'Insights',
-                index: 3,
-                current: _currentIndex,
-                onTap: _onTap,
+              Expanded(
+                child: _NavItem(
+                  icon: Iconsax.graph,
+                  label: 'Insights',
+                  index: 3,
+                  current: _currentIndex,
+                  onTap: _onTap,
+                ),
               ),
-              _NavItem(
-                icon: Iconsax.user,
-                label: 'Profile',
-                index: 4,
-                current: _currentIndex,
-                onTap: _onTap,
+              Expanded(
+                child: _NavItem(
+                  icon: Iconsax.user,
+                  label: 'Profile',
+                  index: 4,
+                  current: _currentIndex,
+                  onTap: _onTap,
+                ),
               ),
             ],
           ),
@@ -162,7 +172,7 @@ class _NavItem extends StatelessWidget {
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
               ? AppColors.primary.withValues(alpha: 0.1)
@@ -176,18 +186,24 @@ class _NavItem extends StatelessWidget {
               icon,
               color: isActive
                   ? AppColors.primary
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.65),
               size: 22,
             ),
             const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 color: isActive
                     ? AppColors.primary
-                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.65),
               ),
             ),
           ],

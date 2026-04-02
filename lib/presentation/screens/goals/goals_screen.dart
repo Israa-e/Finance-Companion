@@ -78,13 +78,17 @@ class GoalsScreen extends StatelessWidget {
   }
 
   void _showAddGoal(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      builder: (sheetContext) => BlocProvider.value(
         value: context.read<GoalCubit>(),
-        child: const _AddGoalSheet(),
+        child: _AddGoalSheet(),
       ),
     );
   }
@@ -108,76 +112,85 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        20,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + 20,
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textHint,
-                  borderRadius: BorderRadius.circular(2),
+      child: Wrap(
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.textHint,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
+                const Gap(16),
+                Text('New Goal', style: AppTextStyles.h3),
+                const Gap(16),
+                _buildEmojiPicker(),
+                const Gap(16),
+                CustomTextField(
+                  label: 'Goal title',
+                  controller: _titleController,
+                  hint: 'Goal title',
+                ),
+                const Gap(12),
+                CustomTextField(
+                  label: 'Target amount',
+                  controller: _amountController,
+                  hint: 'Target amount',
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
+                const Gap(12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(
+                    Iconsax.calendar,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(
+                    'End Date: ${_endDate.day}/${_endDate.month}/${_endDate.year}',
+                  ),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _endDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(
+                        const Duration(days: 365 * 5),
+                      ),
+                    );
+                    if (picked != null) setState(() => _endDate = picked);
+                  },
+                ),
+                const Gap(16),
+                CustomButton(
+                  label: 'Create Goal',
+                  isLoading: _isLoading,
+                  onTap: _submit,
+                ),
+              ],
             ),
-            const Gap(16),
-            Text('New Goal', style: AppTextStyles.h3),
-            const Gap(16),
-            _buildEmojiPicker(),
-            const Gap(16),
-            CustomTextField(
-              label: 'Goal title',
-              controller: _titleController,
-              hint: 'Goal title',
-            ),
-            const Gap(12),
-            CustomTextField(
-              label: 'Target amount',
-              controller: _amountController,
-              hint: 'Target amount',
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-            ),
-            const Gap(12),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Iconsax.calendar, color: AppColors.primary),
-              title: Text(
-                'End Date: ${_endDate.day}/${_endDate.month}/${_endDate.year}',
-              ),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _endDate,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                );
-                if (picked != null) setState(() => _endDate = picked);
-              },
-            ),
-            const Gap(16),
-            CustomButton(
-              label: 'Create Goal',
-              isLoading: _isLoading,
-              onTap: _submit,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
