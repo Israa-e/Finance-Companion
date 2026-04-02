@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531672485260",
+    "project_id": "finance-companion-3d4fa",
+    "storage_bucket": "finance-companion-3d4fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531672485260:android:451084416c39a5d393daa9",
+        "android_client_info": {
+          "package_name": "com.example.finance_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2kJW_o66zbB-kTaq3PCJIjAVvEI2Ln3A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

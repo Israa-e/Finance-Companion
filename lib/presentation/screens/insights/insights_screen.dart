@@ -39,9 +39,9 @@ class InsightsScreen extends StatelessWidget {
                     const Gap(20),
                     _buildTopCategory(state),
                     const Gap(16),
-                    _buildMonthComparison(state),
+                    _buildMonthComparison(context, state),
                     const Gap(16),
-                    _buildPieChart(state),
+                    _buildPieChart(context, state),
                     const Gap(24),
                   ],
                 );
@@ -88,12 +88,12 @@ class InsightsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMonthComparison(InsightsLoaded state) {
+  Widget _buildMonthComparison(BuildContext context, InsightsLoaded state) {
     final isUp = state.isSpendingUp;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -150,7 +150,7 @@ class InsightsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPieChart(InsightsLoaded state) {
+  Widget _buildPieChart(BuildContext context, InsightsLoaded state) {
     if (state.expensesByCategory.isEmpty) return const SizedBox.shrink();
 
     final entries = state.expensesByCategory.entries.toList();
@@ -159,7 +159,7 @@ class InsightsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

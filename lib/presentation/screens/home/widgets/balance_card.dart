@@ -18,7 +18,9 @@ class BalanceCard extends StatelessWidget {
       builder: (context, txState) {
         return BlocBuilder<AuthCubit, AuthState>(
           builder: (context, authState) {
-            final balance = txState is TransactionLoaded ? txState.balance : 0.0;
+            final balance = txState is TransactionLoaded
+                ? txState.balance
+                : 0.0;
             final isLoading = txState is TransactionLoading;
             final userName = authState is AuthAuthenticated
                 ? authState.user.name.split(' ').first
@@ -49,38 +51,44 @@ class BalanceCard extends StatelessWidget {
                   if (userName.isNotEmpty) ...[
                     Row(
                       children: [
-                        const Icon(Icons.waving_hand_rounded,
-                            color: Colors.white70, size: 16),
+                        const Icon(
+                          Icons.waving_hand_rounded,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Hi, $userName',
-                          style: AppTextStyles.label
-                              .copyWith(color: Colors.white70),
+                          style: AppTextStyles.label.copyWith(
+                            color: Colors.white70,
+                          ),
                         ),
                       ],
                     ),
                     const Gap(8),
                   ],
-                  Text('Total Balance',
-                      style: AppTextStyles.label
-                          .copyWith(color: Colors.white70)),
+                  Text(
+                    'Total Balance',
+                    style: AppTextStyles.label.copyWith(color: Colors.white70),
+                  ),
                   const Gap(8),
                   isLoading
                       ? const SizedBox(
                           height: 40,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : Text(
                           CurrencyFormatter.format(balance),
-                          style: AppTextStyles.amount
-                              .copyWith(color: Colors.white),
+                          style: AppTextStyles.amount.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                   const Gap(16),
                   // Divider
-                  Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.15),
-                  ),
+                  Container(height: 1, color: Colors.white.withOpacity(0.15)),
                   const Gap(16),
                   // Income / Expense mini row
                   if (txState is TransactionLoaded)
@@ -90,7 +98,8 @@ class BalanceCard extends StatelessWidget {
                           icon: Icons.arrow_downward_rounded,
                           label: 'Income',
                           value: CurrencyFormatter.formatCompact(
-                              txState.totalIncome),
+                            txState.totalIncome,
+                          ),
                           color: const Color(0xFF2DCE89),
                         ),
                         const SizedBox(width: 20),
@@ -98,7 +107,8 @@ class BalanceCard extends StatelessWidget {
                           icon: Icons.arrow_upward_rounded,
                           label: 'Expenses',
                           value: CurrencyFormatter.formatCompact(
-                              txState.totalExpense),
+                            txState.totalExpense,
+                          ),
                           color: const Color(0xFFFF5B5B),
                         ),
                         if (txState.initialBalance > 0) ...[
@@ -107,7 +117,8 @@ class BalanceCard extends StatelessWidget {
                             icon: Icons.account_balance_wallet_rounded,
                             label: 'Starting',
                             value: CurrencyFormatter.formatCompact(
-                                txState.initialBalance),
+                              txState.initialBalance,
+                            ),
                             color: Colors.white54,
                           ),
                         ],
@@ -154,16 +165,22 @@ class _MiniStat extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500)),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ],

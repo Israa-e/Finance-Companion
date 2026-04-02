@@ -80,7 +80,7 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget _buildNavBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -165,7 +165,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -174,7 +174,9 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isActive ? AppColors.primary : AppColors.textHint,
+              color: isActive
+                  ? AppColors.primary
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
               size: 22,
             ),
             const SizedBox(height: 2),
@@ -183,7 +185,9 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? AppColors.primary : AppColors.textHint,
+                color: isActive
+                    ? AppColors.primary
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
               ),
             ),
           ],

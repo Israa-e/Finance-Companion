@@ -62,8 +62,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Transaction' : 'Add Transaction',
-            style: AppTextStyles.h3),
+        title: Text(
+          isEditing ? 'Edit Transaction' : 'Add Transaction',
+          style: AppTextStyles.h3,
+        ),
         leading: const BackButton(),
       ),
       body: Form(
@@ -87,10 +89,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 label: 'Amount',
                 hint: '0.00',
                 controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
                 prefixIcon: const Icon(Iconsax.dollar_circle, size: 18),
                 validator: (v) {
@@ -133,7 +136,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -175,13 +178,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           initialValue: _category,
           decoration: InputDecoration(
             filled: true,
-            fillColor: AppColors.background,
+            fillColor: Theme.of(context).colorScheme.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
           items: categories
               .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -281,7 +286,11 @@ class _TypeButton extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.75),
             ),
           ),
         ),

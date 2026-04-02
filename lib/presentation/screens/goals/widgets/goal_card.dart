@@ -1,4 +1,3 @@
-
 import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:finance_companion/core/theme/app_text_styles.dart';
 import 'package:finance_companion/core/utils/currency_formatter.dart';
@@ -9,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:finance_companion/presentation/shared/widgets/custom_text_field.dart';
 
 class GoalCard extends StatelessWidget {
   final GoalModel goal;
@@ -20,7 +20,7 @@ class GoalCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -34,11 +34,16 @@ class GoalCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(goal.title,
-                        style: AppTextStyles.body
-                            .copyWith(fontWeight: FontWeight.w600)),
-                    Text('${goal.daysRemaining} days left',
-                        style: AppTextStyles.caption),
+                    Text(
+                      goal.title,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${goal.daysRemaining} days left',
+                      style: AppTextStyles.caption,
+                    ),
                   ],
                 ),
               ),
@@ -47,9 +52,12 @@ class GoalCard extends StatelessWidget {
                 onPressed: () => _showAddSavings(context, goal),
               ),
               IconButton(
-                icon: const Icon(Iconsax.trash, color: AppColors.expense, size: 18),
-                onPressed: () =>
-                    context.read<GoalCubit>().deleteGoal(goal.id),
+                icon: const Icon(
+                  Iconsax.trash,
+                  color: AppColors.expense,
+                  size: 18,
+                ),
+                onPressed: () => context.read<GoalCubit>().deleteGoal(goal.id),
               ),
             ],
           ),
@@ -57,11 +65,16 @@ class GoalCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(CurrencyFormatter.format(goal.savedAmount),
-                  style: AppTextStyles.amountSmall
-                      .copyWith(color: AppColors.primary)),
-              Text(CurrencyFormatter.format(goal.targetAmount),
-                  style: AppTextStyles.bodySmall),
+              Text(
+                CurrencyFormatter.format(goal.savedAmount),
+                style: AppTextStyles.amountSmall.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+              Text(
+                CurrencyFormatter.format(goal.targetAmount),
+                style: AppTextStyles.bodySmall,
+              ),
             ],
           ),
           const Gap(8),
@@ -70,9 +83,10 @@ class GoalCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: AppColors.primary.withValues(alpha:0.1),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
             ),
           ),
           const Gap(6),
@@ -91,18 +105,20 @@ class GoalCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Add to Savings'),
-        content: TextField(
+        content: CustomTextField(
+          label: 'Amount',
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
           ],
-          decoration: const InputDecoration(hintText: 'Amount'),
+          hint: 'Amount',
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               final amount = double.tryParse(controller.text);
@@ -118,4 +134,3 @@ class GoalCard extends StatelessWidget {
     );
   }
 }
-

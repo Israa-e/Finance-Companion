@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 
 class CustomTextField extends StatelessWidget {
-  final String label;
+  final String? label;
   final String? hint;
   final TextEditingController controller;
   final TextInputType? keyboardType;
@@ -14,10 +14,15 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool readOnly;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
+  final bool obscureText;
+  final bool autofocus;
+  final AutovalidateMode? autovalidateMode;
+  final TextInputAction? textInputAction;
 
   const CustomTextField({
     super.key,
-    required this.label,
+    this.label,
     required this.controller,
     this.hint,
     this.keyboardType,
@@ -28,22 +33,29 @@ class CustomTextField extends StatelessWidget {
     this.suffixIcon,
     this.readOnly = false,
     this.onTap,
+    this.onChanged,
+    this.obscureText = false,
+    this.autofocus = false,
+    this.autovalidateMode,
+    this.textInputAction,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasLabel = label?.isNotEmpty == true;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+        if (hasLabel)
+          Text(
+            label!,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
+        if (hasLabel) const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
@@ -52,18 +64,25 @@ class CustomTextField extends StatelessWidget {
           maxLines: maxLines,
           readOnly: readOnly,
           onTap: onTap,
-          style: const TextStyle(
+          onChanged: onChanged,
+          obscureText: obscureText,
+          autofocus: autofocus,
+          autovalidateMode: autovalidateMode,
+          textInputAction: textInputAction,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
+            hintStyle: Theme.of(context).inputDecorationTheme.hintStyle
+                ?.copyWith(color: Theme.of(context).hintColor),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: AppColors.background,
+            fillColor:
+                Theme.of(context).inputDecorationTheme.fillColor ??
+                Theme.of(context).colorScheme.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -79,10 +98,7 @@ class CustomTextField extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.expense),
-            ),
+            errorBorder: Theme.of(context).inputDecorationTheme.errorBorder,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,

@@ -10,6 +10,7 @@ import '../../../core/theme/app_text_styles.dart';
 
 import '../../shared/widgets/empty_state_widget.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../shared/widgets/custom_text_field.dart';
 
 class GoalsScreen extends StatelessWidget {
   const GoalsScreen({super.key});
@@ -114,9 +115,9 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
         20,
         MediaQuery.of(context).viewInsets.bottom + 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -138,17 +139,19 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
             const Gap(16),
             _buildEmojiPicker(),
             const Gap(16),
-            TextField(
+            CustomTextField(
+              label: 'Goal title',
               controller: _titleController,
-              decoration: const InputDecoration(hintText: 'Goal title'),
+              hint: 'Goal title',
             ),
             const Gap(12),
-            TextField(
+            CustomTextField(
+              label: 'Target amount',
               controller: _amountController,
+              hint: 'Target amount',
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(hintText: 'Target amount'),
             ),
             const Gap(12),
             ListTile(
@@ -194,7 +197,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
             decoration: BoxDecoration(
               color: _emoji == _emojis[i]
                   ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.background,
+                  : Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(10),
               border: _emoji == _emojis[i]
                   ? Border.all(color: AppColors.primary)

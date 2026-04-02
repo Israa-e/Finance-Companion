@@ -10,6 +10,7 @@ import '../../../data/models/transaction_model.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../shared/widgets/empty_state_widget.dart';
+import '../../shared/widgets/custom_text_field.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -72,28 +73,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   Widget _buildSearchBar() {
-    return TextField(
+    return CustomTextField(
+      label: null,
       controller: _searchController,
       onChanged: (v) => setState(() => _searchQuery = v),
-      decoration: InputDecoration(
-        hintText: 'Search transactions...',
-        prefixIcon: const Icon(Iconsax.search_normal, size: 18),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? GestureDetector(
-                onTap: () {
-                  _searchController.clear();
-                  setState(() => _searchQuery = '');
-                },
-                child: const Icon(Icons.close, size: 18))
-            : null,
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-      ),
+      hint: 'Search transactions...',
+      prefixIcon: const Icon(Iconsax.search_normal, size: 18),
+      suffixIcon: _searchQuery.isNotEmpty
+          ? IconButton(
+              onPressed: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              icon: const Icon(Icons.close, size: 18),
+            )
+          : null,
+      keyboardType: TextInputType.text,
     );
   }
 
@@ -102,11 +97,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _FilterChip(label: 'All', isSelected: _filterType == null, onTap: () => setState(() => _filterType = null)),
+          _FilterChip(
+            label: 'All',
+            isSelected: _filterType == null,
+            onTap: () => setState(() => _filterType = null),
+          ),
           const Gap(8),
-          _FilterChip(label: 'Income', isSelected: _filterType == TransactionType.income, onTap: () => setState(() => _filterType = TransactionType.income)),
+          _FilterChip(
+            label: 'Income',
+            isSelected: _filterType == TransactionType.income,
+            onTap: () => setState(() => _filterType = TransactionType.income),
+          ),
           const Gap(8),
-          _FilterChip(label: 'Expense', isSelected: _filterType == TransactionType.expense, onTap: () => setState(() => _filterType = TransactionType.expense)),
+          _FilterChip(
+            label: 'Expense',
+            isSelected: _filterType == TransactionType.expense,
+            onTap: () => setState(() => _filterType = TransactionType.expense),
+          ),
         ],
       ),
     );
@@ -144,7 +151,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             final t = filtered[i];
             return _TransactionCard(
               transaction: t,
-              onDelete: () => context.read<TransactionCubit>().deleteTransaction(t.id),
+              onDelete: () =>
+                  context.read<TransactionCubit>().deleteTransaction(t.id),
               onEdit: () => _openAddTransaction(context, transaction: t),
             );
           },
@@ -153,8 +161,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
-  void _openAddTransaction(BuildContext context,
-      {TransactionModel? transaction}) {
+  void _openAddTransaction(
+    BuildContext context, {
+    TransactionModel? transaction,
+  }) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -186,7 +196,9 @@ class _FilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
+          color: isSelected
+              ? AppColors.primary
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -194,7 +206,11 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.75),
           ),
         ),
       ),
@@ -232,7 +248,7 @@ class _TransactionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -242,7 +258,7 @@ class _TransactionCard extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: (isIncome ? AppColors.income : AppColors.expense)
-                    .withValues(alpha:0.1),
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -256,11 +272,16 @@ class _TransactionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(transaction.title,
-                      style: AppTextStyles.body
-                          .copyWith(fontWeight: FontWeight.w500)),
-                  Text('${transaction.category} · ${DateFormatter.formatShort(transaction.date)}',
-                      style: AppTextStyles.caption),
+                  Text(
+                    transaction.title,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${transaction.category} · ${DateFormatter.formatShort(transaction.date)}',
+                    style: AppTextStyles.caption,
+                  ),
                 ],
               ),
             ),
@@ -268,16 +289,21 @@ class _TransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  CurrencyFormatter.formatSigned(transaction.amount,
-                      isExpense: !isIncome),
+                  CurrencyFormatter.formatSigned(
+                    transaction.amount,
+                    isExpense: !isIncome,
+                  ),
                   style: AppTextStyles.amountSmall.copyWith(
                     color: isIncome ? AppColors.income : AppColors.expense,
                   ),
                 ),
                 GestureDetector(
                   onTap: onEdit,
-                  child: const Icon(Iconsax.edit, size: 16,
-                      color: AppColors.textHint),
+                  child: const Icon(
+                    Iconsax.edit,
+                    size: 16,
+                    color: AppColors.textHint,
+                  ),
                 ),
               ],
             ),

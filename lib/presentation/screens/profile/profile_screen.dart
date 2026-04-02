@@ -5,11 +5,13 @@ import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../logic/auth/auth_cubit.dart';
 import '../../../logic/auth/auth_state.dart';
+import '../../../logic/theme/theme_cubit.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../logic/transaction/transaction_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../shared/widgets/custom_text_field.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -53,11 +55,16 @@ class ProfileScreen extends StatelessWidget {
       height: 90,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.primary.withValues(alpha:0.1),
-        border: Border.all(color: AppColors.primary.withValues(alpha:0.3), width: 2),
+        color: AppColors.primary.withValues(alpha: 0.1),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+          width: 2,
+        ),
         image: imagePath != null
             ? DecorationImage(
-                image: FileImage(File(imagePath)), fit: BoxFit.cover)
+                image: FileImage(File(imagePath)),
+                fit: BoxFit.cover,
+              )
             : null,
       ),
       child: imagePath == null
@@ -75,11 +82,19 @@ class ProfileScreen extends StatelessWidget {
 
         return Row(
           children: [
-            _StatCard(label: 'Balance', amount: balance, color: AppColors.primary),
+            _StatCard(
+              label: 'Balance',
+              amount: balance,
+              color: AppColors.primary,
+            ),
             const Gap(8),
             _StatCard(label: 'Income', amount: income, color: AppColors.income),
             const Gap(8),
-            _StatCard(label: 'Expense', amount: expense, color: AppColors.expense),
+            _StatCard(
+              label: 'Expense',
+              amount: expense,
+              color: AppColors.expense,
+            ),
           ],
         );
       },
@@ -89,6 +104,34 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenuItems(BuildContext context, user) {
     return Column(
       children: [
+        BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: SwitchListTile(
+                value: mode == ThemeMode.dark,
+                activeThumbColor: AppColors.primary,
+                title: Text(
+                  'Dark Mode',
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                secondary: Icon(
+                  Icons.dark_mode,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onChanged: (value) {
+                  context.read<ThemeCubit>().toggleTheme(value);
+                },
+              ),
+            );
+          },
+        ),
         _MenuItem(
           icon: Iconsax.edit,
           label: 'Edit Profile',
@@ -117,10 +160,16 @@ class ProfileScreen extends StatelessWidget {
         child: StatefulBuilder(
           builder: (ctx, setState) => Container(
             padding: EdgeInsets.fromLTRB(
-                20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              20,
+              20,
+              20,
+              MediaQuery.of(ctx).viewInsets.bottom + 20,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -129,8 +178,7 @@ class ProfileScreen extends StatelessWidget {
                 const Gap(20),
                 GestureDetector(
                   onTap: () async {
-                    final path =
-                        await context.read<AuthCubit>().pickImage();
+                    final path = await context.read<AuthCubit>().pickImage();
                     if (path != null) setState(() => newImagePath = path);
                   },
                   child: Container(
@@ -138,32 +186,38 @@ class ProfileScreen extends StatelessWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.primary.withValues(alpha:0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       image: (newImagePath ?? user.imagePath) != null
                           ? DecorationImage(
                               image: FileImage(
-                                  File(newImagePath ?? user.imagePath!)),
-                              fit: BoxFit.cover)
+                                File(newImagePath ?? user.imagePath!),
+                              ),
+                              fit: BoxFit.cover,
+                            )
                           : null,
                     ),
                     child: (newImagePath ?? user.imagePath) == null
-                        ? const Icon(Iconsax.camera,
-                            color: AppColors.primary, size: 28)
+                        ? const Icon(
+                            Iconsax.camera,
+                            color: AppColors.primary,
+                            size: 28,
+                          )
                         : null,
                   ),
                 ),
                 const Gap(16),
-                TextField(
+                CustomTextField(
+                  label: 'Name',
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
+                  hint: 'Enter your name',
                 ),
                 const Gap(20),
                 ElevatedButton(
                   onPressed: () {
                     context.read<AuthCubit>().updateProfile(
-                          name: nameController.text,
-                          imagePath: newImagePath,
-                        );
+                      name: nameController.text,
+                      imagePath: newImagePath,
+                    );
                     Navigator.pop(ctx);
                   },
                   child: const Text('Save'),
@@ -184,8 +238,9 @@ class ProfileScreen extends StatelessWidget {
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
             onPressed: () {
@@ -217,13 +272,15 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha:0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           children: [
-            Text(CurrencyFormatter.formatCompact(amount),
-                style: AppTextStyles.amountSmall.copyWith(color: color)),
+            Text(
+              CurrencyFormatter.formatCompact(amount),
+              style: AppTextStyles.amountSmall.copyWith(color: color),
+            ),
             const Gap(2),
             Text(label, style: AppTextStyles.caption),
           ],
@@ -251,18 +308,26 @@ class _MenuItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
       ),
       child: ListTile(
-        leading: Icon(icon, color: color ?? AppColors.textPrimary, size: 20),
-        title: Text(label,
-            style: AppTextStyles.body.copyWith(
-              color: color ?? AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-            )),
-        trailing:
-            const Icon(Icons.chevron_right, color: AppColors.textHint),
+        leading: Icon(
+          icon,
+          color: color ?? Theme.of(context).colorScheme.onSurface,
+          size: 20,
+        ),
+        title: Text(
+          label,
+          style: AppTextStyles.body.copyWith(
+            color: color ?? Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
         onTap: onTap,
       ),
     );

@@ -32,10 +32,7 @@ class RecentTransactions extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Recent', style: AppTextStyles.h3),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('See all'),
-                ),
+                TextButton(onPressed: () {}, child: const Text('See all')),
               ],
             ),
             const Gap(8),
@@ -65,7 +62,7 @@ class _TransactionTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -75,7 +72,7 @@ class _TransactionTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: (isIncome ? AppColors.income : AppColors.expense)
-                  .withValues(alpha:0.1),
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -89,9 +86,12 @@ class _TransactionTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(transaction.title,
-                    style: AppTextStyles.body
-                        .copyWith(fontWeight: FontWeight.w500)),
+                Text(
+                  transaction.title,
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 Text(transaction.category, style: AppTextStyles.caption),
               ],
             ),
@@ -100,14 +100,18 @@ class _TransactionTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                CurrencyFormatter.formatSigned(transaction.amount,
-                    isExpense: !isIncome),
+                CurrencyFormatter.formatSigned(
+                  transaction.amount,
+                  isExpense: !isIncome,
+                ),
                 style: AppTextStyles.amountSmall.copyWith(
                   color: isIncome ? AppColors.income : AppColors.expense,
                 ),
               ),
-              Text(DateFormatter.formatShort(transaction.date),
-                  style: AppTextStyles.caption),
+              Text(
+                DateFormatter.formatShort(transaction.date),
+                style: AppTextStyles.caption,
+              ),
             ],
           ),
         ],
