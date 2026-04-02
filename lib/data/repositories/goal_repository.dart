@@ -16,15 +16,23 @@ class GoalRepository {
     );
   }
 
-  Future<List<GoalModel>> getAll() async {
+  Future<List<GoalModel>> getAll(int userId) async {
     final db = await _db;
-    final maps = await db.query('goals');
+    final maps = await db.query(
+      'goals',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
     return maps.map((m) => GoalModel.fromMap(m)).toList();
   }
 
-  Future<List<GoalModel>> getActive() async {
+  Future<List<GoalModel>> getActive(int userId) async {
     final db = await _db;
-    final maps = await db.query('goals', where: "status = 'active'");
+    final maps = await db.query(
+      'goals',
+      where: 'userId = ? AND status = ?',
+      whereArgs: [userId, 'active'],
+    );
     return maps.map((m) => GoalModel.fromMap(m)).toList();
   }
 

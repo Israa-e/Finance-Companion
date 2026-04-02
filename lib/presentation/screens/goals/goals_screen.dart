@@ -62,7 +62,7 @@ class GoalsScreen extends StatelessWidget {
                     }
                     return ListView.separated(
                       itemCount: state.goals.length,
-                      separatorBuilder: (_, __) => const Gap(12),
+                      separatorBuilder: (_, _) => const Gap(12),
                       itemBuilder: (context, i) =>
                           GoalCard(goal: state.goals[i]),
                     );
@@ -88,6 +88,7 @@ class GoalsScreen extends StatelessWidget {
     );
   }
 }
+
 class _AddGoalSheet extends StatefulWidget {
   const _AddGoalSheet();
 
@@ -108,62 +109,72 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+        20,
+        20,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.textHint,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const Gap(16),
-          Text('New Goal', style: AppTextStyles.h3),
-          const Gap(16),
-          _buildEmojiPicker(),
-          const Gap(16),
-          TextField(
-            controller: _titleController,
-            decoration: const InputDecoration(hintText: 'Goal title'),
-          ),
-          const Gap(12),
-          TextField(
-            controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(hintText: 'Target amount'),
-          ),
-          const Gap(12),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Iconsax.calendar, color: AppColors.primary),
-            title: Text('End Date: ${_endDate.day}/${_endDate.month}/${_endDate.year}'),
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _endDate,
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-              );
-              if (picked != null) setState(() => _endDate = picked);
-            },
-          ),
-          const Gap(16),
-          CustomButton(
-            label: 'Create Goal',
-            isLoading: _isLoading,
-            onTap: _submit,
-          ),
-        ],
+            const Gap(16),
+            Text('New Goal', style: AppTextStyles.h3),
+            const Gap(16),
+            _buildEmojiPicker(),
+            const Gap(16),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(hintText: 'Goal title'),
+            ),
+            const Gap(12),
+            TextField(
+              controller: _amountController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(hintText: 'Target amount'),
+            ),
+            const Gap(12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Iconsax.calendar, color: AppColors.primary),
+              title: Text(
+                'End Date: ${_endDate.day}/${_endDate.month}/${_endDate.year}',
+              ),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _endDate,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                );
+                if (picked != null) setState(() => _endDate = picked);
+              },
+            ),
+            const Gap(16),
+            CustomButton(
+              label: 'Create Goal',
+              isLoading: _isLoading,
+              onTap: _submit,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -174,7 +185,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _emojis.length,
-        separatorBuilder: (_, __) => const Gap(8),
+        separatorBuilder: (_, _) => const Gap(8),
         itemBuilder: (_, i) => GestureDetector(
           onTap: () => setState(() => _emoji = _emojis[i]),
           child: Container(
@@ -182,7 +193,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
             height: 44,
             decoration: BoxDecoration(
               color: _emoji == _emojis[i]
-                  ? AppColors.primary.withOpacity(0.15)
+                  ? AppColors.primary.withValues(alpha: 0.15)
                   : AppColors.background,
               borderRadius: BorderRadius.circular(10),
               border: _emoji == _emojis[i]
@@ -202,11 +213,11 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
     if (_titleController.text.isEmpty || _amountController.text.isEmpty) return;
     setState(() => _isLoading = true);
     await context.read<GoalCubit>().addGoal(
-          title: _titleController.text.trim(),
-          targetAmount: double.parse(_amountController.text),
-          endDate: _endDate,
-          emoji: _emoji,
-        );
+      title: _titleController.text.trim(),
+      targetAmount: double.parse(_amountController.text),
+      endDate: _endDate,
+      emoji: _emoji,
+    );
     if (mounted) Navigator.pop(context);
   }
 }

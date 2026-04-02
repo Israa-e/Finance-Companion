@@ -7,14 +7,19 @@ import 'goal_state.dart';
 class GoalCubit extends Cubit<GoalState> {
   final GoalRepository _repo;
   final _uuid = const Uuid();
+  int _userId = 0;
 
   GoalCubit(this._repo) : super(GoalInitial());
+
+  void setUser(int userId) {
+    _userId = userId;
+  }
 
   Future<void> loadGoals() async {
     emit(GoalLoading());
     try {
-      final goals = await _repo.getAll();
-      final active = await _repo.getActive();
+      final goals = await _repo.getAll(_userId);
+      final active = await _repo.getActive(_userId);
       emit(GoalLoaded(goals: goals, activeGoals: active));
     } catch (e) {
       emit(GoalError(e.toString()));
@@ -30,6 +35,7 @@ class GoalCubit extends Cubit<GoalState> {
     try {
       final goal = GoalModel(
         id: _uuid.v4(),
+        userId: _userId,
         title: title,
         targetAmount: targetAmount,
         savedAmount: 0,

@@ -75,7 +75,7 @@ class _TransactionTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: (isIncome ? AppColors.income : AppColors.expense)
-                  .withOpacity(0.1),
+                  .withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(

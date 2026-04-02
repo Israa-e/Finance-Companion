@@ -4,6 +4,7 @@ enum TransactionType { income, expense }
 
 class TransactionModel extends Equatable {
   final String id;
+  final int userId;
   final double amount;
   final TransactionType type;
   final String category;
@@ -13,6 +14,7 @@ class TransactionModel extends Equatable {
 
   const TransactionModel({
     required this.id,
+    required this.userId,
     required this.amount,
     required this.type,
     required this.category,
@@ -26,6 +28,7 @@ class TransactionModel extends Equatable {
 
   Map<String, dynamic> toMap() => {
         'id': id,
+        'userId': userId,
         'amount': amount,
         'type': type.name,
         'category': category,
@@ -37,6 +40,7 @@ class TransactionModel extends Equatable {
   factory TransactionModel.fromMap(Map<String, dynamic> map) =>
       TransactionModel(
         id: map['id'],
+        userId: map['userId'] as int,
         amount: (map['amount'] as num).toDouble(),
         type: TransactionType.values.byName(map['type']),
         category: map['category'],
@@ -47,6 +51,7 @@ class TransactionModel extends Equatable {
 
   TransactionModel copyWith({
     String? id,
+    int? userId,
     double? amount,
     TransactionType? type,
     String? category,
@@ -56,6 +61,7 @@ class TransactionModel extends Equatable {
   }) =>
       TransactionModel(
         id: id ?? this.id,
+        userId: userId ?? this.userId,
         amount: amount ?? this.amount,
         type: type ?? this.type,
         category: category ?? this.category,
@@ -65,5 +71,6 @@ class TransactionModel extends Equatable {
       );
 
   @override
-  List<Object?> get props => [id, amount, type, category, date, title, note];
+  List<Object?> get props =>
+      [id, userId, amount, type, category, date, title, note];
 }

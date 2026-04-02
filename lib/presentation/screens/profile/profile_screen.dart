@@ -53,8 +53,8 @@ class ProfileScreen extends StatelessWidget {
       height: 90,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.primary.withOpacity(0.1),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
+        color: AppColors.primary.withValues(alpha:0.1),
+        border: Border.all(color: AppColors.primary.withValues(alpha:0.3), width: 2),
         image: imagePath != null
             ? DecorationImage(
                 image: FileImage(File(imagePath)), fit: BoxFit.cover)
@@ -138,7 +138,7 @@ class ProfileScreen extends StatelessWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha:0.1),
                       image: (newImagePath ?? user.imagePath) != null
                           ? DecorationImage(
                               image: FileImage(
@@ -217,7 +217,7 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha:0.08),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(

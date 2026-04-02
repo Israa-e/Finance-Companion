@@ -112,7 +112,7 @@ class InsightsScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: (isUp ? AppColors.expense : AppColors.income)
-                  .withOpacity(0.1),
+                  .withValues(alpha: .1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

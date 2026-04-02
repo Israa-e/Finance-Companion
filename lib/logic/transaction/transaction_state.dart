@@ -15,17 +15,19 @@ class TransactionLoaded extends TransactionState {
   final double balance;
   final double totalIncome;
   final double totalExpense;
+  final double initialBalance;
 
   const TransactionLoaded({
     required this.transactions,
     required this.balance,
     required this.totalIncome,
     required this.totalExpense,
+    this.initialBalance = 0.0,
   });
 
   @override
   List<Object?> get props =>
-      [transactions, balance, totalIncome, totalExpense];
+      [transactions, balance, totalIncome, totalExpense, initialBalance];
 }
 
 class TransactionError extends TransactionState {

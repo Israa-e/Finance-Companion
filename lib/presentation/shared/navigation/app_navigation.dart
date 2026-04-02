@@ -2,6 +2,7 @@ import 'package:finance_companion/presentation/screens/profile/profile_screen.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../data/models/user_model.dart';
 import '../../../data/repositories/transaction_repository.dart';
 import '../../../data/repositories/goal_repository.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
@@ -16,11 +17,13 @@ import '../../../core/theme/app_colors.dart';
 class AppNavigation extends StatefulWidget {
   final TransactionRepository transactionRepo;
   final GoalRepository goalRepo;
+  final UserModel user;
 
   const AppNavigation({
     super.key,
     required this.transactionRepo,
     required this.goalRepo,
+    required this.user,
   });
 
   @override
@@ -35,7 +38,7 @@ class _AppNavigationState extends State<AppNavigation> {
   @override
   void initState() {
     super.initState();
-    _screens = [
+    _screens = const [
       HomeScreen(),
       TransactionsScreen(),
       GoalsScreen(),
@@ -49,10 +52,20 @@ class _AppNavigationState extends State<AppNavigation> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) =>
-              TransactionCubit(widget.transactionRepo)..loadTransactions(),
+          create: (_) {
+            final cubit = TransactionCubit(widget.transactionRepo);
+            // Pass both userId AND initialBalance so inserts work and
+            // the balance calculation is correct
+            cubit.setUser(widget.user.id!, widget.user.initialBalance);
+            cubit.loadTransactions();
+            return cubit;
+          },
         ),
-        BlocProvider(create: (_) => GoalCubit(widget.goalRepo)..loadGoals()),
+        BlocProvider(
+          create: (_) => GoalCubit(widget.goalRepo)
+            ..setUser(widget.user.id!)
+            ..loadGoals(),
+        ),
         BlocProvider(
           create: (_) => InsightsCubit(widget.transactionRepo)..loadInsights(),
         ),
@@ -70,7 +83,7 @@ class _AppNavigationState extends State<AppNavigation> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),

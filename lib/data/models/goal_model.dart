@@ -4,6 +4,7 @@ enum GoalStatus { active, completed, failed }
 
 class GoalModel extends Equatable {
   final String id;
+  final int userId;
   final String title;
   final double targetAmount;
   final double savedAmount;
@@ -14,6 +15,7 @@ class GoalModel extends Equatable {
 
   const GoalModel({
     required this.id,
+    required this.userId,
     required this.title,
     required this.targetAmount,
     required this.savedAmount,
@@ -33,6 +35,7 @@ class GoalModel extends Equatable {
 
   Map<String, dynamic> toMap() => {
         'id': id,
+        'userId': userId,
         'title': title,
         'targetAmount': targetAmount,
         'savedAmount': savedAmount,
@@ -44,6 +47,7 @@ class GoalModel extends Equatable {
 
   factory GoalModel.fromMap(Map<String, dynamic> map) => GoalModel(
         id: map['id'],
+        userId: map['userId'],
         title: map['title'],
         targetAmount: (map['targetAmount'] as num).toDouble(),
         savedAmount: (map['savedAmount'] as num).toDouble(),
@@ -55,6 +59,7 @@ class GoalModel extends Equatable {
 
   GoalModel copyWith({
     String? id,
+    int? userId,
     String? title,
     double? targetAmount,
     double? savedAmount,
@@ -65,6 +70,7 @@ class GoalModel extends Equatable {
   }) =>
       GoalModel(
         id: id ?? this.id,
+        userId: userId ?? this.userId,
         title: title ?? this.title,
         targetAmount: targetAmount ?? this.targetAmount,
         savedAmount: savedAmount ?? this.savedAmount,

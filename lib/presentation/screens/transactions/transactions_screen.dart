@@ -139,7 +139,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
         return ListView.separated(
           itemCount: filtered.length,
-          separatorBuilder: (_, __) => const Gap(8),
+          separatorBuilder: (_, _) => const Gap(8),
           itemBuilder: (context, i) {
             final t = filtered[i];
             return _TransactionCard(
@@ -242,7 +242,7 @@ class _TransactionCard extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: (isIncome ? AppColors.income : AppColors.expense)
-                    .withOpacity(0.1),
+                    .withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
