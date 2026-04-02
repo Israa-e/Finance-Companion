@@ -3,6 +3,9 @@ import 'package:finance_companion/core/theme/app_text_styles.dart';
 import 'package:finance_companion/core/utils/currency_formatter.dart';
 import 'package:finance_companion/data/models/goal_model.dart';
 import 'package:finance_companion/logic/goal/goal_cubit.dart';
+import 'package:finance_companion/logic/goal/goal_state.dart';
+import 'package:finance_companion/logic/transaction/transaction_cubit.dart';
+import 'package:finance_companion/logic/transaction/transaction_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,13 +97,29 @@ class GoalCard extends StatelessWidget {
             '${(progress * 100).toStringAsFixed(1)}% achieved',
             style: AppTextStyles.caption,
           ),
+          const Gap(4),
+          Text(
+            'Remaining: ${CurrencyFormatter.format(goal.remainingAmount)}',
+            style: AppTextStyles.caption,
+          ),
         ],
       ),
     );
   }
 
   void _showAddSavings(BuildContext context, GoalModel goal) {
+    final txState = context.read<TransactionCubit>().state;
+    final goalState = context.read<GoalCubit>().state;
+    final lockedAmount = goalState is GoalLoaded
+        ? goalState.goals.fold(0.0, (sum, goal) => sum + goal.savedAmount)
+        : 0.0;
+    final totalBalance = txState is TransactionLoaded ? txState.balance : 0.0;
+    final availableBalance = (totalBalance - lockedAmount).clamp(
+      0.0,
+      double.infinity,
+    );
     final controller = TextEditingController();
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -140,6 +159,11 @@ class GoalCard extends StatelessWidget {
                     ),
                     const Gap(16),
                     Text('Add to Savings', style: AppTextStyles.h3),
+                    const Gap(8),
+                    Text(
+                      'Available: ${CurrencyFormatter.format(availableBalance)}',
+                      style: AppTextStyles.caption,
+                    ),
                     const Gap(16),
                     CustomTextField(
                       label: 'Amount',
@@ -158,17 +182,7 @@ class GoalCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: AppColors.textHint,
-                              shadowColor: Colors.transparent,
-                              side: BorderSide(
-                                color: AppColors.textHint.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
+                          child: OutlinedButton(
                             onPressed: () => Navigator.pop(sheetContext),
                             child: const Text('Cancel'),
                           ),
@@ -178,13 +192,34 @@ class GoalCard extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: () {
                               final amount = double.tryParse(controller.text);
-                              if (amount != null && amount > 0) {
-                                context.read<GoalCubit>().addToSavings(
-                                  goal.id,
-                                  amount,
+                              if (amount == null || amount <= 0) return;
+                              if (amount > availableBalance) {
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Not enough available balance to allocate.',
+                                    ),
+                                  ),
                                 );
-                                Navigator.pop(sheetContext);
+                                return;
                               }
+                              if (amount > goal.remainingAmount) {
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Goal only needs ${CurrencyFormatter.format(goal.remainingAmount)} more.',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              context.read<GoalCubit>().addToSavings(
+                                goal.id,
+                                amount,
+                                availableBalance: availableBalance,
+                              );
+                              Navigator.pop(sheetContext);
                             },
                             child: const Text('Add'),
                           ),

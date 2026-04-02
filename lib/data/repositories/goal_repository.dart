@@ -98,12 +98,17 @@ class GoalRepository {
   }
 
   Future<void> addToSavings(String id, double amount) async {
-    final db = await _db;
+    if (amount <= 0) return;
 
+    final db = await _db;
     final maps = await db.query('goals', where: 'id = ?', whereArgs: [id]);
     if (maps.isEmpty) return;
 
     final goal = GoalModel.fromMap(maps.first);
+    if (amount > goal.remainingAmount) {
+      throw Exception('Amount exceeds remaining goal total.');
+    }
+
     final newSaved = goal.savedAmount + amount;
     final newStatus = newSaved >= goal.targetAmount
         ? GoalStatus.completed

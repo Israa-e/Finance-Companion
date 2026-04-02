@@ -19,6 +19,12 @@ class GoalLoaded extends GoalState {
     required this.activeGoals,
   });
 
+  double get totalLocked =>
+      goals.fold(0.0, (sum, goal) => sum + goal.savedAmount);
+
+  double get totalRemaining =>
+      goals.fold(0.0, (sum, goal) => sum + goal.remainingAmount);
+
   @override
   List<Object?> get props => [goals, activeGoals];
 }

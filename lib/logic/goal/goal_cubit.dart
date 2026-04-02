@@ -51,8 +51,29 @@ class GoalCubit extends Cubit<GoalState> {
     }
   }
 
-  Future<void> addToSavings(String id, double amount) async {
+  Future<void> addToSavings(
+    String id,
+    double amount, {
+    double? availableBalance,
+  }) async {
+    final currentState = state;
+    if (currentState is! GoalLoaded) return;
+
     try {
+      final goal = currentState.goals.firstWhere((goal) => goal.id == id);
+      if (amount <= 0) {
+        emit(const GoalError('Amount must be greater than zero.'));
+        return;
+      }
+      if (amount > goal.remainingAmount) {
+        emit(const GoalError('Amount exceeds remaining goal total.'));
+        return;
+      }
+      if (availableBalance != null && amount > availableBalance) {
+        emit(const GoalError('Not enough available balance for this goal.'));
+        return;
+      }
+
       await _repo.addToSavings(id, amount);
       await loadGoals();
     } catch (e) {

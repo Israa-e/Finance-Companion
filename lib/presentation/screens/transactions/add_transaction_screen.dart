@@ -1,8 +1,12 @@
+import 'package:finance_companion/core/utils/currency_formatter.dart';
+import 'package:finance_companion/logic/goal/goal_state.dart';
+import 'package:finance_companion/logic/transaction/transaction_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../logic/goal/goal_cubit.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -58,6 +62,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.dispose();
   }
 
+  double get _availableBalance {
+    final txState = context.read<TransactionCubit>().state;
+    final goalState = context.read<GoalCubit>().state;
+    final balance = txState is TransactionLoaded ? txState.balance : 0.0;
+    final locked = goalState is GoalLoaded
+        ? goalState.goals.fold(0.0, (sum, goal) => sum + goal.savedAmount)
+        : 0.0;
+    return (balance - locked).clamp(0.0, double.infinity);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +112,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 prefixIcon: const Icon(Iconsax.dollar_circle, size: 18),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Amount is required';
-                  if (double.tryParse(v) == null) return 'Invalid amount';
+                  final value = double.tryParse(v);
+                  if (value == null) return 'Invalid amount';
+
+                  if (_type == TransactionType.expense) {
+                    final currentExpense = isEditing &&
+                            widget.transaction?.type == TransactionType.expense
+                        ? widget.transaction!.amount
+                        : 0.0;
+                    final maxAllowed = _availableBalance + currentExpense;
+                    if (value > maxAllowed) {
+                      return 'Only ${CurrencyFormatter.format(maxAllowed)} available';
+                    }
+                  }
+
                   return null;
                 },
               ),
@@ -224,6 +251,24 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     final cubit = context.read<TransactionCubit>();
     final amount = double.parse(_amountController.text);
+    if (_type == TransactionType.expense) {
+      final currentExpense =
+          isEditing && widget.transaction?.type == TransactionType.expense
+          ? widget.transaction!.amount
+          : 0.0;
+      final maxAllowed = _availableBalance + currentExpense;
+      if (amount > maxAllowed) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Only ${CurrencyFormatter.format(maxAllowed)} available for expenses.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
 
     if (isEditing) {
       await cubit.updateTransaction(

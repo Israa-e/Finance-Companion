@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
+import '../../../../logic/goal/goal_cubit.dart';
+import '../../../../logic/goal/goal_state.dart';
 import '../../../../logic/transaction/transaction_cubit.dart';
 import '../../../../logic/transaction/transaction_state.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -38,31 +40,45 @@ class _BalanceCardState extends State<BalanceCard>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TransactionCubit, TransactionState>(
-      builder: (context, txState) {
-        return BlocBuilder<AuthCubit, AuthState>(
-          builder: (context, authState) {
-            final balance = txState is TransactionLoaded
-                ? txState.balance
-                : 0.0;
-            final isLoading = txState is TransactionLoading;
-            final userName = authState is AuthAuthenticated
-                ? authState.user.name.split(' ').first
-                : '';
-            final income = txState is TransactionLoaded
-                ? txState.totalIncome
-                : 0.0;
-            final expense = txState is TransactionLoaded
-                ? txState.totalExpense
-                : 0.0;
+    return BlocBuilder<GoalCubit, GoalState>(
+      builder: (context, goalState) {
+        final lockedAmount = goalState is GoalLoaded
+            ? goalState.totalLocked
+            : 0.0;
 
-            return _AnimatedBalanceCard(
-              shimmerController: _shimmerController,
-              balance: balance,
-              income: income,
-              expense: expense,
-              userName: userName,
-              isLoading: isLoading,
+        return BlocBuilder<TransactionCubit, TransactionState>(
+          builder: (context, txState) {
+            return BlocBuilder<AuthCubit, AuthState>(
+              builder: (context, authState) {
+                final balance = txState is TransactionLoaded
+                    ? txState.balance
+                    : 0.0;
+                final isLoading = txState is TransactionLoading;
+                final userName = authState is AuthAuthenticated
+                    ? authState.user.name.split(' ').first
+                    : '';
+                final income = txState is TransactionLoaded
+                    ? txState.totalIncome
+                    : 0.0;
+                final expense = txState is TransactionLoaded
+                    ? txState.totalExpense
+                    : 0.0;
+                final availableBalance = (balance - lockedAmount).clamp(
+                  0.0,
+                  double.infinity,
+                );
+
+                return _AnimatedBalanceCard(
+                  shimmerController: _shimmerController,
+                  balance: balance,
+                  lockedAmount: lockedAmount,
+                  availableBalance: availableBalance,
+                  income: income,
+                  expense: expense,
+                  userName: userName,
+                  isLoading: isLoading,
+                );
+              },
             );
           },
         );
@@ -74,6 +90,8 @@ class _BalanceCardState extends State<BalanceCard>
 class _AnimatedBalanceCard extends StatelessWidget {
   final AnimationController shimmerController;
   final double balance;
+  final double lockedAmount;
+  final double availableBalance;
   final double income;
   final double expense;
   final String userName;
@@ -82,6 +100,8 @@ class _AnimatedBalanceCard extends StatelessWidget {
   const _AnimatedBalanceCard({
     required this.shimmerController,
     required this.balance,
+    required this.lockedAmount,
+    required this.availableBalance,
     required this.income,
     required this.expense,
     required this.userName,
@@ -215,31 +235,54 @@ class _AnimatedBalanceCard extends StatelessWidget {
                       ),
                     ),
                     const Gap(16),
-                    // Income / Expense row
                     Row(
                       children: [
                         Expanded(
                           child: _StatPill(
-                            icon: Icons.arrow_downward_rounded,
-                            label: 'Income',
-                            value: CurrencyFormatter.formatCompact(income),
-                            color: const Color(0xFF81F5AE),
+                            icon: Icons.lock,
+                            label: 'Locked',
+                            value: CurrencyFormatter.formatCompact(
+                              lockedAmount,
+                            ),
+                            color: const Color(0xFFFFB3B3),
                           ),
                         ),
                         const Gap(12),
                         Expanded(
                           child: _StatPill(
-                            icon: Icons.arrow_upward_rounded,
-                            label: 'Expenses',
-                            value: CurrencyFormatter.formatCompact(expense),
-                            color: const Color(0xFFFFB3B3),
+                            icon: Icons.wallet_rounded,
+                            label: 'Available',
+                            value: CurrencyFormatter.formatCompact(
+                              availableBalance,
+                            ),
+                            color: const Color(0xFF81F5AE),
                           ),
                         ),
-                        const Gap(12),
-                        // Mini donut chart
-                        _MiniDonut(income: income, expense: expense),
                       ],
                     ),
+                    // const Gap(12),
+                    // Row(
+                    //   children: [
+                    //     Expanded(
+                    //       child: _StatPill(
+                    //         icon: Icons.arrow_downward_rounded,
+                    //         label: 'Income',
+                    //         value: CurrencyFormatter.formatCompact(income),
+                    //         color: const Color(0xFF81F5AE),
+                    //       ),
+                    //     ),
+                    //     const Gap(12),
+                    //     Expanded(
+                    //       child: _StatPill(
+                    //         icon: Icons.arrow_upward_rounded,
+                    //         label: 'Expenses',
+                    //         value: CurrencyFormatter.formatCompact(expense),
+                    //         color: const Color(0xFFFFB3B3),
+                    //       ),
+                    //     ),
+                    //     // Mini donut chart
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
