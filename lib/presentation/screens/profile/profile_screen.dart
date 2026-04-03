@@ -11,6 +11,7 @@ import '../../../logic/transaction/transaction_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../data/models/user_model.dart';
 import '../../shared/widgets/custom_text_field.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -24,7 +25,9 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: BlocBuilder<AuthCubit, AuthState>(
             builder: (context, state) {
-              if (state is! AuthAuthenticated) return const SizedBox.shrink();
+              if (state is! AuthAuthenticated) {
+                return const SizedBox.shrink();
+              }
               final user = state.user;
 
               return Column(
@@ -40,6 +43,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildStatsRow(context),
                   const Gap(24),
                   _buildMenuItems(context, user),
+                  const Gap(24),
                 ],
               );
             },
@@ -101,9 +105,10 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItems(BuildContext context, user) {
+  Widget _buildMenuItems(BuildContext context, UserModel user) {
     return Column(
       children: [
+        // ── Dark mode toggle ───────────────────────────────────────
         BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, mode) {
             return Container(
@@ -125,9 +130,8 @@ class ProfileScreen extends StatelessWidget {
                   Icons.dark_mode,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
-                onChanged: (value) {
-                  context.read<ThemeCubit>().toggleTheme(value);
-                },
+                onChanged: (value) =>
+                    context.read<ThemeCubit>().toggleTheme(value),
               ),
             );
           },
@@ -147,91 +151,104 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showEditProfile(BuildContext context, user) {
+  // ─── Edit profile sheet ──────────────────────────────────────────────────
+
+  void _showEditProfile(BuildContext context, UserModel user) {
+    // Capture the cubit before entering the sheet so we don't rely on
+    // a potentially stale BuildContext inside StatefulBuilder.
+    final authCubit = context.read<AuthCubit>();
     final nameController = TextEditingController(text: user.name);
     String? newImagePath;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: context.read<AuthCubit>(),
-        child: StatefulBuilder(
-          builder: (ctx, setState) => Container(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              MediaQuery.of(ctx).viewInsets.bottom + 20,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(ctx).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setState) => Container(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Edit Profile', style: AppTextStyles.h3),
-                const Gap(20),
-                GestureDetector(
-                  onTap: () async {
-                    final path = await context.read<AuthCubit>().pickImage();
-                    if (path != null) setState(() => newImagePath = path);
-                  },
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      image: (newImagePath ?? user.imagePath) != null
-                          ? DecorationImage(
-                              image: FileImage(
-                                File(newImagePath ?? user.imagePath!),
-                              ),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: (newImagePath ?? user.imagePath) == null
-                        ? const Icon(
-                            Iconsax.camera,
-                            color: AppColors.primary,
-                            size: 28,
+              const Gap(16),
+              Text('Edit Profile', style: AppTextStyles.h3),
+              const Gap(20),
+              // Avatar picker
+              GestureDetector(
+                onTap: () async {
+                  final path = await authCubit.pickImage();
+                  if (path != null) setState(() => newImagePath = path);
+                },
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    image: (newImagePath ?? user.imagePath) != null
+                        ? DecorationImage(
+                            image: FileImage(
+                              File(newImagePath ?? user.imagePath!),
+                            ),
+                            fit: BoxFit.cover,
                           )
                         : null,
                   ),
+                  child: (newImagePath ?? user.imagePath) == null
+                      ? const Icon(
+                          Iconsax.camera,
+                          color: AppColors.primary,
+                          size: 28,
+                        )
+                      : null,
                 ),
-                const Gap(16),
-                CustomTextField(
-                  label: 'Name',
-                  controller: nameController,
-                  hint: 'Enter your name',
-                ),
-                const Gap(20),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<AuthCubit>().updateProfile(
-                      name: nameController.text,
-                      imagePath: newImagePath,
-                    );
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            ),
+              ),
+              const Gap(16),
+              CustomTextField(
+                label: 'Name',
+                controller: nameController,
+                hint: 'Enter your name',
+              ),
+              const Gap(20),
+              ElevatedButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  if (name.isEmpty) return;
+                  authCubit.updateProfile(name: name, imagePath: newImagePath);
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Save'),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  // ─── Logout confirmation ─────────────────────────────────────────────────
+
   void _confirmLogout(BuildContext context) {
-    showDialog(
+    final authCubit = context.read<AuthCubit>();
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Logout'),
@@ -253,7 +270,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
-                    context.read<AuthCubit>().logout();
+                    authCubit.logout();
                   },
                   child: const Text('Logout'),
                 ),
@@ -265,6 +282,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
+// ─── Stat card ───────────────────────────────────────────────────────────────
 
 class _StatCard extends StatelessWidget {
   final String label;
@@ -300,6 +319,8 @@ class _StatCard extends StatelessWidget {
     );
   }
 }
+
+// ─── Menu item ───────────────────────────────────────────────────────────────
 
 class _MenuItem extends StatelessWidget {
   final IconData icon;

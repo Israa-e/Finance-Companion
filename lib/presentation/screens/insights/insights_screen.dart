@@ -8,6 +8,7 @@ import '../../../logic/insights/insights_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../shared/widgets/empty_state_widget.dart';
 
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({super.key});
@@ -24,13 +25,42 @@ class InsightsScreen extends StatelessWidget {
             child: BlocBuilder<InsightsCubit, InsightsState>(
               builder: (context, state) {
                 if (state is InsightsLoading) {
-                  return const Center(
-                      heightFactor: 10,
-                      child: CircularProgressIndicator());
+                  return const SizedBox(
+                    height: 400,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
                 }
+
+                if (state is InsightsError) {
+                  return SizedBox(
+                    height: 400,
+                    child: EmptyStateWidget(
+                      title: 'Could not load insights',
+                      subtitle: state.message,
+                      icon: Iconsax.warning_2,
+                    ),
+                  );
+                }
+
                 if (state is! InsightsLoaded) {
                   return const SizedBox.shrink();
                 }
+
+                // No transactions at all
+                if (state.expensesByCategory.isEmpty &&
+                    state.thisMonthExpense == 0 &&
+                    state.lastMonthExpense == 0) {
+                  return const SizedBox(
+                    height: 400,
+                    child: EmptyStateWidget(
+                      title: 'No data yet',
+                      subtitle:
+                          'Add some transactions to start seeing insights',
+                      icon: Iconsax.chart,
+                    ),
+                  );
+                }
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -40,8 +70,10 @@ class InsightsScreen extends StatelessWidget {
                     _buildTopCategory(state),
                     const Gap(16),
                     _buildMonthComparison(context, state),
-                    const Gap(16),
-                    _buildPieChart(context, state),
+                    if (state.expensesByCategory.isNotEmpty) ...[
+                      const Gap(16),
+                      _buildPieChart(context, state),
+                    ],
                     const Gap(24),
                   ],
                 );
@@ -68,20 +100,27 @@ class InsightsScreen extends StatelessWidget {
         children: [
           const Icon(Iconsax.chart_2, color: Colors.white, size: 36),
           const Gap(16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Top Spending',
-                  style: AppTextStyles.label.copyWith(color: Colors.white70)),
-              Text(
-                state.topCategory.isEmpty ? 'No data' : state.topCategory,
-                style: AppTextStyles.h3.copyWith(color: Colors.white),
-              ),
-              Text(
-                CurrencyFormatter.format(state.topCategoryAmount),
-                style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Top Spending',
+                  style: AppTextStyles.label.copyWith(color: Colors.white70),
+                ),
+                Text(
+                  state.topCategory.isEmpty ? 'No data' : state.topCategory,
+                  style: AppTextStyles.h3.copyWith(color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  CurrencyFormatter.format(state.topCategoryAmount),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -103,19 +142,23 @@ class InsightsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('This Month', style: AppTextStyles.label),
-                Text(CurrencyFormatter.format(state.thisMonthExpense),
-                    style: AppTextStyles.amountSmall),
+                Text(
+                  CurrencyFormatter.format(state.thisMonthExpense),
+                  style: AppTextStyles.amountSmall,
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: (isUp ? AppColors.expense : AppColors.income)
-                  .withValues(alpha: .1),
+              color: (isUp ? AppColors.expense : AppColors.income).withValues(
+                alpha: .1,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   isUp ? Iconsax.arrow_up : Iconsax.arrow_down,
@@ -140,8 +183,10 @@ class InsightsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('Last Month', style: AppTextStyles.label),
-                Text(CurrencyFormatter.format(state.lastMonthExpense),
-                    style: AppTextStyles.amountSmall),
+                Text(
+                  CurrencyFormatter.format(state.lastMonthExpense),
+                  style: AppTextStyles.amountSmall,
+                ),
               ],
             ),
           ),
@@ -151,10 +196,11 @@ class InsightsScreen extends StatelessWidget {
   }
 
   Widget _buildPieChart(BuildContext context, InsightsLoaded state) {
-    if (state.expensesByCategory.isEmpty) return const SizedBox.shrink();
-
     final entries = state.expensesByCategory.entries.toList();
     final total = entries.fold(0.0, (s, e) => s + e.value);
+    // Guard: wrap color index so we never go out of bounds regardless
+    // of how many categories the user creates.
+    final colorCount = AppColors.categoryColors.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -174,17 +220,18 @@ class InsightsScreen extends StatelessWidget {
                 sectionsSpace: 2,
                 centerSpaceRadius: 50,
                 sections: List.generate(entries.length, (i) {
-                  final pct = (entries[i].value / total * 100);
+                  final pct = entries[i].value / total * 100;
+                  final color = AppColors.categoryColors[i % colorCount];
                   return PieChartSectionData(
-                    color: AppColors.categoryColors[
-                        i % AppColors.categoryColors.length],
+                    color: color,
                     value: entries[i].value,
                     title: '${pct.toStringAsFixed(0)}%',
                     radius: 60,
                     titleStyle: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   );
                 }),
               ),
@@ -201,18 +248,24 @@ class InsightsScreen extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: AppColors.categoryColors[
-                          i % AppColors.categoryColors.length],
+                      color: AppColors.categoryColors[i % colorCount],
                       shape: BoxShape.circle,
                     ),
                   ),
                   const Gap(8),
                   Expanded(
-                      child: Text(entries[i].key,
-                          style: AppTextStyles.bodySmall)),
-                  Text(CurrencyFormatter.format(entries[i].value),
-                      style: AppTextStyles.bodySmall
-                          .copyWith(fontWeight: FontWeight.w600)),
+                    child: Text(
+                      entries[i].key,
+                      style: AppTextStyles.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    CurrencyFormatter.format(entries[i].value),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),

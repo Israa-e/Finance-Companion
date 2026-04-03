@@ -12,7 +12,9 @@ import '../../../../data/models/transaction_model.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 
 class RecentTransactions extends StatelessWidget {
-  const RecentTransactions({super.key});
+  final VoidCallback? onSeeAll;
+
+  const RecentTransactions({super.key, this.onSeeAll});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class RecentTransactions extends StatelessWidget {
         }
         if (state is! TransactionLoaded) return const SizedBox.shrink();
 
-        final recent = state.transactions.take(5).toList();
+        final recent = state.transactions.take(3).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,7 +34,17 @@ class RecentTransactions extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Recent', style: AppTextStyles.h3),
-                TextButton(onPressed: () {}, child: const Text('See all')),
+                if (state.transactions.isNotEmpty)
+                  TextButton(
+                    onPressed: onSeeAll,
+                    child: Text(
+                      'See all',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
               ],
             ),
             const Gap(8),

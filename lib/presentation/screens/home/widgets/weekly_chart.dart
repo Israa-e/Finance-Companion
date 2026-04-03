@@ -8,7 +8,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class WeeklyChart extends StatelessWidget {
-  const WeeklyChart({super.key});
+  final VoidCallback? onSeeAll;
+
+  const WeeklyChart({super.key, this.onSeeAll});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,9 @@ class WeeklyChart extends StatelessWidget {
         final data = state.weeklyExpenses;
         final keys = data.keys.toList();
         final values = data.values.toList();
-        final maxVal = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
+        final maxVal = values.isEmpty
+            ? 1.0
+            : values.reduce((a, b) => a > b ? a : b);
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -28,7 +32,7 @@ class WeeklyChart extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha:0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -37,7 +41,23 @@ class WeeklyChart extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Weekly Spending', style: AppTextStyles.h3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Weekly Spending', style: AppTextStyles.h3),
+                  if (onSeeAll != null)
+                    TextButton(
+                      onPressed: onSeeAll,
+                      child: Text(
+                        'See all',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const Gap(16),
               SizedBox(
                 height: 140,
@@ -47,15 +67,23 @@ class WeeklyChart extends StatelessWidget {
                     gridData: const FlGridData(show: false),
                     borderData: FlBorderData(show: false),
                     titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      leftTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
                           getTitlesWidget: (value, _) {
                             final idx = value.toInt();
-                            if (idx < 0 || idx >= keys.length) return const SizedBox();
+                            if (idx < 0 || idx >= keys.length) {
+                              return const SizedBox();
+                            }
                             return Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
@@ -79,7 +107,7 @@ class WeeklyChart extends StatelessWidget {
                             backDrawRodData: BackgroundBarChartRodData(
                               show: true,
                               toY: maxVal * 1.2,
-                              color: AppColors.primary.withValues(alpha:0.06),
+                              color: AppColors.primary.withValues(alpha: 0.06),
                             ),
                           ),
                         ],

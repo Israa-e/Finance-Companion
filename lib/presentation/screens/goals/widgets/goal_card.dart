@@ -15,7 +15,15 @@ import 'package:finance_companion/presentation/shared/widgets/custom_text_field.
 
 class GoalCard extends StatelessWidget {
   final GoalModel goal;
-  const GoalCard({super.key, required this.goal});
+
+  /// Called after the user confirms deletion in the dialog.
+  final VoidCallback onDeleteConfirmed;
+
+  const GoalCard({
+    super.key,
+    required this.goal,
+    required this.onDeleteConfirmed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,23 +52,33 @@ class GoalCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${goal.daysRemaining} days left',
-                      style: AppTextStyles.caption,
+                      goal.isCompleted
+                          ? '🎉 Completed!'
+                          : '${goal.daysRemaining} days left',
+                      style: AppTextStyles.caption.copyWith(
+                        color: goal.isCompleted ? AppColors.income : null,
+                      ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Iconsax.add_circle, color: AppColors.primary),
-                onPressed: () => _showAddSavings(context, goal),
-              ),
+              // Add savings button — hidden when goal is complete
+              if (!goal.isCompleted)
+                IconButton(
+                  icon: const Icon(
+                    Iconsax.add_circle,
+                    color: AppColors.primary,
+                  ),
+                  onPressed: () => _showAddSavings(context, goal),
+                ),
+              // Delete — shows confirmation first
               IconButton(
                 icon: const Icon(
                   Iconsax.trash,
                   color: AppColors.expense,
                   size: 18,
                 ),
-                onPressed: () => context.read<GoalCubit>().deleteGoal(goal.id),
+                onPressed: () => _confirmDelete(context),
               ),
             ],
           ),
@@ -87,8 +105,8 @@ class GoalCard extends StatelessWidget {
               value: progress,
               minHeight: 8,
               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primary,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                goal.isCompleted ? AppColors.income : AppColors.primary,
               ),
             ),
           ),
@@ -97,21 +115,63 @@ class GoalCard extends StatelessWidget {
             '${(progress * 100).toStringAsFixed(1)}% achieved',
             style: AppTextStyles.caption,
           ),
-          const Gap(4),
-          Text(
-            'Remaining: ${CurrencyFormatter.format(goal.remainingAmount)}',
-            style: AppTextStyles.caption,
+          if (!goal.isCompleted)
+            Text(
+              'Remaining: ${CurrencyFormatter.format(goal.remainingAmount)}',
+              style: AppTextStyles.caption,
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Delete confirmation ─────────────────────────────────────────────────
+
+  void _confirmDelete(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete goal?'),
+        content: Text(
+          'This will permanently remove "${goal.title}".'
+          ' Any amount saved to this goal will be returned to your balance.',
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const Gap(8),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.expense,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    onDeleteConfirmed();
+                  },
+                  child: const Text('Delete'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  // ─── Add savings sheet ───────────────────────────────────────────────────
+
   void _showAddSavings(BuildContext context, GoalModel goal) {
     final txState = context.read<TransactionCubit>().state;
     final goalState = context.read<GoalCubit>().state;
     final lockedAmount = goalState is GoalLoaded
-        ? goalState.goals.fold(0.0, (sum, goal) => sum + goal.savedAmount)
+        ? goalState.goals.fold(0.0, (sum, g) => sum + g.savedAmount)
         : 0.0;
     final totalBalance = txState is TransactionLoaded ? txState.balance : 0.0;
     final availableBalance = (totalBalance - lockedAmount).clamp(
@@ -159,7 +219,7 @@ class GoalCard extends StatelessWidget {
                     ),
                     const Gap(16),
                     Text('Add to Savings', style: AppTextStyles.h3),
-                    const Gap(8),
+                    const Gap(4),
                     Text(
                       'Available: ${CurrencyFormatter.format(availableBalance)}',
                       style: AppTextStyles.caption,
@@ -176,7 +236,7 @@ class GoalCard extends StatelessWidget {
                           RegExp(r'^\d+\.?\d{0,2}'),
                         ),
                       ],
-                      hint: 'Amount',
+                      hint: '0.00',
                     ),
                     const Gap(18),
                     Row(
@@ -192,12 +252,19 @@ class GoalCard extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: () {
                               final amount = double.tryParse(controller.text);
-                              if (amount == null || amount <= 0) return;
-                              if (amount > availableBalance) {
+                              if (amount == null || amount <= 0) {
                                 ScaffoldMessenger.of(sheetContext).showSnackBar(
                                   const SnackBar(
+                                    content: Text('Enter a valid amount'),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (amount > availableBalance) {
+                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                  SnackBar(
                                     content: Text(
-                                      'Not enough available balance to allocate.',
+                                      'Only ${CurrencyFormatter.format(availableBalance)} available.',
                                     ),
                                   ),
                                 );
@@ -213,7 +280,6 @@ class GoalCard extends StatelessWidget {
                                 );
                                 return;
                               }
-
                               context.read<GoalCubit>().addToSavings(
                                 goal.id,
                                 amount,

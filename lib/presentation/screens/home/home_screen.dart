@@ -17,7 +17,11 @@ import 'widgets/recent_transactions.dart';
 import 'widgets/weekly_chart.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  /// Callback to switch the root [AppNavigation] tab.
+  /// Index constants: 0 Home · 1 Transactions · 2 Goals · 3 Insights · 4 Profile
+  final void Function(int tabIndex) onTabSwitch;
+
+  const HomeScreen({super.key, required this.onTabSwitch});
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +46,14 @@ class HomeScreen extends StatelessWidget {
                 const Gap(20),
                 const SummaryRow(),
                 const Gap(24),
-                const WeeklyChart(),
+                // ── Weekly chart — "See all" goes to Insights tab ────────
+                WeeklyChart(onSeeAll: () => onTabSwitch(3)),
                 const Gap(24),
-                const RecentTransactions(),
+                // ── Goals preview — "See all" goes to Goals tab ──────────
+                QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
+                const Gap(24),
+                // ── Recent transactions — "See all" goes to Transactions ─
+                RecentTransactions(onSeeAll: () => onTabSwitch(1)),
                 const Gap(32),
               ],
             ),
@@ -82,70 +91,76 @@ class HomeScreen extends StatelessWidget {
             ),
             Row(
               children: [
-                // Notification bell
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(
-                        Iconsax.notification,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppColors.expense,
-                            shape: BoxShape.circle,
+                // Notification bell — taps to Insights for now
+                GestureDetector(
+                  onTap: () => onTabSwitch(3),
+                  child: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Iconsax.notification,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppColors.expense,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const Gap(10),
-                // Avatar
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: AppColors.primary.withOpacity(0.1),
-                    border: Border.all(
-                      color: AppColors.primary.withOpacity(0.3),
-                      width: 1.5,
+                // Avatar — taps to Profile tab
+                GestureDetector(
+                  onTap: () => onTabSwitch(4),
+                  child: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.primary.withOpacity(0.1),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                      image: imagePath != null
+                          ? DecorationImage(
+                              image: FileImage(File(imagePath)),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
-                    image: imagePath != null
-                        ? DecorationImage(
-                            image: FileImage(File(imagePath)),
-                            fit: BoxFit.cover,
+                    child: imagePath == null
+                        ? const Icon(
+                            Iconsax.user,
+                            color: AppColors.primary,
+                            size: 20,
                           )
                         : null,
                   ),
-                  child: imagePath == null
-                      ? const Icon(
-                          Iconsax.user,
-                          color: AppColors.primary,
-                          size: 20,
-                        )
-                      : null,
                 ),
               ],
             ),

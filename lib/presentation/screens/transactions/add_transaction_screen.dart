@@ -36,11 +36,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   DateTime _date = DateTime.now();
   bool _isLoading = false;
 
+  // Computed once in initState / on type change — never called during build.
+  double _availableBalance = 0.0;
+
   bool get isEditing => widget.transaction != null;
 
   @override
   void initState() {
     super.initState();
+
     if (isEditing) {
       final t = widget.transaction!;
       _titleController.text = t.title;
@@ -51,6 +55,44 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _date = t.date;
     }
     _dateController.text = DateFormatter.formatFull(_date);
+
+    // Compute available balance once, safely, after the first frame
+    // so all cubits are guaranteed to be in scope.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshAvailableBalance();
+    });
+  }
+
+  void _refreshAvailableBalance() {
+    if (!mounted) return;
+    final txState = context.read<TransactionCubit>().state;
+    final goalState = _safeGoalState();
+    final balance = txState is TransactionLoaded ? txState.balance : 0.0;
+    final locked = goalState is GoalLoaded
+        ? goalState.goals.fold(0.0, (sum, goal) => sum + goal.savedAmount)
+        : 0.0;
+
+    // When editing an expense, the current transaction's amount is already
+    // deducted from the balance, so add it back to get the true ceiling.
+    final editingOffset =
+        isEditing && widget.transaction!.type == TransactionType.expense
+        ? widget.transaction!.amount
+        : 0.0;
+
+    setState(() {
+      _availableBalance = (balance - locked + editingOffset).clamp(
+        0.0,
+        double.infinity,
+      );
+    });
+  }
+
+  GoalState? _safeGoalState() {
+    try {
+      return context.read<GoalCubit>().state;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -60,24 +102,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _noteController.dispose();
     _dateController.dispose();
     super.dispose();
-  }
-
-  GoalState? get _goalState {
-    try {
-      return context.read<GoalCubit>().state;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  double get _availableBalance {
-    final txState = context.read<TransactionCubit>().state;
-    final goalState = _goalState;
-    final balance = txState is TransactionLoaded ? txState.balance : 0.0;
-    final locked = goalState is GoalLoaded
-        ? goalState.goals.fold(0.0, (sum, goal) => sum + goal.savedAmount)
-        : 0.0;
-    return (balance - locked).clamp(0.0, double.infinity);
   }
 
   @override
@@ -104,7 +128,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 hint: 'e.g. Coffee at Starbucks',
                 controller: _titleController,
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Title is required' : null,
+                    v == null || v.trim().isEmpty ? 'Title is required' : null,
               ),
               const Gap(16),
               CustomTextField(
@@ -118,25 +142,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
                 prefixIcon: const Icon(Iconsax.dollar_circle, size: 18),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Amount is required';
-                  final value = double.tryParse(v);
-                  if (value == null) return 'Invalid amount';
-
-                  if (_type == TransactionType.expense) {
-                    final currentExpense =
-                        isEditing &&
-                            widget.transaction?.type == TransactionType.expense
-                        ? widget.transaction!.amount
-                        : 0.0;
-                    final maxAllowed = _availableBalance + currentExpense;
-                    if (value > maxAllowed) {
-                      return 'Only ${CurrencyFormatter.format(maxAllowed)} available';
-                    }
-                  }
-
-                  return null;
-                },
+                validator: _validateAmount,
               ),
               const Gap(16),
               _buildCategoryDropdown(),
@@ -168,6 +174,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  // ─── Validation ─────────────────────────────────────────────────────────
+
+  String? _validateAmount(String? v) {
+    if (v == null || v.isEmpty) return 'Amount is required';
+    final value = double.tryParse(v);
+    if (value == null || value <= 0) return 'Enter a valid amount';
+    // Only enforce balance ceiling for expenses
+    if (_type == TransactionType.expense && value > _availableBalance) {
+      return 'Only ${CurrencyFormatter.format(_availableBalance)} available';
+    }
+    return null;
+  }
+
+  // ─── Widgets ────────────────────────────────────────────────────────────
+
   Widget _buildTypeToggle() {
     return Container(
       padding: const EdgeInsets.all(4),
@@ -184,6 +205,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             onTap: () => setState(() {
               _type = TransactionType.expense;
               _category = AppConstants.expenseCategories.first;
+              _refreshAvailableBalance();
             }),
           ),
           _TypeButton(
@@ -193,6 +215,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             onTap: () => setState(() {
               _type = TransactionType.income;
               _category = AppConstants.incomeCategories.first;
+              _refreshAvailableBalance();
             }),
           ),
         ],
@@ -205,13 +228,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ? AppConstants.expenseCategories
         : AppConstants.incomeCategories;
 
+    // Ensure _category is always a valid member of the current list.
+    if (!categories.contains(_category)) {
+      _category = categories.first;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Category', style: AppTextStyles.label),
         const Gap(6),
         DropdownButtonFormField<String>(
-          initialValue: _category,
+          value: _category, // 'value' not 'initialValue'
           decoration: InputDecoration(
             filled: true,
             fillColor: Theme.of(context).colorScheme.surface,
@@ -227,7 +255,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           items: categories
               .map((c) => DropdownMenuItem(value: c, child: Text(c)))
               .toList(),
-          onChanged: (v) => setState(() => _category = v!),
+          onChanged: (v) {
+            if (v != null) setState(() => _category = v);
+          },
         ),
       ],
     );
@@ -242,8 +272,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: Theme.of(context).brightness == Brightness.dark
-              ? ColorScheme.dark(primary: AppColors.primary)
-              : ColorScheme.light(primary: AppColors.primary),
+              ? const ColorScheme.dark(primary: AppColors.primary)
+              : const ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),
@@ -256,30 +286,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
+  // ─── Submit ──────────────────────────────────────────────────────────────
+
   Future<void> _submit() async {
+    // Re-sync balance before final validation in case time passed
+    _refreshAvailableBalance();
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
     final cubit = context.read<TransactionCubit>();
     final amount = double.parse(_amountController.text);
-    if (_type == TransactionType.expense) {
-      final currentExpense =
-          isEditing && widget.transaction?.type == TransactionType.expense
-          ? widget.transaction!.amount
-          : 0.0;
-      final maxAllowed = _availableBalance + currentExpense;
-      if (amount > maxAllowed) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Only ${CurrencyFormatter.format(maxAllowed)} available for expenses.',
-            ),
-          ),
-        );
-        return;
-      }
-    }
+    final note = _noteController.text.trim().isEmpty
+        ? null
+        : _noteController.text.trim();
 
     if (isEditing) {
       await cubit.updateTransaction(
@@ -289,9 +309,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           type: _type,
           category: _category,
           date: _date,
-          note: _noteController.text.trim().isEmpty
-              ? null
-              : _noteController.text.trim(),
+          note: note,
         ),
       );
     } else {
@@ -301,15 +319,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         type: _type,
         category: _category,
         date: _date,
-        note: _noteController.text.trim().isEmpty
-            ? null
-            : _noteController.text.trim(),
+        note: note,
       );
     }
 
     if (mounted) Navigator.pop(context);
   }
 }
+
+// ─── Type toggle button ──────────────────────────────────────────────────────
 
 class _TypeButton extends StatelessWidget {
   final String label;

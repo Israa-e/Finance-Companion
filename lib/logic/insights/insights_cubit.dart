@@ -10,12 +10,15 @@ class InsightsCubit extends Cubit<InsightsState> {
   Future<void> loadInsights() async {
     emit(InsightsLoading());
     try {
+      final now = DateTime.now();
+
+      // Safe previous month — handles January (month 1 → Dec of prior year)
+      final lastMonthDate = DateTime(now.year, now.month - 1, 1);
+
       final byCategory = await _repo.getExpensesByCategory();
       final weekly = await _repo.getWeeklyExpenses();
-      final thisMonth = await _repo.getMonthlyExpense(DateTime.now());
-      final lastMonth = await _repo.getMonthlyExpense(
-        DateTime(DateTime.now().year, DateTime.now().month - 1),
-      );
+      final thisMonth = await _repo.getMonthlyExpense(now);
+      final lastMonth = await _repo.getMonthlyExpense(lastMonthDate);
 
       String topCategory = '';
       double topAmount = 0;
@@ -26,14 +29,16 @@ class InsightsCubit extends Cubit<InsightsState> {
         }
       });
 
-      emit(InsightsLoaded(
-        expensesByCategory: byCategory,
-        weeklyExpenses: weekly,
-        thisMonthExpense: thisMonth,
-        lastMonthExpense: lastMonth,
-        topCategory: topCategory,
-        topCategoryAmount: topAmount,
-      ));
+      emit(
+        InsightsLoaded(
+          expensesByCategory: byCategory,
+          weeklyExpenses: weekly,
+          thisMonthExpense: thisMonth,
+          lastMonthExpense: lastMonth,
+          topCategory: topCategory,
+          topCategoryAmount: topAmount,
+        ),
+      );
     } catch (e) {
       emit(InsightsError(e.toString()));
     }

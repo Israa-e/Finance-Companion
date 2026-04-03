@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../../../logic/goal/goal_cubit.dart';
 import '../../../../logic/goal/goal_state.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -10,7 +9,9 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../data/models/goal_model.dart';
 
 class QuickGoalsPreview extends StatelessWidget {
-  const QuickGoalsPreview({super.key});
+  final VoidCallback? onSeeAll;
+
+  const QuickGoalsPreview({super.key, this.onSeeAll});
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +22,14 @@ class QuickGoalsPreview extends StatelessWidget {
         }
 
         final goals = state.activeGoals.take(3).toList();
+        final totalSaved = state.activeGoals.fold(
+          0.0,
+          (s, g) => s + g.savedAmount,
+        );
+        final totalTarget = state.activeGoals.fold(
+          0.0,
+          (s, g) => s + g.targetAmount,
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,7 +39,7 @@ class QuickGoalsPreview extends StatelessWidget {
               children: [
                 Text('Savings Goals', style: AppTextStyles.h3),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: onSeeAll,
                   child: Text(
                     'See all',
                     style: AppTextStyles.bodySmall.copyWith(
@@ -43,14 +52,17 @@ class QuickGoalsPreview extends StatelessWidget {
             ),
             const Gap(4),
             Text(
-              '${CurrencyFormatter.formatCompact(state.activeGoals.fold(0.0, (s, g) => s + g.savedAmount))} saved of ${CurrencyFormatter.formatCompact(state.activeGoals.fold(0.0, (s, g) => s + g.targetAmount))} total',
+              '${CurrencyFormatter.formatCompact(totalSaved)} saved'
+              ' of ${CurrencyFormatter.formatCompact(totalTarget)} total',
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const Gap(12),
+            // 120px gives the chip content (≈96px) + padding (24px) = 120px
+            // with 0px to spare — safe on all densities.
             SizedBox(
-              height: 110,
+              height: 120,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: goals.length,
@@ -76,7 +88,10 @@ class _GoalChip extends StatelessWidget {
 
     return Container(
       width: 160,
-      padding: const EdgeInsets.all(14),
+      // Padding reduced from 14→12 so total vertical content fits in 120px.
+      // Content budget: 12 top + 29(emoji row) + 6 + 17(title) + 6 +
+      //                 5(bar) + 5 + 16(amount) + 12 bottom = 108px ✓
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -90,8 +105,13 @@ class _GoalChip extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Use start + explicit gaps instead of spaceBetween.
+        // spaceBetween distributes leftover space unpredictably when
+        // text height varies across font scales / screen densities.
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
         children: [
+          // ── Emoji row ──────────────────────────────────────────────
           Row(
             children: [
               Text(goal.emoji ?? '🎯', style: const TextStyle(fontSize: 20)),
@@ -106,6 +126,7 @@ class _GoalChip extends StatelessWidget {
             ],
           ),
           const Gap(6),
+          // ── Goal title ─────────────────────────────────────────────
           Text(
             goal.title,
             maxLines: 1,
@@ -115,6 +136,7 @@ class _GoalChip extends StatelessWidget {
             ),
           ),
           const Gap(6),
+          // ── Progress bar ───────────────────────────────────────────
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -124,9 +146,11 @@ class _GoalChip extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
-          const Gap(4),
+          const Gap(5),
+          // ── Saved / target amounts ─────────────────────────────────
           Text(
-            '${CurrencyFormatter.formatCompact(goal.savedAmount)} / ${CurrencyFormatter.formatCompact(goal.targetAmount)}',
+            '${CurrencyFormatter.formatCompact(goal.savedAmount)}'
+            ' / ${CurrencyFormatter.formatCompact(goal.targetAmount)}',
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textSecondary,
             ),

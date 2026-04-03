@@ -33,19 +33,14 @@ class AppNavigation extends StatefulWidget {
 class _AppNavigationState extends State<AppNavigation> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens;
+  // Tab index constants — single source of truth
+  static const int tabHome = 0;
+  static const int tabTransactions = 1;
+  static const int tabGoals = 2;
+  static const int tabInsights = 3;
+  static const int tabProfile = 4;
 
-  @override
-  void initState() {
-    super.initState();
-    _screens = const [
-      HomeScreen(),
-      TransactionsScreen(),
-      GoalsScreen(),
-      InsightsScreen(),
-      ProfileScreen(),
-    ];
-  }
+  void _onTap(int index) => setState(() => _currentIndex = index);
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +49,6 @@ class _AppNavigationState extends State<AppNavigation> {
         BlocProvider(
           create: (_) {
             final cubit = TransactionCubit(widget.transactionRepo);
-            // Pass both userId AND initialBalance so inserts work and
-            // the balance calculation is correct
             cubit.setUser(widget.user.id!, widget.user.initialBalance);
             cubit.loadTransactions();
             return cubit;
@@ -71,7 +64,17 @@ class _AppNavigationState extends State<AppNavigation> {
         ),
       ],
       child: Scaffold(
-        body: IndexedStack(index: _currentIndex, children: _screens),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            // HomeScreen gets a callback to switch any tab
+            HomeScreen(onTabSwitch: _onTap),
+            const TransactionsScreen(),
+            const GoalsScreen(),
+            const InsightsScreen(),
+            const ProfileScreen(),
+          ],
+        ),
         bottomNavigationBar: _buildNavBar(),
       ),
     );
@@ -99,7 +102,7 @@ class _AppNavigationState extends State<AppNavigation> {
                 child: _NavItem(
                   icon: Iconsax.home,
                   label: 'Home',
-                  index: 0,
+                  index: tabHome,
                   current: _currentIndex,
                   onTap: _onTap,
                 ),
@@ -108,7 +111,7 @@ class _AppNavigationState extends State<AppNavigation> {
                 child: _NavItem(
                   icon: Iconsax.receipt,
                   label: 'Transactions',
-                  index: 1,
+                  index: tabTransactions,
                   current: _currentIndex,
                   onTap: _onTap,
                 ),
@@ -117,7 +120,7 @@ class _AppNavigationState extends State<AppNavigation> {
                 child: _NavItem(
                   icon: Iconsax.chart,
                   label: 'Goals',
-                  index: 2,
+                  index: tabGoals,
                   current: _currentIndex,
                   onTap: _onTap,
                 ),
@@ -126,7 +129,7 @@ class _AppNavigationState extends State<AppNavigation> {
                 child: _NavItem(
                   icon: Iconsax.graph,
                   label: 'Insights',
-                  index: 3,
+                  index: tabInsights,
                   current: _currentIndex,
                   onTap: _onTap,
                 ),
@@ -135,7 +138,7 @@ class _AppNavigationState extends State<AppNavigation> {
                 child: _NavItem(
                   icon: Iconsax.user,
                   label: 'Profile',
-                  index: 4,
+                  index: tabProfile,
                   current: _currentIndex,
                   onTap: _onTap,
                 ),
@@ -146,8 +149,6 @@ class _AppNavigationState extends State<AppNavigation> {
       ),
     );
   }
-
-  void _onTap(int index) => setState(() => _currentIndex = index);
 }
 
 class _NavItem extends StatelessWidget {
