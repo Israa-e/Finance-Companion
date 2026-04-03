@@ -33,12 +33,42 @@ class AppNavigation extends StatefulWidget {
 class _AppNavigationState extends State<AppNavigation> {
   int _currentIndex = 0;
 
-  // Tab index constants — single source of truth
   static const int tabHome = 0;
   static const int tabTransactions = 1;
   static const int tabGoals = 2;
   static const int tabInsights = 3;
   static const int tabProfile = 4;
+
+  // Hold cubit references so we can pass them to child routes.
+  late final TransactionCubit _txCubit;
+  late final GoalCubit _goalCubit;
+  late final InsightsCubit _insightsCubit;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _insightsCubit = InsightsCubit(widget.transactionRepo)..loadInsights();
+
+    _txCubit = TransactionCubit(widget.transactionRepo)
+      ..setUser(widget.user.id!, widget.user.initialBalance)
+      ..loadTransactions();
+
+    // Wire auto-refresh: every mutation re-loads insights immediately.
+    _txCubit.onMutated = () => _insightsCubit.loadInsights();
+
+    _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo)
+      ..setUser(widget.user.id!)
+      ..loadGoals();
+  }
+
+  @override
+  void dispose() {
+    _txCubit.close();
+    _goalCubit.close();
+    _insightsCubit.close();
+    super.dispose();
+  }
 
   void _onTap(int index) => setState(() => _currentIndex = index);
 
@@ -46,28 +76,14 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) {
-            final cubit = TransactionCubit(widget.transactionRepo);
-            cubit.setUser(widget.user.id!, widget.user.initialBalance);
-            cubit.loadTransactions();
-            return cubit;
-          },
-        ),
-        BlocProvider(
-          create: (_) => GoalCubit(widget.goalRepo)
-            ..setUser(widget.user.id!)
-            ..loadGoals(),
-        ),
-        BlocProvider(
-          create: (_) => InsightsCubit(widget.transactionRepo)..loadInsights(),
-        ),
+        BlocProvider.value(value: _txCubit),
+        BlocProvider.value(value: _goalCubit),
+        BlocProvider.value(value: _insightsCubit),
       ],
       child: Scaffold(
         body: IndexedStack(
           index: _currentIndex,
           children: [
-            // HomeScreen gets a callback to switch any tab
             HomeScreen(onTabSwitch: _onTap),
             const TransactionsScreen(),
             const GoalsScreen(),
@@ -96,60 +112,51 @@ class _AppNavigationState extends State<AppNavigation> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: _NavItem(
-                  icon: Iconsax.home,
-                  label: 'Home',
-                  index: tabHome,
-                  current: _currentIndex,
-                  onTap: _onTap,
-                ),
+              _NavItem(
+                icon: Iconsax.home,
+                label: 'Home',
+                index: tabHome,
+                current: _currentIndex,
+                onTap: _onTap,
               ),
-              Expanded(
-                child: _NavItem(
-                  icon: Iconsax.receipt,
-                  label: 'Transactions',
-                  index: tabTransactions,
-                  current: _currentIndex,
-                  onTap: _onTap,
-                ),
+              _NavItem(
+                icon: Iconsax.receipt,
+                label: 'Transactions',
+                index: tabTransactions,
+                current: _currentIndex,
+                onTap: _onTap,
               ),
-              Expanded(
-                child: _NavItem(
-                  icon: Iconsax.chart,
-                  label: 'Goals',
-                  index: tabGoals,
-                  current: _currentIndex,
-                  onTap: _onTap,
-                ),
+              _NavItem(
+                icon: Iconsax.chart,
+                label: 'Goals',
+                index: tabGoals,
+                current: _currentIndex,
+                onTap: _onTap,
               ),
-              Expanded(
-                child: _NavItem(
-                  icon: Iconsax.graph,
-                  label: 'Insights',
-                  index: tabInsights,
-                  current: _currentIndex,
-                  onTap: _onTap,
-                ),
+              _NavItem(
+                icon: Iconsax.graph,
+                label: 'Insights',
+                index: tabInsights,
+                current: _currentIndex,
+                onTap: _onTap,
               ),
-              Expanded(
-                child: _NavItem(
-                  icon: Iconsax.user,
-                  label: 'Profile',
-                  index: tabProfile,
-                  current: _currentIndex,
-                  onTap: _onTap,
-                ),
+              _NavItem(
+                icon: Iconsax.user,
+                label: 'Profile',
+                index: tabProfile,
+                current: _currentIndex,
+                onTap: _onTap,
               ),
-            ],
+            ].map((item) => Expanded(child: item)).toList(),
           ),
         ),
       ),
     );
   }
 }
+
+// ─── Nav item ─────────────────────────────────────────────────────────────────
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
@@ -189,7 +196,7 @@ class _NavItem extends StatelessWidget {
                   ? AppColors.primary
                   : Theme.of(
                       context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.65),
+                    ).colorScheme.onSurface.withValues(alpha: 0.55),
               size: 22,
             ),
             const SizedBox(height: 2),
@@ -204,7 +211,7 @@ class _NavItem extends StatelessWidget {
                     ? AppColors.primary
                     : Theme.of(
                         context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.65),
+                      ).colorScheme.onSurface.withValues(alpha: 0.55),
               ),
             ),
           ],

@@ -7,6 +7,7 @@ abstract class InsightsState extends Equatable {
 }
 
 class InsightsInitial extends InsightsState {}
+
 class InsightsLoading extends InsightsState {}
 
 class InsightsLoaded extends InsightsState {
@@ -17,6 +18,13 @@ class InsightsLoaded extends InsightsState {
   final String topCategory;
   final double topCategoryAmount;
 
+  /// Ordered map: 'Jan' → total expense amount (last 6 months, oldest first).
+  final Map<String, double> monthlyTrend;
+
+  /// Category with the most transaction entries (not highest amount).
+  final String mostFrequentCategory;
+  final int mostFrequentCount;
+
   const InsightsLoaded({
     required this.expensesByCategory,
     required this.weeklyExpenses,
@@ -24,6 +32,9 @@ class InsightsLoaded extends InsightsState {
     required this.lastMonthExpense,
     required this.topCategory,
     required this.topCategoryAmount,
+    required this.monthlyTrend,
+    required this.mostFrequentCategory,
+    required this.mostFrequentCount,
   });
 
   double get monthlyChange => thisMonthExpense - lastMonthExpense;
@@ -31,13 +42,16 @@ class InsightsLoaded extends InsightsState {
 
   @override
   List<Object?> get props => [
-        expensesByCategory,
-        weeklyExpenses,
-        thisMonthExpense,
-        lastMonthExpense,
-        topCategory,
-        topCategoryAmount,
-      ];
+    expensesByCategory,
+    weeklyExpenses,
+    thisMonthExpense,
+    lastMonthExpense,
+    topCategory,
+    topCategoryAmount,
+    monthlyTrend,
+    mostFrequentCategory,
+    mostFrequentCount,
+  ];
 }
 
 class InsightsError extends InsightsState {

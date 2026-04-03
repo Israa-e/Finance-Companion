@@ -87,14 +87,25 @@ class GoalRepository {
     }
   }
 
-  Future<void> delete(String id) async {
+  /// Returns the goal's [savedAmount] before deletion so the caller can
+  /// refund it to the user's balance.
+  Future<double> delete(String id) async {
     final db = await _db;
+
+    // Fetch saved amount BEFORE deleting so we can return it.
+    final maps = await db.query('goals', where: 'id = ?', whereArgs: [id]);
+    final savedAmount = maps.isNotEmpty
+        ? (maps.first['savedAmount'] as num).toDouble()
+        : 0.0;
+
     await db.delete('goals', where: 'id = ?', whereArgs: [id]);
 
     final ref = _goalsRef;
     if (ref != null) {
       await ref.doc(id).delete();
     }
+
+    return savedAmount;
   }
 
   Future<void> addToSavings(String id, double amount) async {
