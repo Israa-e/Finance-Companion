@@ -143,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen>
         return FadeTransition(
           opacity: _exitFade,
           child: Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+            backgroundColor: Theme.of(context).colorScheme.background,
             body: Stack(
               children: [
                 _buildBlob(
