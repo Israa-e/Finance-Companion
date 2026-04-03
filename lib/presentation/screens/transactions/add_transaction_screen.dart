@@ -56,7 +56,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
         // We also need GoalCubit to calculate available balance for validation
         final goalState = context.watch<GoalCubit>().state;
-        final lockedAmount = goalState is GoalLoaded ? goalState.totalLocked : 0.0;
+        final lockedAmount =
+            goalState is GoalLoaded ? goalState.totalLocked : 0.0;
         final availableToSpend = state.balance - lockedAmount;
 
         return Scaffold(
@@ -95,8 +96,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       if (v == null || v.isEmpty) return 'Enter amount';
                       final val = double.tryParse(v);
                       if (val == null || val <= 0) return 'Invalid amount';
-                      
-                      if (state.formType == TransactionType.expense && val > availableToSpend) {
+
+                      if (state.formType == TransactionType.expense &&
+                          val > availableToSpend) {
                         return 'Only ${CurrencyFormatter.format(availableToSpend)} available (locked in goals)';
                       }
                       return null;
@@ -110,7 +112,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     controller: _titleController,
                     hint: 'e.g. Grocery Shopping',
                     onChanged: (v) => cubit.updateFormTitle(v),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Enter title' : null,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Enter title' : null,
                   ),
                   const Gap(20),
                   _buildDatePicker(context, cubit, state.formDate),
@@ -141,11 +144,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildDatePicker(BuildContext context, TransactionCubit cubit, DateTime date) {
+  Widget _buildDatePicker(
+      BuildContext context, TransactionCubit cubit, DateTime date) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Date', style: AppTextStyles.label.copyWith(color: AppColors.textSecondary)),
+        Text(
+          'Date',
+          style: AppTextStyles.label.copyWith(
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.black54
+                : Colors.white,
+          ),
+        ),
         const Gap(8),
         InkWell(
           onTap: () async {
@@ -160,12 +171,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: Theme.of(context).inputDecorationTheme.fillColor ??
+                  (Theme.of(context).brightness == Brightness.light
+                      ? Colors.grey[100]
+                      : Theme.of(context).colorScheme.surface),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const Icon(Iconsax.calendar, size: 20, color: AppColors.primary),
+                const Icon(Iconsax.calendar,
+                    size: 20, color: AppColors.primary),
                 const Gap(12),
                 Text(
                   '${date.day}/${date.month}/${date.year}',

@@ -316,10 +316,9 @@ class _ToggleButton extends StatelessWidget {
             style: AppTextStyles.body.copyWith(
               color: isSelected
                   ? Colors.white
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.5),
+                  : (Theme.of(context).brightness == Brightness.light
+                      ? Colors.black54
+                      : Colors.white),
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
@@ -350,8 +349,9 @@ class _CategoryDropdown extends StatelessWidget {
         Text(
           'Category',
           style: AppTextStyles.label.copyWith(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.black54
+                : Colors.white,
           ),
         ),
         const SizedBox(height: 8),
@@ -370,10 +370,9 @@ class _CategoryDropdown extends StatelessWidget {
               isExpanded: true,
               icon: Icon(
                 Icons.keyboard_arrow_down,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.35),
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black54
+                    : Colors.white,
               ),
               style: AppTextStyles.body.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
@@ -410,8 +409,9 @@ class _DatePicker extends StatelessWidget {
         Text(
           'Date',
           style: AppTextStyles.label.copyWith(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.black54
+                : Colors.white,
           ),
         ),
         const Gap(8),

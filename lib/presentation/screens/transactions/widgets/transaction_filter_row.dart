@@ -62,10 +62,9 @@ class TransactionFilterRow extends StatelessWidget {
                       style: TextStyle(
                         color: isSelected
                             ? Colors.white
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
+                            : (Theme.of(context).brightness == Brightness.light
+                                ? Colors.black54
+                                : Colors.white),
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.w500,
                         fontSize: 14,

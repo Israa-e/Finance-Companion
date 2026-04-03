@@ -20,10 +20,9 @@ class TransactionSearchBar extends StatelessWidget {
               hintText: 'Search transactions...',
               prefixIcon: Icon(
                 Iconsax.search_normal,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.35),
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black45
+                    : Colors.white60,
                 size: 20,
               ),
             ),

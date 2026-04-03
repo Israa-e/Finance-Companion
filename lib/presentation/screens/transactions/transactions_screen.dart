@@ -61,10 +61,10 @@ class TransactionsScreen extends StatelessWidget {
                                   Text(
                                     date,
                                     style: AppTextStyles.label.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.5),
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? Colors.black
+                                          : Colors.white70,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.1,
                                     ),
@@ -183,7 +183,9 @@ class _Header extends StatelessWidget {
                   Text(
                     '$count entries',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? Colors.black54
+                          : Colors.white60,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

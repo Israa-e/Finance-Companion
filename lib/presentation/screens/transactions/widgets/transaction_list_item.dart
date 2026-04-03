@@ -1,3 +1,4 @@
+import 'package:finance_companion/presentation/shared/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -50,16 +51,31 @@ class TransactionListItem extends StatelessWidget {
             title: const Text('Delete transaction?'),
             content: Text('Remove "${transaction.title}" permanently?'),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.expense,
-                ),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Delete'),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Gap(12),
+                  Expanded(
+                    child: CustomButton(
+                      label: 'Delete',
+                      color: AppColors.expense,
+                      onTap: () {
+                        Navigator.pop(ctx, true);
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -70,8 +86,11 @@ class TransactionListItem extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFF1F2430), // Dark background for the item
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+          ),
         ),
         child: Row(
           children: [
@@ -83,7 +102,8 @@ class TransactionListItem extends StatelessWidget {
                 color: accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Icon(_iconFor(transaction.category), color: accent, size: 22),
+              child:
+                  Icon(_iconFor(transaction.category), color: accent, size: 22),
             ),
             const Gap(14),
             // Info
@@ -94,13 +114,15 @@ class TransactionListItem extends StatelessWidget {
                   Text(
                     transaction.title,
                     style: AppTextStyles.body.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
                   ),
                   const Gap(4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(6),
@@ -138,13 +160,13 @@ class TransactionListItem extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
                       Iconsax.edit_2,
                       size: 14,
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                 ),

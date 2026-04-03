@@ -19,7 +19,10 @@ class TransactionTypeToggle extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: Theme.of(context).inputDecorationTheme.fillColor ??
+                (Theme.of(context).brightness == Brightness.light
+                    ? Colors.grey[100]
+                    : Theme.of(context).colorScheme.surface),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -77,7 +80,11 @@ class _ToggleButton extends StatelessWidget {
           child: Text(
             label,
             style: AppTextStyles.body.copyWith(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+              color: isSelected
+                  ? Colors.white
+                  : (Theme.of(context).brightness == Brightness.light
+                      ? Colors.black54
+                      : Colors.white60),
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
