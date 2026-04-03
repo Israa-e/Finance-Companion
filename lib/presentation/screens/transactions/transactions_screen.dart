@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:gap/gap.dart';
+
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../logic/transaction/transaction_state.dart';
+import '../../../logic/goal/goal_cubit.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/models/transaction_model.dart';
+
+import 'edit_transaction_screen.dart';
+import 'add_transaction_screen.dart';
 import 'widgets/transaction_list_item.dart';
 import 'widgets/transaction_search_bar.dart';
 import 'widgets/transaction_filter_row.dart';
-import 'package:gap/gap.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -16,7 +22,6 @@ class TransactionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0C10), // Ultra dark background
       body: SafeArea(
         child: Column(
           children: [
@@ -34,7 +39,8 @@ class TransactionsScreen extends StatelessWidget {
                     final groupedByDate = state.groupedTransactions;
 
                     if (groupedByDate.isEmpty) {
-                      return _buildEmptyState(state.searchQuery.isNotEmpty);
+                      return _buildEmptyState(
+                          context, state.searchQuery.isNotEmpty);
                     }
 
                     return ListView.builder(
@@ -55,8 +61,10 @@ class TransactionsScreen extends StatelessWidget {
                                   Text(
                                     date,
                                     style: AppTextStyles.label.copyWith(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.5),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.5),
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.1,
                                     ),
@@ -65,8 +73,10 @@ class TransactionsScreen extends StatelessWidget {
                                   Expanded(
                                     child: Container(
                                       height: 1,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.05),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.07),
                                     ),
                                   ),
                                 ],
@@ -74,9 +84,7 @@ class TransactionsScreen extends StatelessWidget {
                             ),
                             ...transactions.map((tx) => TransactionListItem(
                                   transaction: tx,
-                                  onEdit: () {
-                                    // TODO: Implement edit
-                                  },
+                                  onEdit: () => _navigateToEdit(context, tx),
                                   onDelete: () => context
                                       .read<TransactionCubit>()
                                       .deleteTransaction(tx.id),
@@ -101,7 +109,20 @@ class TransactionsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(bool isSearching) {
+  void _navigateToEdit(BuildContext context, TransactionModel tx) {
+    final txCubit = context.read<TransactionCubit>();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: txCubit,
+          child: EditTransactionScreen(transaction: tx),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, bool isSearching) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -109,19 +130,25 @@ class TransactionsScreen extends StatelessWidget {
           Icon(
             isSearching ? Iconsax.search_status : Iconsax.receipt_item,
             size: 64,
-            color: Colors.grey[800],
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
           ),
           const SizedBox(height: 16),
           Text(
             isSearching ? 'No transactions found' : 'No transactions yet',
-            style: AppTextStyles.h3.copyWith(color: Colors.grey[700]),
+            style: AppTextStyles.h3,
           ),
           const SizedBox(height: 8),
           Text(
             isSearching
                 ? 'Try a different search term'
                 : 'Your transactions will appear here',
-            style: AppTextStyles.body.copyWith(color: Colors.grey[600]),
+            style: AppTextStyles.body.copyWith(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.5),
+            ),
           ),
         ],
       ),
@@ -150,23 +177,35 @@ class _Header extends StatelessWidget {
                 children: [
                   Text(
                     'Transactions',
-                    style: AppTextStyles.h2.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTextStyles.h2,
                   ),
                   const Gap(4),
                   Text(
                     '$count entries',
                     style: AppTextStyles.caption.copyWith(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
               GestureDetector(
-                onTap: () => Navigator.pushNamed(context, '/add-transaction'),
+                onTap: () {
+                  final txCubit = context.read<TransactionCubit>();
+                  final goalCubit = context.read<GoalCubit>();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MultiBlocProvider(
+                        providers: [
+                          BlocProvider.value(value: txCubit),
+                          BlocProvider.value(value: goalCubit),
+                        ],
+                        child: const AddTransactionScreen(),
+                      ),
+                    ),
+                  );
+                },
                 child: Container(
                   width: 48,
                   height: 48,

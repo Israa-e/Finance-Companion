@@ -27,31 +27,47 @@ class TransactionFilterRow extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: GestureDetector(
-                  onTap: () => context.read<TransactionCubit>().updateFilter(filter),
+                  onTap: () =>
+                      context.read<TransactionCubit>().updateFilter(filter),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : const Color(0xFF161A23),
+                      color: isSelected
+                          ? AppColors.primary
+                          : Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSelected 
-                            ? AppColors.primary 
-                            : Colors.white.withValues(alpha: 0.05),
+                        color: isSelected
+                            ? AppColors.primary
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.08),
                       ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ] : null,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : null,
                     ),
                     child: Text(
                       filter.label,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
@@ -65,4 +81,3 @@ class TransactionFilterRow extends StatelessWidget {
     );
   }
 }
-
