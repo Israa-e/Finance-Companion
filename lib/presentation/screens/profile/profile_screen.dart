@@ -54,6 +54,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildAvatar(String? imagePath) {
+    final hasImage = imagePath != null && File(imagePath).existsSync();
     return Container(
       width: 90,
       height: 90,
@@ -64,14 +65,14 @@ class ProfileScreen extends StatelessWidget {
           color: AppColors.primary.withValues(alpha: 0.3),
           width: 2,
         ),
-        image: imagePath != null
+        image: hasImage
             ? DecorationImage(
                 image: FileImage(File(imagePath)),
                 fit: BoxFit.cover,
               )
             : null,
       ),
-      child: imagePath == null
+      child: !hasImage
           ? const Icon(Iconsax.user, size: 40, color: AppColors.primary)
           : null,
     );
@@ -197,28 +198,32 @@ class ProfileScreen extends StatelessWidget {
                   final path = await authCubit.pickImage();
                   if (path != null) setState(() => newImagePath = path);
                 },
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    image: (newImagePath ?? user.imagePath) != null
-                        ? DecorationImage(
-                            image: FileImage(
-                              File(newImagePath ?? user.imagePath!),
-                            ),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: (newImagePath ?? user.imagePath) == null
-                      ? const Icon(
-                          Iconsax.camera,
-                          color: AppColors.primary,
-                          size: 28,
-                        )
-                      : null,
+                child: Builder(
+                  builder: (context) {
+                    final path = newImagePath ?? user.imagePath;
+                    final hasImage = path != null && File(path).existsSync();
+                    return Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        image: hasImage
+                            ? DecorationImage(
+                                image: FileImage(File(path)),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: !hasImage
+                          ? const Icon(
+                              Iconsax.camera,
+                              color: AppColors.primary,
+                              size: 28,
+                            )
+                          : null,
+                    );
+                  },
                 ),
               ),
               const Gap(16),

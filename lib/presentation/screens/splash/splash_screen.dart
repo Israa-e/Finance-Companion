@@ -156,14 +156,14 @@ class _SplashScreenState extends State<SplashScreen>
                   opacity: 0.23 * _bgScale.value,
                 ),
                 // Reduced particles for cleaner appearance
-                Positioned(
-                  left: size.width * 0.14,
-                  top: size.height * 0.2,
-                  child: FadeTransition(
-                    opacity: _bgScale,
-                    child: Text('💰', style: TextStyle(fontSize: 26)),
-                  ),
-                ),
+                // Positioned(
+                //   left: size.width * 0.14,
+                //   top: size.height * 0.2,
+                //   child: FadeTransition(
+                //     opacity: _bgScale,
+                //     child: Text('💰', style: TextStyle(fontSize: 26)),
+                //   ),
+                // ),
 
                 // Center content
                 Center(

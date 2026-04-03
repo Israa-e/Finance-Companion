@@ -146,14 +146,14 @@ class HomeScreen extends StatelessWidget {
                         color: AppColors.primary.withOpacity(0.3),
                         width: 1.5,
                       ),
-                      image: imagePath != null
+                      image: imagePath != null && File(imagePath).existsSync()
                           ? DecorationImage(
                               image: FileImage(File(imagePath)),
                               fit: BoxFit.cover,
                             )
                           : null,
                     ),
-                    child: imagePath == null
+                    child: (imagePath == null || !File(imagePath).existsSync())
                         ? const Icon(
                             Iconsax.user,
                             color: AppColors.primary,
