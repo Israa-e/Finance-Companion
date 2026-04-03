@@ -128,9 +128,14 @@ class _AnimatedBalanceCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.28),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 30,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -208,7 +213,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
                             tween: Tween(begin: 0, end: balance),
                             duration: const Duration(milliseconds: 800),
                             curve: Curves.easeOutCubic,
-                            builder: (_, val, _) => Text(
+                            builder: (_, val, __) => Text(
                               CurrencyFormatter.format(val),
                               style: const TextStyle(
                                 color: Colors.white,

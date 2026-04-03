@@ -66,7 +66,7 @@ class QuickGoalsPreview extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: goals.length,
-                separatorBuilder: (_, _) => const Gap(16),
+                separatorBuilder: (_, __) => const Gap(16),
                 itemBuilder: (_, i) => _GoalChip(goal: goals[i]),
               ),
             ),

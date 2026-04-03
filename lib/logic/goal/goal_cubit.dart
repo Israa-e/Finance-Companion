@@ -29,6 +29,67 @@ class GoalCubit extends Cubit<GoalState> {
     }
   }
 
+  // --- Goal Form (Consolidated) ---
+
+  void updateFormTitle(String title) {
+    final current = state;
+    if (current is GoalLoaded) emit(current.copyWith(formTitle: title));
+  }
+
+  void updateFormAmount(double amount) {
+    final current = state;
+    if (current is GoalLoaded) emit(current.copyWith(formAmount: amount));
+  }
+
+  void updateFormDate(DateTime date) {
+    final current = state;
+    if (current is GoalLoaded) emit(current.copyWith(formEndDate: date));
+  }
+
+  void updateFormEmoji(String emoji) {
+    final current = state;
+    if (current is GoalLoaded) emit(current.copyWith(formEmoji: emoji));
+  }
+
+  Future<void> submitGoalForm() async {
+    final current = state;
+    if (current is! GoalLoaded) return;
+
+    if (current.formTitle.trim().isEmpty || current.formAmount <= 0) {
+      emit(current.copyWith(
+        formErrorMessage: 'Please fill all fields correctly.',
+      ));
+      return;
+    }
+
+    emit(current.copyWith(isSubmitting: true, formErrorMessage: null));
+    try {
+      final goal = GoalModel(
+        id: _uuid.v4(),
+        userId: _userId,
+        title: current.formTitle.trim(),
+        targetAmount: current.formAmount,
+        savedAmount: 0,
+        startDate: DateTime.now(),
+        endDate: current.formEndDate ?? DateTime.now().add(const Duration(days: 30)),
+        status: GoalStatus.active,
+        emoji: current.formEmoji,
+      );
+      await _repo.add(goal);
+      
+      // Reset form on success and reload
+      final goals = await _repo.getAll(_userId);
+      final active = await _repo.getActive(_userId);
+      emit(GoalLoaded(
+        goals: goals,
+        activeGoals: active,
+        submitSuccess: true,
+      ));
+    } catch (e) {
+      emit(current.copyWith(isSubmitting: false, formErrorMessage: e.toString()));
+    }
+  }
+
   Future<void> addGoal({
     required String title,
     required double targetAmount,

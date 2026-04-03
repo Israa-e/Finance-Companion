@@ -11,9 +11,6 @@ class TransactionCubit extends Cubit<TransactionState> {
   double _initialBalance = 0.0;
   int _userId = 0;
 
-  /// Optional callback invoked after every mutating operation
-  /// (add / update / delete). Wire this to InsightsCubit.loadInsights()
-  /// in AppNavigation so insights stay fresh without manual pull-to-refresh.
   VoidCallback? onMutated;
 
   TransactionCubit(this._repo) : super(TransactionInitial());
@@ -34,6 +31,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       final income = await _repo.getTotalIncome();
       final expense = await _repo.getTotalExpense();
       final balance = _initialBalance + income - expense;
+      
       emit(
         TransactionLoaded(
           transactions: transactions,
@@ -41,10 +39,119 @@ class TransactionCubit extends Cubit<TransactionState> {
           totalIncome: income,
           totalExpense: expense,
           initialBalance: _initialBalance,
+          formDate: DateTime.now(), // Default for loaded state
         ),
       );
     } catch (e) {
       emit(TransactionError(e.toString()));
+    }
+  }
+
+  // --- Search & Filter (Consolidated) ---
+
+  void updateSearchQuery(String query) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(searchQuery: query));
+    }
+  }
+
+  void updateFilter(TransactionFilter filter) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(activeFilter: filter));
+    }
+  }
+
+  // --- Transaction Form (Consolidated) ---
+
+  void updateFormType(TransactionType type) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      // Auto-set category if changing type to expense
+      final category = type == TransactionType.expense ? 'Food' : 'Salary';
+      emit(current.copyWith(formType: type, formCategory: category));
+    }
+  }
+
+  void updateFormCategory(String category) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(formCategory: category));
+    }
+  }
+
+  void updateFormAmount(double amount) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(formAmount: amount));
+    }
+  }
+
+  void updateFormDate(DateTime date) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(formDate: date));
+    }
+  }
+
+  void updateFormTitle(String title) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(formTitle: title));
+    }
+  }
+
+  void updateFormNote(String note) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(formNote: note));
+    }
+  }
+
+  Future<void> submitTransactionForm() async {
+    final current = state;
+    if (current is! TransactionLoaded) return;
+
+    if (current.formTitle.trim().isEmpty || current.formAmount <= 0) {
+      emit(current.copyWith(formErrorMessage: 'Please fill all required fields.'));
+      return;
+    }
+
+    emit(current.copyWith(isSubmitting: true, formErrorMessage: null));
+    try {
+      final transaction = TransactionModel(
+        id: _uuid.v4(),
+        userId: _userId,
+        amount: current.formAmount,
+        type: current.formType,
+        category: current.formCategory,
+        date: current.formDate,
+        title: current.formTitle.trim(),
+        note: current.formNote.trim().isEmpty ? null : current.formNote.trim(),
+      );
+      
+      await _repo.add(transaction);
+      
+      // Success: Clear form and reload everything
+      final transactions = await _repo.getAll();
+      final income = await _repo.getTotalIncome();
+      final expense = await _repo.getTotalExpense();
+      final balance = _initialBalance + income - expense;
+
+      emit(TransactionLoaded(
+        transactions: transactions,
+        balance: balance,
+        totalIncome: income,
+        totalExpense: expense,
+        initialBalance: _initialBalance,
+        formDate: DateTime.now(),
+        submitSuccess: true, // UI will listen to this
+      ));
+      
+      onMutated?.call();
+    } catch (e) {
+      emit(current.copyWith(isSubmitting: false, formErrorMessage: e.toString()));
     }
   }
 
@@ -94,101 +201,6 @@ class TransactionCubit extends Cubit<TransactionState> {
       emit(TransactionError(e.toString()));
     }
   }
-
-  List<TransactionModel> getFiltered({
-    TransactionType? type,
-    String? category,
-    String? searchQuery,
-    DateRangeFilter? dateRange,
-  }) {
-    final state = this.state;
-    if (state is! TransactionLoaded) return [];
-    var list = state.transactions;
-
-    if (type != null) list = list.where((t) => t.type == type).toList();
-    if (category != null) {
-      list = list.where((t) => t.category == category).toList();
-    }
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      final q = searchQuery.toLowerCase();
-      list = list
-          .where(
-            (t) =>
-                t.title.toLowerCase().contains(q) ||
-                t.category.toLowerCase().contains(q) ||
-                (t.note?.toLowerCase().contains(q) ?? false),
-          )
-          .toList();
-    }
-    if (dateRange != null) {
-      final range = dateRange.resolve();
-      if (range != null) {
-        list = list
-            .where(
-              (t) =>
-                  !t.date.isBefore(range.start) && !t.date.isAfter(range.end),
-            )
-            .toList();
-      }
-    }
-
-    return list;
-  }
 }
 
-// ─── Date range filter ────────────────────────────────────────────────────────
-
-enum DateRangeFilter { today, thisWeek, thisMonth, lastMonth, all }
-
-extension DateRangeFilterExt on DateRangeFilter {
-  String get label {
-    switch (this) {
-      case DateRangeFilter.today:
-        return 'Today';
-      case DateRangeFilter.thisWeek:
-        return 'This week';
-      case DateRangeFilter.thisMonth:
-        return 'This month';
-      case DateRangeFilter.lastMonth:
-        return 'Last month';
-      case DateRangeFilter.all:
-        return 'All time';
-    }
-  }
-
-  /// Returns a [_DateRange] for filtering, or null if "all time".
-  // ignore: library_private_types_in_public_api
-  _DateRange? resolve() {
-    final now = DateTime.now();
-    switch (this) {
-      case DateRangeFilter.today:
-        final start = DateTime(now.year, now.month, now.day);
-        return _DateRange(start, start.add(const Duration(days: 1)));
-      case DateRangeFilter.thisWeek:
-        final start = now.subtract(Duration(days: now.weekday - 1));
-        final s = DateTime(start.year, start.month, start.day);
-        return _DateRange(s, now);
-      case DateRangeFilter.thisMonth:
-        return _DateRange(DateTime(now.year, now.month, 1), now);
-      case DateRangeFilter.lastMonth:
-        final first = DateTime(now.year, now.month - 1, 1);
-        final last = DateTime(
-          now.year,
-          now.month,
-          1,
-        ).subtract(const Duration(milliseconds: 1));
-        return _DateRange(first, last);
-      case DateRangeFilter.all:
-        return null;
-    }
-  }
-}
-
-class _DateRange {
-  final DateTime start;
-  final DateTime end;
-  const _DateRange(this.start, this.end);
-}
-
-// Alias so we don't need to import Flutter just for the typedef.
 typedef VoidCallback = void Function();

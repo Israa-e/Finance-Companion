@@ -14,7 +14,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repo.getLoggedInUser();
       if (user != null) {
-        emit(AuthAuthenticated(user));
+        emit(AuthAuthenticated(user: user));
       } else {
         emit(AuthUnauthenticated());
       }
@@ -39,7 +39,7 @@ class AuthCubit extends Cubit<AuthState> {
         initialBalance: initialBalance,
         imagePath: imagePath,
       );
-      emit(AuthAuthenticated(user));
+      emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
     }
@@ -52,7 +52,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repo.login(email: email, password: password);
-      emit(AuthAuthenticated(user));
+      emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
     }
@@ -61,6 +61,53 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     await _repo.logout();
     emit(AuthUnauthenticated());
+  }
+
+  // --- Profile Editing (Consolidated) ---
+
+  void updateEditName(String name) {
+    final current = state;
+    if (current is AuthAuthenticated) {
+      emit(current.copyWith(editName: name));
+    }
+  }
+
+  Future<void> pickEditImage() async {
+    final path = await pickImage();
+    final current = state;
+    if (current is AuthAuthenticated && path != null) {
+      emit(current.copyWith(editImagePath: path));
+    }
+  }
+
+  Future<void> submitProfileUpdate() async {
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+
+    final name = current.editName?.trim() ?? current.user.name;
+    final imagePath = current.editImagePath ?? current.user.imagePath;
+
+    if (name.isEmpty) {
+      emit(current.copyWith(errorMessage: 'Name cannot be empty.'));
+      return;
+    }
+
+    emit(current.copyWith(isUpdating: true, errorMessage: null));
+    try {
+      final updatedUser = current.user.copyWith(
+        name: name,
+        imagePath: imagePath,
+      );
+      await _repo.updateProfile(updatedUser);
+      emit(current.copyWith(
+        user: updatedUser,
+        isUpdating: false,
+        updateSuccess: true,
+      ));
+      // Reset success flag after emit (optional, depends on UI)
+    } catch (e) {
+      emit(current.copyWith(isUpdating: false, errorMessage: e.toString()));
+    }
   }
 
   Future<void> updateProfile({
@@ -75,7 +122,7 @@ class AuthCubit extends Cubit<AuthState> {
         imagePath: imagePath ?? current.user.imagePath,
       );
       await _repo.updateProfile(updated);
-      emit(AuthAuthenticated(updated));
+      emit(AuthAuthenticated(user: updated));
     } catch (e) {
       emit(AuthError(e.toString()));
     }

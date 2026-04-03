@@ -8,6 +8,8 @@ import '../../screens/auth/login_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import 'app_navigation.dart';
 
+import '../../../logic/onboarding/onboarding_cubit.dart';
+
 class AuthWrapper extends StatefulWidget {
   final TransactionRepository transactionRepo;
   final GoalRepository goalRepo;
@@ -34,7 +36,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Future<void> _init() async {
-    final seen = await OnboardingScreen.hasSeenOnboarding();
+    final seen = await OnboardingCubit.hasSeenOnboarding();
     if (!mounted) return;
     setState(() {
       _showOnboarding = !seen;
