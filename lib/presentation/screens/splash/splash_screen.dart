@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -102,8 +103,8 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 600));
     _textController.forward();
 
-    // Hold for a moment
-    await Future.delayed(const Duration(milliseconds: 1000));
+    // Hold for a longer moment so splash feels a bit longer
+    await Future.delayed(const Duration(milliseconds: 1800));
 
     // Exit
     await _exitController.forward();
@@ -134,37 +135,35 @@ class _SplashScreenState extends State<SplashScreen>
         return FadeTransition(
           opacity: _exitFade,
           child: Scaffold(
-            backgroundColor: const Color(0xFF1A6B3A),
+            backgroundColor: AppColors.primary,
             body: Stack(
               children: [
-                // Animated background blobs
+                // Simplified background: fewer animated blobs for a less crowded feel
                 _buildBlob(
                   size,
-                  top: -size.height * 0.15,
-                  left: -size.width * 0.2,
-                  diameter: size.width * 0.9,
-                  color: const Color(0xFF2ECC71),
-                  opacity: 0.25 * _bgScale.value,
+                  top: -size.height * 0.08,
+                  left: -size.width * 0.15,
+                  diameter: size.width * 0.8,
+                  color: AppColors.primaryLight,
+                  opacity: 0.18 * _bgScale.value,
                 ),
                 _buildBlob(
                   size,
-                  bottom: -size.height * 0.1,
-                  right: -size.width * 0.15,
-                  diameter: size.width * 0.75,
-                  color: const Color(0xFF27AE60),
-                  opacity: 0.3 * _bgScale.value,
+                  bottom: -size.height * 0.18,
+                  right: -size.width * 0.2,
+                  diameter: size.width * 0.7,
+                  color: AppColors.primary,
+                  opacity: 0.23 * _bgScale.value,
                 ),
-                _buildBlob(
-                  size,
-                  top: size.height * 0.35,
-                  left: size.width * 0.5,
-                  diameter: size.width * 0.4,
-                  color: const Color(0xFF82E0AA),
-                  opacity: 0.15 * _bgScale.value,
+                // Reduced particles for cleaner appearance
+                Positioned(
+                  left: size.width * 0.14,
+                  top: size.height * 0.2,
+                  child: FadeTransition(
+                    opacity: _bgScale,
+                    child: Text('💰', style: TextStyle(fontSize: 26)),
+                  ),
                 ),
-
-                // Floating coin particles
-                ..._buildParticles(size),
 
                 // Center content
                 Center(
@@ -236,7 +235,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   ),
                                   child: const Icon(
                                     Icons.account_balance_wallet_rounded,
-                                    color: Color(0xFF2ECC71),
+                                    color: AppColors.primary,
                                     size: 42,
                                   ),
                                 ),

@@ -1,3 +1,4 @@
+import 'package:finance_companion/logic/goal/goal_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
@@ -168,8 +169,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<TransactionCubit>(),
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: context.read<TransactionCubit>()),
+            BlocProvider.value(value: context.read<GoalCubit>()),
+          ],
           child: AddTransactionScreen(transaction: transaction),
         ),
       ),

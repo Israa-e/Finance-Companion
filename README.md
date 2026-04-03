@@ -81,7 +81,7 @@ lib/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/finance-companion.git
+git clone https://github.com/Israa-e/Finance-Companion.git
 cd finance-companion
 
 # Install dependencies

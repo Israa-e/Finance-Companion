@@ -1,6 +1,7 @@
 import 'package:finance_companion/data/repositories/auth_repository.dart';
 import 'package:finance_companion/logic/auth/auth_cubit.dart';
 import 'package:finance_companion/logic/theme/theme_cubit.dart';
+import 'package:finance_companion/presentation/screens/splash/splash_screen.dart';
 import 'package:finance_companion/presentation/shared/navigation/auth_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,6 +23,7 @@ class FinanceApp extends StatelessWidget {
   final SharedPreferences prefs;
   final transactionRepo = TransactionRepository();
   final goalRepo = GoalRepository();
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   FinanceApp({required this.prefs, super.key});
 
@@ -35,14 +37,26 @@ class FinanceApp extends StatelessWidget {
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp(
+            navigatorKey: _navigatorKey,
             title: 'Finance Companion',
             debugShowCheckedModeBanner: false,
             themeMode: themeMode,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            home: AuthWrapper(
-              transactionRepo: TransactionRepository(),
-              goalRepo: GoalRepository(),
+            home: SplashScreen(
+              onFinished: () {
+                final nav = _navigatorKey.currentState;
+                if (nav != null) {
+                  nav.pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => AuthWrapper(
+                        transactionRepo: TransactionRepository(),
+                        goalRepo: GoalRepository(),
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
           );
         },

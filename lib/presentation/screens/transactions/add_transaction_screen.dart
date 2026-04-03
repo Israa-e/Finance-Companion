@@ -62,9 +62,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.dispose();
   }
 
+  GoalState? get _goalState {
+    try {
+      return context.read<GoalCubit>().state;
+    } catch (_) {
+      return null;
+    }
+  }
+
   double get _availableBalance {
     final txState = context.read<TransactionCubit>().state;
-    final goalState = context.read<GoalCubit>().state;
+    final goalState = _goalState;
     final balance = txState is TransactionLoaded ? txState.balance : 0.0;
     final locked = goalState is GoalLoaded
         ? goalState.goals.fold(0.0, (sum, goal) => sum + goal.savedAmount)
@@ -116,7 +124,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   if (value == null) return 'Invalid amount';
 
                   if (_type == TransactionType.expense) {
-                    final currentExpense = isEditing &&
+                    final currentExpense =
+                        isEditing &&
                             widget.transaction?.type == TransactionType.expense
                         ? widget.transaction!.amount
                         : 0.0;
@@ -232,7 +241,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       lastDate: DateTime.now(),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.primary),
+          colorScheme: Theme.of(context).brightness == Brightness.dark
+              ? ColorScheme.dark(primary: AppColors.primary)
+              : ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),
