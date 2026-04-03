@@ -12,7 +12,6 @@ import '../../../data/models/transaction_model.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../shared/widgets/empty_state_widget.dart';
-import '../../shared/widgets/custom_text_field.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -240,6 +239,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: _Filter.values.map((f) {
+            if (f == _Filter.today ||
+                f == _Filter.thisWeek ||
+                f == _Filter.thisMonth ||
+                f == _Filter.lastMonth) {
+              return const SizedBox.shrink();
+            }
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: _FilterChip(

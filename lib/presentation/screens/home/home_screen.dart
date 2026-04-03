@@ -45,13 +45,13 @@ class HomeScreen extends StatelessWidget {
                 const BalanceCard(),
                 const Gap(20),
                 const SummaryRow(),
-                const Gap(24),
+                const Gap(20),
                 // ── Weekly chart — "See all" goes to Insights tab ────────
                 WeeklyChart(onSeeAll: () => onTabSwitch(3)),
-                const Gap(24),
+                const Gap(20),
                 // ── Goals preview — "See all" goes to Goals tab ──────────
                 QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
-                const Gap(24),
+                const Gap(20),
                 // ── Recent transactions — "See all" goes to Transactions ─
                 RecentTransactions(onSeeAll: () => onTabSwitch(1)),
                 const Gap(32),
