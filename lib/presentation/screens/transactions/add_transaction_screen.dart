@@ -40,25 +40,50 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TransactionCubit, TransactionState>(
+      listenWhen: (previous, current) {
+        // Only fire listener when submitSuccess flips true, or error message changes
+        if (current is TransactionLoaded && previous is TransactionLoaded) {
+          return (current.submitSuccess && !previous.submitSuccess) ||
+              current.formErrorMessage != previous.formErrorMessage;
+        }
+        return false;
+      },
       listener: (context, state) {
         if (state is TransactionLoaded && state.submitSuccess) {
-          Navigator.pop(context);
+          if (mounted) Navigator.pop(context);
+          return;
         }
         if (state is TransactionLoaded && state.formErrorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.formErrorMessage!)),
-          );
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(state.formErrorMessage!),
+                backgroundColor: AppColors.expense,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
+              ),
+            );
         }
       },
       builder: (context, state) {
-        if (state is! TransactionLoaded) return const Scaffold();
+        if (state is! TransactionLoaded) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         final cubit = context.read<TransactionCubit>();
 
-        // We also need GoalCubit to calculate available balance for validation
         final goalState = context.watch<GoalCubit>().state;
         final lockedAmount =
             goalState is GoalLoaded ? goalState.totalLocked : 0.0;
-        final availableToSpend = state.balance - lockedAmount;
+        // state.balance = initialBalance + income - expense (already correct)
+        final availableToSpend =
+            (state.balance - lockedAmount).clamp(0.0, double.infinity);
 
         return Scaffold(
           appBar: AppBar(
@@ -74,8 +99,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Type toggle ─────────────────────────────────────
                   const TransactionTypeToggle(),
                   const Gap(24),
+
+                  // ── Amount ──────────────────────────────────────────
                   CustomTextField(
                     label: 'Amount',
                     controller: _amountController,
@@ -96,28 +124,35 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       if (v == null || v.isEmpty) return 'Enter amount';
                       final val = double.tryParse(v);
                       if (val == null || val <= 0) return 'Invalid amount';
-
                       if (state.formType == TransactionType.expense &&
                           val > availableToSpend) {
-                        return 'Only ${CurrencyFormatter.format(availableToSpend)} available (locked in goals)';
+                        return 'Only ${CurrencyFormatter.format(availableToSpend)} available';
                       }
                       return null;
                     },
                   ),
                   const Gap(20),
+
+                  // ── Category ────────────────────────────────────────
                   const TransactionCategoryDropdown(),
                   const Gap(20),
+
+                  // ── Title ───────────────────────────────────────────
                   CustomTextField(
                     label: 'Title',
                     controller: _titleController,
                     hint: 'e.g. Grocery Shopping',
                     onChanged: (v) => cubit.updateFormTitle(v),
                     validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Enter title' : null,
+                        (v == null || v.trim().isEmpty) ? 'Enter title' : null,
                   ),
                   const Gap(20),
+
+                  // ── Date picker ─────────────────────────────────────
                   _buildDatePicker(context, cubit, state.formDate),
                   const Gap(20),
+
+                  // ── Note ────────────────────────────────────────────
                   CustomTextField(
                     label: 'Note (Optional)',
                     controller: _noteController,
@@ -126,15 +161,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     maxLines: 3,
                   ),
                   const Gap(32),
+
+                  // ── Submit ──────────────────────────────────────────
                   CustomButton(
                     label: 'Save Transaction',
                     isLoading: state.isSubmitting,
                     onTap: () {
+                      FocusScope.of(context).unfocus();
                       if (_formKey.currentState!.validate()) {
                         cubit.submitTransactionForm();
                       }
                     },
                   ),
+                  const Gap(16),
                 ],
               ),
             ),
@@ -145,7 +184,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildDatePicker(
-      BuildContext context, TransactionCubit cubit, DateTime date) {
+    BuildContext context,
+    TransactionCubit cubit,
+    DateTime date,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -159,6 +201,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
         const Gap(8),
         InkWell(
+          borderRadius: BorderRadius.circular(12),
           onTap: () async {
             final picked = await showDatePicker(
               context: context,
@@ -169,7 +212,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             if (picked != null) cubit.updateFormDate(picked);
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Theme.of(context).inputDecorationTheme.fillColor ??
                   (Theme.of(context).brightness == Brightness.light
