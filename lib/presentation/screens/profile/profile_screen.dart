@@ -34,9 +34,9 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   const Gap(16),
                   Text('Profile', style: AppTextStyles.h2),
-                  const Gap(28),
+                  const Gap(32),
                   _buildAvatar(user.imagePath),
-                  const Gap(12),
+                  const Gap(16),
                   Text(user.name, style: AppTextStyles.h3),
                   Text(user.email, style: AppTextStyles.bodySmall),
                   const Gap(24),
@@ -113,10 +113,10 @@ class ProfileScreen extends StatelessWidget {
         BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, mode) {
             return Container(
-              margin: const EdgeInsets.only(bottom: 10),
+              margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: SwitchListTile(
                 value: mode == ThemeMode.dark,
@@ -305,10 +305,10 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           children: [
@@ -316,7 +316,7 @@ class _StatCard extends StatelessWidget {
               CurrencyFormatter.formatCompact(amount),
               style: AppTextStyles.amountSmall.copyWith(color: color),
             ),
-            const Gap(2),
+            const Gap(4),
             Text(label, style: AppTextStyles.caption),
           ],
         ),
@@ -343,10 +343,10 @@ class _MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: ListTile(
         leading: Icon(

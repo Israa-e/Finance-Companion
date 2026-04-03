@@ -138,8 +138,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: const Icon(Iconsax.sms, size: 18),
                         validator: (v) {
-                          if (v == null || v.isEmpty)
+                          if (v == null || v.isEmpty) {
                             return 'Email is required';
+                          }
                           if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
                             return 'Enter a valid email address';
                           }

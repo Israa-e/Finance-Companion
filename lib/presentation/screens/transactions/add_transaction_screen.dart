@@ -239,7 +239,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         Text('Category', style: AppTextStyles.label),
         const Gap(6),
         DropdownButtonFormField<String>(
-          value: _category, // 'value' not 'initialValue'
+          initialValue: _category, // 'value' not 'initialValue'
           decoration: InputDecoration(
             filled: true,
             fillColor: Theme.of(context).colorScheme.surface,

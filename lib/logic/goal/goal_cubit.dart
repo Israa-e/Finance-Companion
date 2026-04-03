@@ -86,7 +86,7 @@ class GoalCubit extends Cubit<GoalState> {
     } catch (e) {
       emit(GoalError(e.toString()));
       // Recover to the last known-good loaded state.
-      if (currentState is GoalLoaded) emit(currentState);
+      // if (currentState is GoalLoaded) emit(currentState);
     }
   }
 

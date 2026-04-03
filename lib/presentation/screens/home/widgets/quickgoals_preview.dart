@@ -50,7 +50,7 @@ class QuickGoalsPreview extends StatelessWidget {
                 ),
               ],
             ),
-            const Gap(4),
+            const Gap(8),
             Text(
               '${CurrencyFormatter.formatCompact(totalSaved)} saved'
               ' of ${CurrencyFormatter.formatCompact(totalTarget)} total',
@@ -58,15 +58,15 @@ class QuickGoalsPreview extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-            const Gap(12),
+            const Gap(16),
             // 120px gives the chip content (≈96px) + padding (24px) = 120px
             // with 0px to spare — safe on all densities.
             SizedBox(
-              height: 120,
+              height: 130,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: goals.length,
-                separatorBuilder: (_, __) => const Gap(12),
+                separatorBuilder: (_, _) => const Gap(16),
                 itemBuilder: (_, i) => _GoalChip(goal: goals[i]),
               ),
             ),
@@ -97,7 +97,7 @@ class _GoalChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -125,7 +125,7 @@ class _GoalChip extends StatelessWidget {
               ),
             ],
           ),
-          const Gap(6),
+          const Gap(8),
           // ── Goal title ─────────────────────────────────────────────
           Text(
             goal.title,
@@ -135,18 +135,18 @@ class _GoalChip extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const Gap(6),
+          const Gap(8),
           // ── Progress bar ───────────────────────────────────────────
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 5,
-              backgroundColor: color.withOpacity(0.12),
+              backgroundColor: color.withValues(alpha: 0.12),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
-          const Gap(5),
+          const Gap(8),
           // ── Saved / target amounts ─────────────────────────────────
           Text(
             '${CurrencyFormatter.formatCompact(goal.savedAmount)}'

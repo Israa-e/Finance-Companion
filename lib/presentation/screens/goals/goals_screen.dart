@@ -77,7 +77,7 @@ class GoalsScreen extends StatelessWidget {
                       child: ListView.separated(
                         physics: const AlwaysScrollableScrollPhysics(),
                         itemCount: state.goals.length,
-                        separatorBuilder: (_, __) => const Gap(12),
+                        separatorBuilder: (_, _) => const Gap(12),
                         itemBuilder: (context, i) => GoalCard(
                           goal: state.goals[i],
                           onDeleteConfirmed: () => context
@@ -217,8 +217,9 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                       }
                       final parsed = double.tryParse(v);
                       if (parsed == null) return 'Enter a valid number';
-                      if (parsed <= 0)
+                      if (parsed <= 0) {
                         return 'Amount must be greater than zero';
+                      }
                       return null;
                     },
                   ),
@@ -257,7 +258,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _emojis.length,
-        separatorBuilder: (_, __) => const Gap(8),
+        separatorBuilder: (_, _) => const Gap(8),
         itemBuilder: (_, i) => GestureDetector(
           onTap: () => setState(() => _emoji = _emojis[i]),
           child: AnimatedContainer(

@@ -163,6 +163,7 @@ class TransactionRepository {
                 ) &&
                 t.date.isBefore(end),
           )
+          // ignore: avoid_types_as_parameter_names
           .fold(0.0, (sum, t) => sum + t.amount);
       map[key] = dailyTotal;
     }

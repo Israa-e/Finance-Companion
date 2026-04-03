@@ -130,6 +130,7 @@ class AppTheme {
         primary: AppColors.primary,
         secondary: AppColors.primaryLight,
         surface: AppColors.cardBg,
+        // ignore: deprecated_member_use
         background: AppColors.background,
         error: AppColors.expense,
         onPrimary: Colors.white,

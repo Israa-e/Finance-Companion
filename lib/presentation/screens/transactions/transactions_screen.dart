@@ -138,8 +138,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 Text('Transactions', style: AppTextStyles.h2),
                 BlocBuilder<TransactionCubit, TransactionState>(
                   builder: (_, state) {
-                    if (state is! TransactionLoaded)
+                    if (state is! TransactionLoaded) {
                       return const SizedBox.shrink();
+                    }
                     final count = state.transactions.length;
                     return Text(
                       '$count entries',

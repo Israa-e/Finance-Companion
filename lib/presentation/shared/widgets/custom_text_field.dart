@@ -55,7 +55,7 @@ class CustomTextField extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-        if (hasLabel) const SizedBox(height: 6),
+        if (hasLabel) const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
@@ -84,15 +84,15 @@ class CustomTextField extends StatelessWidget {
                 Theme.of(context).inputDecorationTheme.fillColor ??
                 Theme.of(context).colorScheme.surface,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(
                 color: AppColors.primary,
                 width: 1.5,
@@ -101,7 +101,7 @@ class CustomTextField extends StatelessWidget {
             errorBorder: Theme.of(context).inputDecorationTheme.errorBorder,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 14,
+              vertical: 16,
             ),
           ),
         ),

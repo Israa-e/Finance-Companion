@@ -374,7 +374,7 @@ class InsightsScreen extends StatelessWidget {
                 }),
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, _, rod, __) => BarTooltipItem(
+                    getTooltipItem: (group, _, rod, _) => BarTooltipItem(
                       CurrencyFormatter.formatCompact(rod.toY),
                       const TextStyle(
                         color: Colors.white,

@@ -43,15 +43,15 @@ class HomeScreen extends StatelessWidget {
                 _buildHeader(context),
                 const Gap(24),
                 const BalanceCard(),
-                const Gap(20),
+                const Gap(24),
                 const SummaryRow(),
-                const Gap(20),
+                const Gap(24),
                 // ── Weekly chart — "See all" goes to Insights tab ────────
                 WeeklyChart(onSeeAll: () => onTabSwitch(3)),
-                const Gap(20),
+                const Gap(24),
                 // ── Goals preview — "See all" goes to Goals tab ──────────
                 QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
-                const Gap(20),
+                const Gap(24),
                 // ── Recent transactions — "See all" goes to Transactions ─
                 RecentTransactions(onSeeAll: () => onTabSwitch(1)),
                 const Gap(32),
@@ -102,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -141,9 +141,9 @@ class HomeScreen extends StatelessWidget {
                     height: 42,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                       image: imagePath != null && File(imagePath).existsSync()

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -129,7 +128,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.28),
+                color: AppColors.primary.withValues(alpha: 0.28),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
@@ -188,7 +187,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Gap(12),
+                    const Gap(8),
                     // Balance label
                     Text(
                       'Total Balance',
@@ -198,7 +197,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
                         fontSize: 11,
                       ),
                     ),
-                    const Gap(12),
+                    const Gap(8),
                     // Balance amount
                     isLoading
                         ? const CircularProgressIndicator(
@@ -385,74 +384,3 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-class _MiniDonut extends StatelessWidget {
-  final double income;
-  final double expense;
-
-  const _MiniDonut({required this.income, required this.expense});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 44,
-      height: 44,
-      child: CustomPaint(
-        painter: _DonutPainter(income: income, expense: expense),
-      ),
-    );
-  }
-}
-
-class _DonutPainter extends CustomPainter {
-  final double income;
-  final double expense;
-
-  _DonutPainter({required this.income, required this.expense});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final total = income + expense;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 4;
-    const strokeWidth = 6.0;
-
-    final trackPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.15)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final incomePaint = Paint()
-      ..color = const Color.fromARGB(255, 91, 82, 206)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final expensePaint = Paint()
-      ..color = const Color.fromARGB(255, 233, 154, 154)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    // Track
-    canvas.drawCircle(center, radius, trackPaint);
-
-    if (total > 0) {
-      final incomeSweep = (income / total) * 2 * math.pi;
-      canvas.drawArc(rect, -math.pi / 2, incomeSweep, false, incomePaint);
-      canvas.drawArc(
-        rect,
-        -math.pi / 2 + incomeSweep,
-        2 * math.pi - incomeSweep,
-        false,
-        expensePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DonutPainter old) =>
-      old.income != income || old.expense != expense;
-}

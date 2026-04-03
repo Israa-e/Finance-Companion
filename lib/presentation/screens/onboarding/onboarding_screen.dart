@@ -139,7 +139,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final isLast = _currentPage == _pages.length - 1;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
           // ── Animated background blob ──────────────────────────────────
@@ -192,7 +192,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onBackground.withOpacity(0.75),
+                          ).colorScheme.onSurface.withValues(alpha: 0.75),
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -283,7 +283,7 @@ class _PageContent extends StatelessWidget {
               fontWeight: FontWeight.w800,
               height: 1.15,
               letterSpacing: -0.5,
-              color: Theme.of(context).colorScheme.onBackground,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -296,7 +296,7 @@ class _PageContent extends StatelessWidget {
               fontSize: 15,
               color: Theme.of(
                 context,
-              ).colorScheme.onBackground.withOpacity(0.7),
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
               height: 1.6,
               fontWeight: FontWeight.w400,
             ),

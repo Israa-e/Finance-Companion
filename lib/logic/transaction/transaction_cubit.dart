@@ -157,6 +157,7 @@ extension DateRangeFilterExt on DateRangeFilter {
   }
 
   /// Returns a [_DateRange] for filtering, or null if "all time".
+  // ignore: library_private_types_in_public_api
   _DateRange? resolve() {
     final now = DateTime.now();
     switch (this) {

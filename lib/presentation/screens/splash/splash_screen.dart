@@ -22,6 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _logoController;
   late final AnimationController _textController;
   late final AnimationController _exitController;
+  late final AnimationController _floatController;
 
   late final Animation<double> _bgScale;
   late final Animation<double> _logoScale;
@@ -90,6 +91,12 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _exitController, curve: Curves.easeInCubic),
     );
 
+    // Floating animation for particles
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
     _startSequence();
   }
 
@@ -117,6 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
     _logoController.dispose();
     _textController.dispose();
     _exitController.dispose();
+    _floatController.dispose();
     super.dispose();
   }
 
@@ -135,10 +143,9 @@ class _SplashScreenState extends State<SplashScreen>
         return FadeTransition(
           opacity: _exitFade,
           child: Scaffold(
-            backgroundColor: AppColors.primary,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: Stack(
               children: [
-                // Simplified background: fewer animated blobs for a less crowded feel
                 _buildBlob(
                   size,
                   top: -size.height * 0.08,
@@ -155,15 +162,7 @@ class _SplashScreenState extends State<SplashScreen>
                   color: AppColors.primary,
                   opacity: 0.23 * _bgScale.value,
                 ),
-                // Reduced particles for cleaner appearance
-                // Positioned(
-                //   left: size.width * 0.14,
-                //   top: size.height * 0.2,
-                //   child: FadeTransition(
-                //     opacity: _bgScale,
-                //     child: Text('💰', style: TextStyle(fontSize: 26)),
-                //   ),
-                // ),
+                ..._buildParticles(size),
 
                 // Center content
                 Center(
@@ -244,7 +243,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ],
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 32),
 
                       // App name + tagline
                       FadeTransition(
@@ -325,23 +324,111 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   List<Widget> _buildParticles(Size size) {
-    final positions = [
-      [0.1, 0.2],
-      [0.85, 0.15],
-      [0.75, 0.75],
-      [0.15, 0.8],
-      [0.5, 0.1],
+    final items = [
+      {
+        'pos': [0.1, 0.2],
+        'emoji': '💰',
+        'size': 24.0,
+        'delay': 0.0,
+      },
+      {
+        'pos': [0.85, 0.15],
+        'emoji': '✨',
+        'size': 20.0,
+        'delay': 0.2,
+      },
+      {
+        'pos': [0.75, 0.75],
+        'emoji': '💎',
+        'size': 22.0,
+        'delay': 0.4,
+      },
+      {
+        'pos': [0.15, 0.8],
+        'emoji': '🌿',
+        'size': 18.0,
+        'delay': 0.1,
+      },
+      {
+        'pos': [0.5, 0.08],
+        'emoji': '⭐',
+        'size': 20.0,
+        'delay': 0.3,
+      },
+      {
+        'pos': [0.9, 0.6],
+        'emoji': '📈',
+        'size': 22.0,
+        'delay': 0.5,
+      },
+      {
+        'pos': [0.08, 0.5],
+        'emoji': '💵',
+        'size': 20.0,
+        'delay': 0.2,
+      },
+      {
+        'pos': [0.8, 0.9],
+        'emoji': '🪙',
+        'size': 18.0,
+        'delay': 0.4,
+      },
+      {
+        'pos': [0.2, 0.05],
+        'emoji': '⚡',
+        'size': 16.0,
+        'delay': 0.1,
+      },
+      {
+        'pos': [0.65, 0.12],
+        'emoji': '📊',
+        'size': 18.0,
+        'delay': 0.3,
+      },
+      {
+        'pos': [0.35, 0.92],
+        'emoji': '💳',
+        'size': 20.0,
+        'delay': 0.6,
+      },
+      {
+        'pos': [0.55, 0.82],
+        'emoji': '🏦',
+        'size': 22.0,
+        'delay': 0.7,
+      },
     ];
-    final emojis = ['💰', '✨', '💎', '🌿', '⭐'];
-    return List.generate(positions.length, (i) {
+
+    return List.generate(items.length, (i) {
+      final item = items[i];
+      final pos = item['pos'] as List<double>;
+      final delay = item['delay'] as double;
+
       return Positioned(
-        left: positions[i][0] * size.width,
-        top: positions[i][1] * size.height,
+        left: pos[0] * size.width,
+        top: pos[1] * size.height,
         child: FadeTransition(
           opacity: _bgScale,
-          child: Text(
-            emojis[i],
-            style: TextStyle(fontSize: 20 + (i % 3) * 6.0),
+          child: ScaleTransition(
+            scale: _bgScale,
+            child: AnimatedBuilder(
+              animation: _floatController,
+              builder: (context, child) {
+                // Individualized offset using sine wave with phase shift
+                final offset =
+                    math.sin(
+                      (_floatController.value * 2 * math.pi) + (delay * 10),
+                    ) *
+                    8;
+                return Transform.translate(
+                  offset: Offset(0, offset),
+                  child: Text(
+                    item['emoji'] as String,
+                    style: TextStyle(fontSize: item['size'] as double),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       );
@@ -379,7 +466,7 @@ class _LoadingDotsState extends State<_LoadingDots>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) {
+      builder: (_, _) {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(3, (i) {
