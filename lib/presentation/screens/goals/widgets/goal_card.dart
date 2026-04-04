@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:finance_companion/core/theme/app_text_styles.dart';
 import 'package:finance_companion/core/utils/currency_formatter.dart';
@@ -15,10 +16,8 @@ import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import 'package:finance_companion/presentation/shared/widgets/custom_text_field.dart';
 
-class GoalCard extends StatelessWidget {
+class GoalCard extends StatefulWidget {
   final GoalModel goal;
-
-  /// Called after the user confirms deletion in the dialog.
   final VoidCallback onDeleteConfirmed;
 
   const GoalCard({
@@ -28,111 +27,185 @@ class GoalCard extends StatelessWidget {
   });
 
   @override
+  State<GoalCard> createState() => _GoalCardState();
+}
+
+class _GoalCardState extends State<GoalCard> {
+  late ConfettiController _confettiController;
+  late double _lastProgress;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _lastProgress = widget.goal.progressPercent;
+  }
+
+  @override
+  void didUpdateWidget(GoalCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentProgress = widget.goal.progressPercent;
+    
+    // Trigger celebration if crossing 50% or 100%
+    if ((_lastProgress < 0.5 && currentProgress >= 0.5) ||
+        (_lastProgress < 1.0 && currentProgress >= 1.0)) {
+      _confettiController.play();
+      HapticFeedback.heavyImpact();
+    }
+    _lastProgress = currentProgress;
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     final formatter = authState is AuthAuthenticated
         ? authState.formatter
         : const CurrencyFormatter();
 
-    final progress = goal.progressPercent;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(goal.emoji ?? '🎯', style: const TextStyle(fontSize: 28)),
-              const Gap(12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    final progress = widget.goal.progressPercent;
+    return Stack(
+      children: [
+        Semantics(
+          label: 'Goal: ${widget.goal.title}',
+          value: '${(progress * 100).toStringAsFixed(0)} percent complete',
+          hint: widget.goal.isCompleted ? 'Goal achieved' : 'Tap the plus icon to add savings',
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      goal.title,
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.w600,
+                    if (widget.goal.isCompleted)
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.8, end: 1.2),
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.elasticOut,
+                        builder: (context, value, child) => Transform.scale(
+                          scale: value,
+                          child: Text(widget.goal.emoji ?? '🎯', style: const TextStyle(fontSize: 28)),
+                        ),
+                      )
+                    else
+                      Text(widget.goal.emoji ?? '🎯', style: const TextStyle(fontSize: 28)),
+                    const Gap(12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.goal.title,
+                            style: AppTextStyles.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            widget.goal.isCompleted
+                                ? '🎉 Completed!'
+                                : '${widget.goal.daysRemaining} days left',
+                            style: AppTextStyles.caption.copyWith(
+                              color: widget.goal.isCompleted ? AppColors.income : null,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      goal.isCompleted
-                          ? '🎉 Completed!'
-                          : '${goal.daysRemaining} days left',
-                      style: AppTextStyles.caption.copyWith(
-                        color: goal.isCompleted ? AppColors.income : null,
+                    if (!widget.goal.isCompleted)
+                      IconButton(
+                        icon: const Icon(
+                          Iconsax.add_circle,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: () => _showAddSavings(context, widget.goal, formatter),
                       ),
+                    IconButton(
+                      icon: const Icon(
+                        Iconsax.trash,
+                        color: AppColors.expense,
+                        size: 18,
+                      ),
+                      onPressed: () => _confirmDelete(context),
                     ),
                   ],
                 ),
-              ),
-              // Add savings button — hidden when goal is complete
-              if (!goal.isCompleted)
-                IconButton(
-                  icon: const Icon(
-                    Iconsax.add_circle,
-                    color: AppColors.primary,
+                const Gap(14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      formatter.format(widget.goal.savedAmount),
+                      style: AppTextStyles.amountSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    Text(
+                      formatter.format(widget.goal.targetAmount),
+                      style: AppTextStyles.bodySmall,
+                    ),
+                  ],
+                ),
+                const Gap(8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOutCubic,
+                    tween: Tween<double>(begin: 0, end: progress),
+                    builder: (context, value, _) {
+                      return LinearProgressIndicator(
+                        value: value,
+                        minHeight: 8,
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          widget.goal.isCompleted ? AppColors.income : AppColors.primary,
+                        ),
+                      );
+                    },
                   ),
-                  onPressed: () => _showAddSavings(context, goal, formatter),
                 ),
-              // Delete — shows confirmation first
-              IconButton(
-                icon: const Icon(
-                  Iconsax.trash,
-                  color: AppColors.expense,
-                  size: 18,
+                const Gap(6),
+                Text(
+                  '${(progress * 100).toStringAsFixed(1)}% achieved',
+                  style: AppTextStyles.caption,
                 ),
-                onPressed: () => _confirmDelete(context),
-              ),
-            ],
-          ),
-          const Gap(14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                formatter.format(goal.savedAmount),
-                style: AppTextStyles.amountSmall.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-              Text(
-                formatter.format(goal.targetAmount),
-                style: AppTextStyles.bodySmall,
-              ),
-            ],
-          ),
-          const Gap(8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                goal.isCompleted ? AppColors.income : AppColors.primary,
-              ),
+                if (!widget.goal.isCompleted)
+                  Text(
+                    'Remaining: ${formatter.format(widget.goal.remainingAmount)}',
+                    style: AppTextStyles.caption,
+                  ),
+              ],
             ),
           ),
-          const Gap(6),
-          Text(
-            '${(progress * 100).toStringAsFixed(1)}% achieved',
-            style: AppTextStyles.caption,
+        ),
+        Align(
+          alignment: Alignment.center,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              AppColors.primary,
+              AppColors.income,
+              Colors.orange,
+              Colors.pink,
+            ],
+            numberOfParticles: 20,
+            gravity: 0.1,
           ),
-          if (!goal.isCompleted)
-            Text(
-              'Remaining: ${formatter.format(goal.remainingAmount)}',
-              style: AppTextStyles.caption,
-            ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-
-  // ─── Delete confirmation ─────────────────────────────────────────────────
 
   void _confirmDelete(BuildContext context) {
     showDialog<void>(
@@ -140,7 +213,7 @@ class GoalCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete goal?'),
         content: Text(
-          'This will permanently remove "${goal.title}".'
+          'This will permanently remove "${widget.goal.title}".'
           ' Any amount saved to this goal will be returned to your balance.',
         ),
         actions: [
@@ -160,7 +233,7 @@ class GoalCard extends StatelessWidget {
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
-                    onDeleteConfirmed();
+                    widget.onDeleteConfirmed();
                   },
                   child: const Text('Delete'),
                 ),
@@ -171,8 +244,6 @@ class GoalCard extends StatelessWidget {
       ),
     );
   }
-
-  // ─── Add savings sheet ───────────────────────────────────────────────────
 
   void _showAddSavings(
     BuildContext context,
@@ -195,118 +266,76 @@ class GoalCard extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      clipBehavior: Clip.antiAlias,
       builder: (sheetContext) {
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          child: Wrap(
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                decoration: BoxDecoration(
-                  color: Theme.of(sheetContext).colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            decoration: BoxDecoration(
+              color: Theme.of(sheetContext).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.textHint,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const Gap(16),
+                Text('Add to Savings', style: AppTextStyles.h3),
+                const Gap(4),
+                Text(
+                  'Available: ${formatter.format(availableBalance)}',
+                  style: AppTextStyles.caption,
+                ),
+                const Gap(16),
+                CustomTextField(
+                  label: 'Amount',
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                  ],
+                  hint: '0.00',
+                ),
+                const Gap(18),
+                Row(
                   children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.textHint,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        child: const Text('Cancel'),
                       ),
                     ),
-                    const Gap(16),
-                    Text('Add to Savings', style: AppTextStyles.h3),
-                    const Gap(4),
-                    Text(
-                      'Available: ${formatter.format(availableBalance)}',
-                      style: AppTextStyles.caption,
-                    ),
-                    const Gap(16),
-                    CustomTextField(
-                      label: 'Amount',
-                      controller: controller,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                    const Gap(12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final amount = double.tryParse(controller.text) ?? 0.0;
+                          context.read<GoalCubit>().addToSavings(
+                            goal.id,
+                            amount,
+                            availableBalance: availableBalance,
+                          );
+                          Navigator.pop(sheetContext);
+                        },
+                        child: const Text('Add'),
                       ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d+\.?\d{0,2}'),
-                        ),
-                      ],
-                      hint: '0.00',
-                    ),
-                    const Gap(18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(sheetContext),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const Gap(12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final amount = double.tryParse(controller.text);
-                              if (amount == null || amount <= 0) {
-                                ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Enter a valid amount'),
-                                  ),
-                                );
-                                return;
-                              }
-                              if (amount > availableBalance) {
-                                ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Only ${formatter.format(availableBalance)} available.',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              if (amount > goal.remainingAmount) {
-                                ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Goal only needs ${formatter.format(goal.remainingAmount)} more.',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              context.read<GoalCubit>().addToSavings(
-                                goal.id,
-                                amount,
-                                availableBalance: availableBalance,
-                              );
-                              Navigator.pop(sheetContext);
-                            },
-                            child: const Text('Add'),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

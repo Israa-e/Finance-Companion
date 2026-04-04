@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../logic/notification/notification_cubit.dart';
 import '../../notification/notifications_screen.dart';
+import '../../../shared/widgets/sync_indicator.dart';
 
 class HomeHeader extends StatelessWidget {
   final void Function(int tabIndex) onTabSwitch;
@@ -46,6 +47,8 @@ class HomeHeader extends StatelessWidget {
             ),
             Row(
               children: [
+                const SyncIndicator(),
+                const Gap(12),
                 GestureDetector(
                   onTap: () {
                     final notifCubit = context.read<NotificationCubit>();
@@ -84,8 +87,9 @@ class HomeHeader extends StatelessWidget {
                         // FIX: read real unread count instead of hardcoded dot
                         BlocBuilder<NotificationCubit, NotificationState>(
                           builder: (context, notifState) {
-                            if (notifState.unreadCount == 0)
+                            if (notifState.unreadCount == 0) {
                               return const SizedBox.shrink();
+                            }
                             return Positioned(
                               top: 10,
                               right: 10,

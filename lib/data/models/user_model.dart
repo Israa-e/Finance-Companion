@@ -10,6 +10,10 @@ class UserModel extends Equatable {
   final String currency;
   final String? imagePath;
   final DateTime createdAt;
+  
+  // New: Threshold configuration for budget alerts
+  final double warningThreshold;  // e.g. 0.8 for 80%
+  final double criticalThreshold; // e.g. 1.0 for 100%
 
   const UserModel({
     this.id,
@@ -21,6 +25,8 @@ class UserModel extends Equatable {
     this.currency = 'USD',
     this.imagePath,
     required this.createdAt,
+    this.warningThreshold = 0.8,
+    this.criticalThreshold = 1.0,
   });
 
   Map<String, dynamic> toMap() => {
@@ -33,6 +39,8 @@ class UserModel extends Equatable {
         'currency': currency,
         'imagePath': imagePath,
         'createdAt': createdAt.toIso8601String(),
+        'warningThreshold': warningThreshold,
+        'criticalThreshold': criticalThreshold,
       };
 
   factory UserModel.fromMap(Map<String, dynamic> map) => UserModel(
@@ -45,6 +53,8 @@ class UserModel extends Equatable {
         currency: map['currency'] as String? ?? 'USD',
         imagePath: map['imagePath'],
         createdAt: DateTime.parse(map['createdAt']),
+        warningThreshold: (map['warningThreshold'] as num?)?.toDouble() ?? 0.8,
+        criticalThreshold: (map['criticalThreshold'] as num?)?.toDouble() ?? 1.0,
       );
 
   UserModel copyWith({
@@ -57,6 +67,8 @@ class UserModel extends Equatable {
     String? currency,
     String? imagePath,
     DateTime? createdAt,
+    double? warningThreshold,
+    double? criticalThreshold,
   }) =>
       UserModel(
         id: id ?? this.id,
@@ -68,6 +80,8 @@ class UserModel extends Equatable {
         currency: currency ?? this.currency,
         imagePath: imagePath ?? this.imagePath,
         createdAt: createdAt ?? this.createdAt,
+        warningThreshold: warningThreshold ?? this.warningThreshold,
+        criticalThreshold: criticalThreshold ?? this.criticalThreshold,
       );
 
   @override
@@ -80,5 +94,8 @@ class UserModel extends Equatable {
         monthlyBudget,
         currency,
         imagePath,
+        createdAt,
+        warningThreshold,
+        criticalThreshold,
       ];
 }

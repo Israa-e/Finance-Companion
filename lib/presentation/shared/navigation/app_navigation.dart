@@ -10,7 +10,6 @@ import '../../../data/repositories/transaction_repository.dart';
 import '../../../data/repositories/goal_repository.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../logic/goal/goal_cubit.dart';
-import '../../../logic/goal/goal_state.dart';
 import '../../../logic/insights/insights_cubit.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/transactions/transactions_screen.dart';
@@ -62,57 +61,25 @@ class _AppNavigationState extends State<AppNavigation> {
     _alertService = AlertService(notifRepo);
     _notifCubit = NotificationCubit(notifRepo)..load();
 
-    _txCubit = TransactionCubit(widget.transactionRepo)
-      ..setUser(widget.user.id!, widget.user.initialBalance)
+    _txCubit = TransactionCubit(widget.transactionRepo, _alertService)
+      ..setUser(
+        widget.user.id!,
+        widget.user.initialBalance,
+        monthlyBudget: widget.user.monthlyBudget,
+        warningThreshold: widget.user.warningThreshold,
+        criticalThreshold: widget.user.criticalThreshold,
+      )
       ..loadTransactions();
 
-    // After every transaction mutation: refresh insights, streak, and alerts
-    _txCubit.onMutated = () async {
+    _txCubit.onMutated = () {
       _insightsCubit.loadInsights();
-
-      // Reload streak and check for streak milestones
-      await _streakCubit.loadStreak();
-      final streakState = _streakCubit.state;
-      if (streakState is StreakLoaded) {
-        await _alertService.checkStreakAlerts(streakState.streak.currentStreak);
-      }
-
-      // Check monthly budget alerts
-      final transactions = await widget.transactionRepo.getAll();
-      await _alertService.checkBudgetAlerts(
-        transactions: transactions,
-        monthlyBudget: widget.user.monthlyBudget,
-      );
+      _streakCubit.loadStreak();
       _notifCubit.load();
     };
 
-    _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo)
+    _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo, _alertService)
       ..setUser(widget.user.id!)
       ..loadGoals();
-
-    // Listen to goal state changes (add/save) for alerts
-    _goalCubit.stream.listen((state) async {
-      if (state is GoalLoaded) {
-        await _alertService.checkGoalAlerts(state.goals);
-        _notifCubit.load();
-      }
-    });
-
-    // On start, run full check against existing data
-    _runStartupChecks();
-  }
-
-  Future<void> _runStartupChecks() async {
-    try {
-      final transactions = await widget.transactionRepo.getAll();
-      await _alertService.checkBudgetAlerts(
-        transactions: transactions,
-        monthlyBudget: widget.user.monthlyBudget,
-      );
-      final goals = await widget.goalRepo.getAll(widget.user.id!);
-      await _alertService.checkGoalAlerts(goals);
-      _notifCubit.load();
-    } catch (_) {}
   }
 
   @override

@@ -184,7 +184,7 @@ class TransactionRepository {
                 ) &&
                 t.date.isBefore(end),
           )
-          .fold<double>(0.0, (sum, t) => sum + t.amount);
+          .fold<double>(0.0, (total, t) => total + t.amount);
     }
     return map;
   }
@@ -213,6 +213,6 @@ class TransactionRepository {
               t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
               t.date.isBefore(end),
         )
-        .fold<double>(0.0, (sum, t) => sum + t.amount);
+        .fold<double>(0.0, (total, t) => total + t.amount);
   }
 }

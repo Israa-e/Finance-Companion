@@ -114,8 +114,6 @@ class _AnimatedBalanceCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            // ✅ FIXED: removed the huge blurRadius:30 purple glow
-            // that was leaking outside the card boundary
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.18),
@@ -171,94 +169,104 @@ class _AnimatedBalanceCard extends StatelessWidget {
                 ),
               ),
               // ── Content ─────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Gap(8),
-                    Text(
-                      'Total Balance',
-                      style: AppTextStyles.caption.copyWith(
-                        color: Colors.white.withValues(alpha: 0.75),
-                        letterSpacing: 1.2,
-                        fontSize: 11,
+              Semantics(
+                label: 'Financial overview card',
+                container: true,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Gap(8),
+                      Semantics(
+                        label: 'Total Balance Label',
+                        child: Text(
+                          'Total Balance',
+                          style: AppTextStyles.caption.copyWith(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            letterSpacing: 1.2,
+                            fontSize: 11,
+                          ),
+                        ),
                       ),
-                    ),
-                    const Gap(8),
-                    isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
+                      const Gap(8),
+                      isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0, end: balance),
+                              duration: const Duration(milliseconds: 800),
+                              curve: Curves.easeOutCubic,
+                              builder: (_, val, __) {
+                                final authState =
+                                    context.watch<AuthCubit>().state;
+                                final formatter = authState is AuthAuthenticated
+                                    ? authState.formatter
+                                    : const CurrencyFormatter();
+                                return Text(
+                                  formatter.format(val),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1,
+                                    height: 1.1,
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                        : TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0, end: balance),
-                            duration: const Duration(milliseconds: 800),
-                            curve: Curves.easeOutCubic,
-                            builder: (_, val, __) {
-                              final authState = context.watch<AuthCubit>().state;
-                              final formatter = authState is AuthAuthenticated
-                                  ? authState.formatter
-                                  : const CurrencyFormatter();
-                              return Text(
-                                formatter.format(val),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -1,
-                                  height: 1.1,
-                                ),
-                              );
-                            },
+                      const Gap(24),
+                      // ── Divider ──────────────────────────────────────
+                      Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              Colors.white.withValues(alpha: 0.3),
+                              Colors.transparent,
+                            ],
                           ),
-                    const Gap(24),
-                    // ── Divider ──────────────────────────────────────
-                    Container(
-                      height: 1,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withValues(alpha: 0.3),
-                            Colors.transparent,
-                          ],
                         ),
                       ),
-                    ),
-                    const Gap(16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatPill(
-                            icon: Icons.lock_rounded,
-                            label: 'Locked',
-                            value: (context.watch<AuthCubit>().state as AuthAuthenticated?)
-                                    ?.formatter
-                                    .formatCompact(lockedAmount) ??
-                                '\$0.0',
-                            color: const Color(0xFFFFB3B3),
+                      const Gap(16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatPill(
+                              icon: Icons.lock_rounded,
+                              label: 'Locked',
+                              value: (context.watch<AuthCubit>().state
+                                          as AuthAuthenticated?)
+                                      ?.formatter
+                                      .formatCompact(lockedAmount) ??
+                                  '\$0.0',
+                              color: const Color(0xFFFFB3B3),
+                            ),
                           ),
-                        ),
-                        const Gap(12),
-                        Expanded(
-                          child: _StatPill(
-                            icon: Icons.wallet_rounded,
-                            label: 'Available',
-                            value: (context.watch<AuthCubit>().state as AuthAuthenticated?)
-                                    ?.formatter
-                                    .formatCompact(availableBalance) ??
-                                '\$0.0',
-                            color: const Color(0xFF81F5AE),
+                          const Gap(12),
+                          Expanded(
+                            child: _StatPill(
+                              icon: Icons.wallet_rounded,
+                              label: 'Available',
+                              value: (context.watch<AuthCubit>().state
+                                          as AuthAuthenticated?)
+                                      ?.formatter
+                                      .formatCompact(availableBalance) ??
+                                  '\$0.0',
+                              color: const Color(0xFF81F5AE),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -268,8 +276,6 @@ class _AnimatedBalanceCard extends StatelessWidget {
     );
   }
 }
-
-// ─── Shimmer Painter ──────────────────────────────────────────────────────────
 
 class _ShimmerPainter extends CustomPainter {
   final double progress;
@@ -298,8 +304,6 @@ class _ShimmerPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ShimmerPainter old) => old.progress != progress;
 }
-
-// ─── Stat Pill ────────────────────────────────────────────────────────────────
 
 class _StatPill extends StatelessWidget {
   final IconData icon;

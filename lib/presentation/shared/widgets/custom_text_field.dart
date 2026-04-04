@@ -56,55 +56,59 @@ class CustomTextField extends StatelessWidget {
                 ),
           ),
         if (hasLabel) const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          validator: validator,
-          maxLines: maxLines,
-          readOnly: readOnly,
-          onTap: onTap,
-          onChanged: onChanged,
-          obscureText: obscureText,
-          autofocus: autofocus,
-          autovalidateMode: autovalidateMode,
-          textInputAction: textInputAction,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+        Semantics(
+          label: '${label ?? "Input"}: ${hint ?? ""}',
+          textField: true,
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
+            validator: validator,
+            maxLines: maxLines,
+            readOnly: readOnly,
+            onTap: onTap,
+            onChanged: onChanged,
+            obscureText: obscureText,
+            autofocus: autofocus,
+            autovalidateMode: autovalidateMode,
+            textInputAction: textInputAction,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: Theme.of(context)
+                  .inputDecorationTheme
+                  .hintStyle
+                  ?.copyWith(color: Theme.of(context).hintColor),
+              prefixIcon: prefixIcon,
+              suffixIcon: suffixIcon,
+              filled: true,
+              fillColor: Theme.of(context).inputDecorationTheme.fillColor ??
+                  (Theme.of(context).brightness == Brightness.light
+                      ? Colors.grey[100]
+                      : Theme.of(context).colorScheme.surface),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
               ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: Theme.of(context)
-                .inputDecorationTheme
-                .hintStyle
-                ?.copyWith(color: Theme.of(context).hintColor),
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
-            filled: true,
-            fillColor: Theme.of(context).inputDecorationTheme.fillColor ??
-                (Theme.of(context).brightness == Brightness.light
-                    ? Colors.grey[100]
-                    : Theme.of(context).colorScheme.surface),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.5,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
               ),
-            ),
-            errorBorder: Theme.of(context).inputDecorationTheme.errorBorder,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
+              ),
+              errorBorder: Theme.of(context).inputDecorationTheme.errorBorder,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
             ),
           ),
         ),

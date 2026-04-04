@@ -45,7 +45,11 @@ class InsightsLoaded extends InsightsState {
   final String mostFrequentCategory;
   final int mostFrequentCount;
   final InsightsPeriod activePeriod;
-  final List<TransactionModel> transactions; // ADDED
+  final List<TransactionModel> transactions;
+  final double dailyBurnRate;
+  final DateTime? predictedBreachDate;
+  final double weekdayAverage;
+  final double weekendAverage;
 
   const InsightsLoaded({
     required this.expensesByCategory,
@@ -57,7 +61,11 @@ class InsightsLoaded extends InsightsState {
     required this.monthlyTrend,
     required this.mostFrequentCategory,
     required this.mostFrequentCount,
-    required this.transactions, // ADDED
+    required this.transactions,
+    required this.dailyBurnRate,
+    required this.weekdayAverage,
+    required this.weekendAverage,
+    this.predictedBreachDate,
     this.activePeriod = InsightsPeriod.allTime,
   });
 

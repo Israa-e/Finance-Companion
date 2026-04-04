@@ -4,6 +4,7 @@ import 'package:finance_companion/data/models/transaction_model.dart';
 import 'package:finance_companion/data/repositories/notification_repository.dart';
 import 'package:finance_companion/data/services/notification_service.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Service responsible for business logic relating to smart alerts,
 /// budget warnings, and goal milestones.
@@ -18,6 +19,8 @@ class AlertService {
   Future<void> checkBudgetAlerts({
     required List<TransactionModel> transactions,
     required double monthlyBudget,
+    required double warningThreshold,
+    required double criticalThreshold,
   }) async {
     if (monthlyBudget <= 0) return;
 
@@ -35,15 +38,20 @@ class AlertService {
         .fold(0.0, (sum, t) => sum + t.amount);
 
     final ratio = monthlyExpense / monthlyBudget;
-    if (ratio >= 0.9) {
+    
+    if (ratio >= criticalThreshold) {
       await _maybeAdd(
         type: NotificationType.monthlyBudgetWarning,
-        title: ratio >= 1.0
-            ? '🚨 Monthly budget exceeded!'
-            : '⚠️ 90% of monthly budget used',
-        body: ratio >= 1.0
-            ? 'You\'ve spent more than your monthly budget. Consider reviewing your expenses.'
-            : 'You\'re close to your monthly limit. Spend carefully for the rest of the month.',
+        title: '🚨 Monthly budget exceeded!',
+        body: 'You\'ve spent more than your monthly budget limit of ${criticalThreshold * 100}%.',
+        payload: 'transactions',
+      );
+    } else if (ratio >= warningThreshold) {
+      await _maybeAdd(
+        type: NotificationType.monthlyBudgetWarning,
+        title: '⚠️ Budget Warning',
+        body: 'You have reached ${warningThreshold * 100}% of your monthly budget.',
+        payload: 'transactions',
       );
     }
   }
@@ -86,6 +94,7 @@ class AlertService {
     required NotificationType type,
     required String title,
     required String body,
+    String? payload,
   }) async {
     // Only fire if not already fired in the last 24h to avoid spam
     final cutoff = DateTime.now().subtract(const Duration(hours: 24));
@@ -109,10 +118,19 @@ class AlertService {
 
     // 2. Fire actual system notification
     try {
+      // Use a fixed offset for different types to keep them separate in the system tray
+      final typeOffset = type.index * 1000;
       await NotificationService.instance.showNotification(
-        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        id: typeOffset + DateTime.now().millisecondsSinceEpoch.remainder(1000),
         title: title,
         body: body,
+        payload: payload,
+        importance: type == NotificationType.monthlyBudgetWarning 
+            ? Importance.max 
+            : Importance.defaultImportance,
+        priority: type == NotificationType.monthlyBudgetWarning 
+            ? Priority.high 
+            : Priority.defaultPriority,
       );
     } catch (_) {}
   }

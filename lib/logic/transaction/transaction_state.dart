@@ -31,33 +31,33 @@ extension DateRangeFilterExt on DateRangeFilter {
     }
   }
 
-  _DateRange? resolve() {
+  CustomDateRange? resolve() {
     final now = DateTime.now();
     switch (this) {
       case DateRangeFilter.today:
         final start = DateTime(now.year, now.month, now.day);
-        return _DateRange(start, start.add(const Duration(days: 1)));
+        return CustomDateRange(start, start.add(const Duration(days: 1)));
       case DateRangeFilter.thisWeek:
         final start = now.subtract(Duration(days: now.weekday - 1));
         final s = DateTime(start.year, start.month, start.day);
-        return _DateRange(s, now);
+        return CustomDateRange(s, now);
       case DateRangeFilter.thisMonth:
-        return _DateRange(DateTime(now.year, now.month, 1), now);
+        return CustomDateRange(DateTime(now.year, now.month, 1), now);
       case DateRangeFilter.lastMonth:
         final first = DateTime(now.year, now.month - 1, 1);
         final last = DateTime(now.year, now.month, 1)
             .subtract(const Duration(milliseconds: 1));
-        return _DateRange(first, last);
+        return CustomDateRange(first, last);
       case DateRangeFilter.all:
         return null;
     }
   }
 }
 
-class _DateRange {
+class CustomDateRange {
   final DateTime start;
   final DateTime end;
-  const _DateRange(this.start, this.end);
+  const CustomDateRange(this.start, this.end);
 }
 
 extension FilterExt on TransactionFilter {
@@ -119,9 +119,11 @@ class TransactionLoaded extends TransactionState {
   final double totalExpense;
   final double initialBalance;
 
-  // Search & Filter
+  // Search & Advanced Filter
   final String searchQuery;
   final TransactionFilter activeFilter;
+  final List<String> selectedCategories;
+  final CustomDateRange? customDateRange;
 
   // Form states
   final TransactionType formType;
@@ -142,6 +144,8 @@ class TransactionLoaded extends TransactionState {
     this.initialBalance = 0.0,
     this.searchQuery = '',
     this.activeFilter = TransactionFilter.all,
+    this.selectedCategories = const [],
+    this.customDateRange,
     this.formType = TransactionType.expense,
     this.formCategory = 'Food & Drinks',
     this.formAmount = 0.0,
@@ -161,6 +165,8 @@ class TransactionLoaded extends TransactionState {
     double? initialBalance,
     String? searchQuery,
     TransactionFilter? activeFilter,
+    List<String>? selectedCategories,
+    CustomDateRange? customDateRange,
     TransactionType? formType,
     String? formCategory,
     double? formAmount,
@@ -179,6 +185,8 @@ class TransactionLoaded extends TransactionState {
       initialBalance: initialBalance ?? this.initialBalance,
       searchQuery: searchQuery ?? this.searchQuery,
       activeFilter: activeFilter ?? this.activeFilter,
+      selectedCategories: selectedCategories ?? this.selectedCategories,
+      customDateRange: customDateRange ?? this.customDateRange,
       formType: formType ?? this.formType,
       formCategory: formCategory ?? this.formCategory,
       formAmount: formAmount ?? this.formAmount,
@@ -192,8 +200,7 @@ class TransactionLoaded extends TransactionState {
     );
   }
 
-  /// Filters transactions by type AND date range AND search query.
-  /// Now correctly applies all seven filter variants.
+  /// Filters transactions by type AND date range AND search query AND custom filters.
   List<TransactionModel> get filteredTransactions {
     return transactions.where((tx) {
       // ── Search ──────────────────────────────────────────────────────────
@@ -207,18 +214,27 @@ class TransactionLoaded extends TransactionState {
       final typeFilter = activeFilter.type;
       final matchesType = typeFilter == null || tx.type == typeFilter;
 
-      // ── Date range filter ────────────────────────────────────────────────
-      final rangeFilter = activeFilter.dateRange;
+      // ── Category filter ──────────────────────────────────────────────────
+      final matchesCategory = selectedCategories.isEmpty ||
+          selectedCategories.contains(tx.category);
+
+      // ── Date range filter (Standard or Custom) ──────────────────────────
       bool matchesDate = true;
-      if (rangeFilter != null) {
-        final range = rangeFilter.resolve();
-        if (range != null) {
-          matchesDate =
-              !tx.date.isBefore(range.start) && !tx.date.isAfter(range.end);
+      if (customDateRange != null) {
+        matchesDate = !tx.date.isBefore(customDateRange!.start) &&
+            !tx.date.isAfter(customDateRange!.end);
+      } else {
+        final rangeFilter = activeFilter.dateRange;
+        if (rangeFilter != null) {
+          final range = rangeFilter.resolve();
+          if (range != null) {
+            matchesDate =
+                !tx.date.isBefore(range.start) && !tx.date.isAfter(range.end);
+          }
         }
       }
 
-      return matchesSearch && matchesType && matchesDate;
+      return matchesSearch && matchesType && matchesCategory && matchesDate;
     }).toList();
   }
 

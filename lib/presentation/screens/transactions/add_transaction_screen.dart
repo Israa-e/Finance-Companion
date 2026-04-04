@@ -107,38 +107,42 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   const Gap(24),
 
                   // ── Amount ──────────────────────────────────────────
-                  CustomTextField(
-                    label: 'Amount',
-                    controller: _amountController,
-                    hint: '0.00',
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onChanged: (v) {
-                      final val = double.tryParse(v);
-                      if (val != null) cubit.updateFormAmount(val);
-                    },
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}'),
+                  Semantics(
+                    label: 'Amount input field',
+                    hint: 'Enter the transaction amount',
+                    child: CustomTextField(
+                      label: 'Amount',
+                      controller: _amountController,
+                      hint: '0.00',
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
-                    ],
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Enter amount';
-                      final val = double.tryParse(v);
-                      if (val == null || val <= 0) return 'Invalid amount';
-                      
-                      final authState = context.read<AuthCubit>().state;
-                      final formatter = authState is AuthAuthenticated 
-                          ? authState.formatter 
-                          : const CurrencyFormatter();
-                          
-                      if (state.formType == TransactionType.expense &&
-                          val > availableToSpend) {
-                        return 'Only ${formatter.format(availableToSpend)} available';
-                      }
-                      return null;
-                    },
+                      onChanged: (v) {
+                        final val = double.tryParse(v);
+                        if (val != null) cubit.updateFormAmount(val);
+                      },
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d{0,2}'),
+                        ),
+                      ],
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Enter amount';
+                        final val = double.tryParse(v);
+                        if (val == null || val <= 0) return 'Invalid amount';
+                        
+                        final authState = context.read<AuthCubit>().state;
+                        final formatter = authState is AuthAuthenticated 
+                            ? authState.formatter 
+                            : const CurrencyFormatter();
+                            
+                        if (state.formType == TransactionType.expense &&
+                            val > availableToSpend) {
+                          return 'Only ${formatter.format(availableToSpend)} available';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
                   BlocBuilder<TransactionCubit, TransactionState>(
                     builder: (context, state) {
@@ -156,29 +160,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ? authState.formatter 
                           : const CurrencyFormatter();
 
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6, left: 4),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline_rounded,
-                              size: 13,
-                              color: availableToSpend < 50
-                                  ? AppColors.expense
-                                  : AppColors.textSecondary,
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6, left: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 13,
+                                  color: availableToSpend < 50
+                                      ? AppColors.expense
+                                      : AppColors.textSecondary,
+                                ),
+                                const Gap(5),
+                                Text(
+                                  'Available to spend: ${formatter.formatCompact(availableToSpend)}',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: availableToSpend < 50
+                                        ? AppColors.expense
+                                        : AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Gap(5),
-                            Text(
-                              'Available to spend: ${formatter.formatCompact(availableToSpend)}',
-                              style: AppTextStyles.caption.copyWith(
-                                color: availableToSpend < 50
-                                    ? AppColors.expense
-                                    : AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const Gap(12),
+                          _buildQuickAmounts(context, cubit),
+                        ],
                       );
                     },
                   ),
@@ -289,6 +300,53 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickAmounts(BuildContext context, TransactionCubit cubit) {
+    final amounts = [10, 20, 50, 100, 200, 500];
+    final authState = context.read<AuthCubit>().state;
+    String symbol = r'$';
+    if (authState is AuthAuthenticated) {
+      symbol = authState.formatter.symbol;
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: amounts.map((amount) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () {
+                _amountController.text = amount.toString();
+                cubit.updateFormAmount(amount.toDouble());
+                HapticFeedback.lightImpact();
+                FocusScope.of(context).unfocus();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Text(
+                  '$symbol$amount',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

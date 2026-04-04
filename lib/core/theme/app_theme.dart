@@ -1,7 +1,6 @@
 import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ─── Dark Theme ────────────────────────────────────────────────────────────
@@ -19,7 +18,8 @@ class AppTheme {
         onSurface: AppColors.textPrimaryDark,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).apply(
+      textTheme: base.textTheme.apply(
+        fontFamily: 'Poppins',
         bodyColor: AppColors.textPrimaryDark,
         displayColor: AppColors.textPrimaryDark,
       ),
@@ -154,7 +154,8 @@ class AppTheme {
         onSurface: AppColors.textPrimaryLight,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).apply(
+      textTheme: base.textTheme.apply(
+        fontFamily: 'Poppins',
         bodyColor: AppColors.textPrimaryLight,
         displayColor: AppColors.textPrimaryLight,
       ),

@@ -83,115 +83,120 @@ class TransactionListItem extends StatelessWidget {
         );
       },
       onDismissed: (_) => onDelete(),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
-          ),
-        ),
-        child: Row(
-          children: [
-            // Icon
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(
-                _iconFor(transaction.category),
-                color: accent,
-                size: 22,
-              ),
+      child: Semantics(
+        label: 'Transaction: ${transaction.title}',
+        value: '${transaction.category}, ${transaction.amount}',
+        hint: 'Swipe left to delete, tap edit icon to modify',
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color:
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
             ),
-            const Gap(14),
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(
+                  _iconFor(transaction.category),
+                  color: accent,
+                  size: 22,
+                ),
+              ),
+              const Gap(14),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      transaction.title,
+                      style: AppTextStyles.body.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const Gap(4),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        transaction.category,
+                        style: TextStyle(
+                          color: accent.withValues(alpha: 0.8),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Amount + Edit
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    transaction.title,
-                    style: AppTextStyles.body.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final authState = context.watch<AuthCubit>().state;
+                      final formatter = authState is AuthAuthenticated
+                          ? authState.formatter
+                          : const CurrencyFormatter();
+                      return Text(
+                        formatter.formatSigned(
+                          transaction.amount,
+                          isExpense: !isIncome,
+                        ),
+                        style: AppTextStyles.h3.copyWith(
+                          color: isIncome ? AppColors.income : AppColors.expense,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
                   ),
-                  const Gap(4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      transaction.category,
-                      style: TextStyle(
-                        color: accent.withValues(alpha: 0.8),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                  const Gap(8),
+                  GestureDetector(
+                    onTap: onEdit,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Iconsax.edit_2,
+                        size: 14,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.4),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            // Amount + Edit
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Builder(
-                  builder: (context) {
-                    final authState = context.watch<AuthCubit>().state;
-                    final formatter = authState is AuthAuthenticated
-                        ? authState.formatter
-                        : const CurrencyFormatter();
-                    return Text(
-                      formatter.formatSigned(
-                        transaction.amount,
-                        isExpense: !isIncome,
-                      ),
-                      style: AppTextStyles.h3.copyWith(
-                        color: isIncome ? AppColors.income : AppColors.expense,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
-                const Gap(8),
-                GestureDetector(
-                  onTap: onEdit,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(
-                      Iconsax.edit_2,
-                      size: 14,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

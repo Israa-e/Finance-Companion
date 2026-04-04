@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -24,9 +25,17 @@ class NotificationService {
     );
     await _plugin.initialize(
       settings: initSettings,
-      onDidReceiveNotificationResponse: (response) {},
+      onDidReceiveNotificationResponse: (response) {
+        if (response.payload != null) {
+          _selectNotificationStream.add(response.payload!);
+        }
+      },
     );
   }
+
+  // Stream for notification taps
+  final _selectNotificationStream = StreamController<String>.broadcast();
+  Stream<String> get selectNotificationStream => _selectNotificationStream.stream;
 
   Future<void> requestPermission() async {
     final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
@@ -38,17 +47,32 @@ class NotificationService {
     required int id,
     required String title,
     required String body,
+    String? payload,
+    Importance importance = Importance.max,
+    Priority priority = Priority.high,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'finance_companion_alerts',
       'Finance Alerts',
       channelDescription: 'Notifications for budgets and streaks',
-      importance: Importance.max,
-      priority: Priority.high,
+      importance: importance,
+      priority: priority,
+      playSound: true,
+      enableVibration: true,
     );
-    const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
-    await _plugin.show(id: id, title: title, body: body, notificationDetails: details);
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: details,
+      payload: payload,
+    );
   }
 }

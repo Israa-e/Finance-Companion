@@ -84,6 +84,8 @@ class AuthCubit extends Cubit<AuthState> {
     required double initialBalance,
     double monthlyBudget = 0.0,
     String currency = 'USD',
+    double? warningThreshold,
+    double? criticalThreshold,
   }) async {
     final current = state;
     if (current is! AuthAuthenticated) return;
@@ -96,6 +98,8 @@ class AuthCubit extends Cubit<AuthState> {
         initialBalance: initialBalance,
         monthlyBudget: monthlyBudget,
         currency: currency,
+        warningThreshold: warningThreshold ?? current.user.warningThreshold,
+        criticalThreshold: criticalThreshold ?? current.user.criticalThreshold,
       );
       await _repo.updateProfile(updatedUser);
       emit(current.copyWith(

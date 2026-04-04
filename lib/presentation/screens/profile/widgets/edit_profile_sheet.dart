@@ -85,6 +85,104 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
         );
   }
 
+  void _showCurrencyPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Gap(16),
+            Text('Select Currency', style: AppTextStyles.h3),
+            const Gap(16),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                children: AppConstants.supportedCurrencies.keys.map((code) {
+                  final symbol = AppConstants.supportedCurrencies[code];
+                  final isSelected = code == _selectedCurrency;
+                  return InkWell(
+                    onTap: () {
+                      setState(() => _selectedCurrency = code);
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary.withValues(alpha: 0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.primary
+                              : Theme.of(context).dividerColor,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            symbol ?? '',
+                            style: AppTextStyles.h3.copyWith(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const Gap(16),
+                          Expanded(
+                            child: Text(
+                              code,
+                              style: AppTextStyles.body.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
@@ -117,8 +215,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -191,8 +288,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                       RegExp(r'^\d+\.?\d{0,2}'),
                     ),
                   ],
-                  prefixIcon:
-                      const Icon(Iconsax.dollar_circle, size: 18),
+                  prefixIcon: const Icon(Iconsax.dollar_circle, size: 18),
                 ),
                 const Gap(16),
 
@@ -208,46 +304,33 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                       RegExp(r'^\d+\.?\d{0,2}'),
                     ),
                   ],
-                  prefixIcon:
-                      const Icon(Iconsax.chart, size: 18),
+                  prefixIcon: const Icon(Iconsax.chart, size: 18),
                 ),
                 const Gap(16),
 
-                // Currency Dropdown
-                DropdownButtonFormField<String>(
-                  value: AppConstants.supportedCurrencies.containsKey(_selectedCurrency) 
-                      ? _selectedCurrency 
-                      : AppConstants.supportedCurrencies.keys.first,
-                  decoration: InputDecoration(
-                    labelText: 'Currency',
-                    labelStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
-                    prefixIcon: const Icon(Iconsax.global, size: 18, color: AppColors.textHint),
-                    filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                // Currency Selection
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 8),
+                      child: Text(
+                        'Currency',
+                        style:
+                            Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                      ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                    CustomButton(
+                      label:
+                          '$_selectedCurrency (${AppConstants.supportedCurrencies[_selectedCurrency]})',
+                      isField: true,
+                      icon: Iconsax.global,
+                      onTap: () => _showCurrencyPicker(context),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                    ),
-                  ),
-                  dropdownColor: Theme.of(context).colorScheme.surface,
-                  items: AppConstants.supportedCurrencies.keys.map((code) {
-                    final symbol = AppConstants.supportedCurrencies[code];
-                    return DropdownMenuItem(
-                      value: code,
-                      child: Text('$code ($symbol)', style: AppTextStyles.body),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedCurrency = val);
-                  },
+                  ],
                 ),
                 const Gap(24),
 

@@ -4,15 +4,17 @@ import '../../data/models/goal_model.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/repositories/goal_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
+import '../../data/services/alert_service.dart';
 import 'goal_state.dart';
 
 class GoalCubit extends Cubit<GoalState> {
   final GoalRepository _repo;
   final TransactionRepository _txRepo;
+  final AlertService? _alertService;
   final _uuid = const Uuid();
   int _userId = 0;
 
-  GoalCubit(this._repo, this._txRepo) : super(GoalInitial());
+  GoalCubit(this._repo, this._txRepo, [this._alertService]) : super(GoalInitial());
 
   void setUser(int userId) {
     _userId = userId;
@@ -86,6 +88,8 @@ class GoalCubit extends Cubit<GoalState> {
         activeGoals: active,
         submitSuccess: true,
       ));
+      
+      _triggerAlerts(goals);
     } catch (e) {
       emit(current.copyWith(
           isSubmitting: false, formErrorMessage: e.toString()));
@@ -120,7 +124,11 @@ class GoalCubit extends Cubit<GoalState> {
       }
 
       await _repo.addToSavings(id, amount);
-      await loadGoals();
+      final goals = await _repo.getAll(_userId);
+      final active = await _repo.getActive(_userId);
+      emit(GoalLoaded(goals: goals, activeGoals: active));
+      
+      _triggerAlerts(goals);
     } catch (e) {
       emit(GoalError(e.toString()));
       // Recover to the last known-good loaded state.
@@ -174,5 +182,10 @@ class GoalCubit extends Cubit<GoalState> {
     } catch (e) {
       emit(GoalError(e.toString()));
     }
+  }
+
+  void _triggerAlerts(List<GoalModel> goals) {
+    if (_alertService == null) return;
+    _alertService!.checkGoalAlerts(goals);
   }
 }

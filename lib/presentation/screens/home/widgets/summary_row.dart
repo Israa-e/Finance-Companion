@@ -61,51 +61,55 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+    return Semantics(
+      label: '$label: ${amount.toStringAsFixed(2)}',
+      container: true,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const Gap(12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTextStyles.caption),
-              const Gap(2),
-              Builder(
-                builder: (context) {
-                  final authState = context.watch<AuthCubit>().state;
-                  final formatter = authState is AuthAuthenticated
-                      ? authState.formatter
-                      : const CurrencyFormatter();
-                  return Text(
-                    formatter.formatCompact(amount),
-                    style: AppTextStyles.amountSmall,
-                  );
-                },
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
-          ),
-        ],
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const Gap(12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: AppTextStyles.caption),
+                const Gap(2),
+                Builder(
+                  builder: (context) {
+                    final authState = context.watch<AuthCubit>().state;
+                    final formatter = authState is AuthAuthenticated
+                        ? authState.formatter
+                        : const CurrencyFormatter();
+                    return Text(
+                      formatter.formatCompact(amount),
+                      style: AppTextStyles.amountSmall,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

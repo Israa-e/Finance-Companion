@@ -15,6 +15,7 @@ import 'edit_transaction_screen.dart';
 import 'add_transaction_screen.dart';
 import 'widgets/transaction_list_item.dart';
 import 'widgets/transaction_search_bar.dart';
+import '../../shared/widgets/sync_indicator.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -202,32 +203,38 @@ class _Header extends StatelessWidget {
                   ),
                 ],
               ),
-              GestureDetector(
-                onTap: () {
-                  final txCubit = context.read<TransactionCubit>();
-                  final goalCubit = context.read<GoalCubit>();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MultiBlocProvider(
-                        providers: [
-                          BlocProvider.value(value: txCubit),
-                          BlocProvider.value(value: goalCubit),
-                        ],
-                        child: const AddTransactionScreen(),
+              Row(
+                children: [
+                  const SyncIndicator(),
+                  const Gap(12),
+                  GestureDetector(
+                    onTap: () {
+                      final txCubit = context.read<TransactionCubit>();
+                      final goalCubit = context.read<GoalCubit>();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MultiBlocProvider(
+                            providers: [
+                              BlocProvider.value(value: txCubit),
+                              BlocProvider.value(value: goalCubit),
+                            ],
+                            child: const AddTransactionScreen(),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                      child: const Icon(Icons.add, color: Colors.white, size: 28),
                     ),
-                  );
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 28),
-                ),
+                ],
               ),
             ],
           );

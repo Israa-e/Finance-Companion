@@ -78,6 +78,33 @@ class InsightsCubit extends Cubit<InsightsState> {
         }
       });
 
+      // Predictive Analytics (Burn Rate)
+      final dayOfMonth = now.day;
+      final dailyBurnRate = thisMonth / dayOfMonth;
+      
+      // Default hypothetical budget for calculation if not explicitly set
+      // (Value can be retrieved from UserSettings later)
+      const monthlyBudget = 2000.0;
+      DateTime? predictedBreachDate;
+      if (dailyBurnRate > 0 && thisMonth < monthlyBudget) {
+        final remainingBudget = monthlyBudget - thisMonth;
+        final daysLeft = (remainingBudget / dailyBurnRate).floor();
+        predictedBreachDate = now.add(Duration(days: daysLeft));
+      }
+
+      // Weighted Averages (Senior+ Feature)
+      final weekdayExpenses = filtered.where((t) => 
+        t.type == TransactionType.expense && t.date.weekday >= 1 && t.date.weekday <= 5);
+      final weekendExpenses = filtered.where((t) => 
+        t.type == TransactionType.expense && (t.date.weekday == 6 || t.date.weekday == 7));
+        
+      final weekdayAvg = weekdayExpenses.isEmpty 
+          ? 0.0 
+          : weekdayExpenses.fold(0.0, (sum, t) => sum + t.amount) / weekdayExpenses.length;
+      final weekendAvg = weekendExpenses.isEmpty 
+          ? 0.0 
+          : weekendExpenses.fold(0.0, (sum, t) => sum + t.amount) / weekendExpenses.length;
+
       emit(InsightsLoaded(
         expensesByCategory: byCategory,
         weeklyExpenses: weekly,
@@ -89,7 +116,11 @@ class InsightsCubit extends Cubit<InsightsState> {
         mostFrequentCategory: mostFrequentCategory,
         mostFrequentCount: mostFrequentCount,
         activePeriod: period,
-        transactions: filtered, // ADDED
+        transactions: filtered,
+        dailyBurnRate: dailyBurnRate,
+        predictedBreachDate: predictedBreachDate,
+        weekdayAverage: weekdayAvg,
+        weekendAverage: weekendAvg,
       ));
     } catch (e) {
       emit(InsightsError(e.toString()));

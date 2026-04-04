@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:finance_companion/presentation/screens/profile/widgets/edit_profile_sheet.dart';
 import 'package:finance_companion/presentation/screens/profile/widgets/menu_item.dart';
 import 'package:finance_companion/presentation/screens/profile/widgets/stat_card.dart';
+import 'package:finance_companion/presentation/screens/profile/widgets/user_settings_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -150,8 +151,12 @@ class ProfileScreen extends StatelessWidget {
         MenuItem(
           icon: Iconsax.edit,
           label: 'Edit Profile',
-          // FIX: pass initialBalance to sheet
           onTap: () => _showEditProfile(context, user),
+        ),
+        MenuItem(
+          icon: Iconsax.notification_status,
+          label: 'Budget Alerts',
+          onTap: () => _showBudgetSettings(context),
         ),
         MenuItem(
           icon: Iconsax.logout,
@@ -186,6 +191,19 @@ class ProfileScreen extends StatelessWidget {
           initialMonthlyBudget: user.monthlyBudget,
           initialCurrency: user.currency,
         ),
+      ),
+    );
+  }
+
+  void _showBudgetSettings(BuildContext context) {
+    final authCubit = context.read<AuthCubit>();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: authCubit,
+        child: const UserSettingsSheet(),
       ),
     );
   }

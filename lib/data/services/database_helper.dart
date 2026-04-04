@@ -18,7 +18,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 4, // FIX: bumped version to add currency
+      version: 5, // Bumped to 5 to add budget alert thresholds
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -34,6 +34,8 @@ class DatabaseHelper {
         initialBalance REAL NOT NULL DEFAULT 0,
         monthlyBudget REAL NOT NULL DEFAULT 0,
         currency TEXT NOT NULL DEFAULT "USD",
+        warningThreshold REAL NOT NULL DEFAULT 0.8,
+        criticalThreshold REAL NOT NULL DEFAULT 1.0,
         imagePath TEXT,
         createdAt TEXT NOT NULL
       )
@@ -69,13 +71,11 @@ class DatabaseHelper {
       )
     ''');
 
-    // FIX: notifications table included from the start on fresh installs
     await _createNotificationsTable(db);
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Existing installs that had v1 get the notifications table on upgrade
       await _createNotificationsTable(db);
     }
     if (oldVersion < 3) {
@@ -84,6 +84,10 @@ class DatabaseHelper {
     }
     if (oldVersion < 4) {
       await db.execute('ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT "USD"');
+    }
+    if (oldVersion < 5) {
+      await db.execute('ALTER TABLE users ADD COLUMN warningThreshold REAL NOT NULL DEFAULT 0.8');
+      await db.execute('ALTER TABLE users ADD COLUMN criticalThreshold REAL NOT NULL DEFAULT 1.0');
     }
   }
 

@@ -3,24 +3,38 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/repositories/transaction_repository.dart';
+import '../../data/services/alert_service.dart';
 import 'transaction_state.dart';
 
 class TransactionCubit extends Cubit<TransactionState> {
   final TransactionRepository _repo;
+  final AlertService? _alertService;
   final _uuid = const Uuid();
 
+  double _monthlyBudget = 0.0;
   double _initialBalance = 0.0;
+  double _warningThreshold = 0.8;
+  double _criticalThreshold = 1.0;
   int _userId = 0;
 
   /// Called after any mutation (add / update / delete) so that
   /// InsightsCubit and other listeners can refresh.
   VoidCallback? onMutated;
 
-  TransactionCubit(this._repo) : super(TransactionInitial());
+  TransactionCubit(this._repo, [this._alertService]) : super(TransactionInitial());
 
-  void setUser(int userId, double initialBalance) {
+  void setUser(
+    int userId,
+    double initialBalance, {
+    double monthlyBudget = 0.0,
+    double warningThreshold = 0.8,
+    double criticalThreshold = 1.0,
+  }) {
     _userId = userId;
     _initialBalance = initialBalance;
+    _monthlyBudget = monthlyBudget;
+    _warningThreshold = warningThreshold;
+    _criticalThreshold = criticalThreshold;
   }
 
   void setInitialBalance(double balance) {
@@ -63,6 +77,39 @@ class TransactionCubit extends Cubit<TransactionState> {
     final current = state;
     if (current is TransactionLoaded) {
       emit(current.copyWith(activeFilter: filter));
+    }
+  }
+
+  void updateSelectedCategories(List<String> categories) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(selectedCategories: categories));
+    }
+  }
+
+  void updateCustomDateRange(DateTime? start, DateTime? end) {
+    final current = state;
+    if (current is TransactionLoaded) {
+      if (start == null || end == null) {
+        emit(current.copyWith(customDateRange: null));
+      } else {
+        // Ensure time is set to start/end of day
+        final s = DateTime(start.year, start.month, start.day);
+        final e = DateTime(end.year, end.month, end.day, 23, 59, 59);
+        emit(current.copyWith(customDateRange: CustomDateRange(s, e)));
+      }
+    }
+  }
+
+  void resetFilters() {
+    final current = state;
+    if (current is TransactionLoaded) {
+      emit(current.copyWith(
+        activeFilter: TransactionFilter.all,
+        selectedCategories: const [],
+        customDateRange: null,
+        searchQuery: '',
+      ));
     }
   }
 
@@ -160,6 +207,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       ));
 
       onMutated?.call();
+      _triggerAlerts();
     } catch (e) {
       emit(current.copyWith(
           isSubmitting: false, formErrorMessage: e.toString()));
@@ -172,7 +220,8 @@ class TransactionCubit extends Cubit<TransactionState> {
     try {
       await _repo.update(transaction);
       await loadTransactions();
-      onMutated?.call(); // FIX: was missing — insights won't refresh on edit
+      onMutated?.call();
+      _triggerAlerts();
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
@@ -185,6 +234,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       await _repo.delete(id);
       await loadTransactions();
       onMutated?.call();
+      _triggerAlerts();
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
@@ -215,8 +265,23 @@ class TransactionCubit extends Cubit<TransactionState> {
       await _repo.add(transaction);
       await loadTransactions();
       onMutated?.call();
+      _triggerAlerts();
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
+  }
+
+  Future<void> _triggerAlerts() async {
+    if (_alertService == null) return;
+    
+    try {
+      final transactions = await _repo.getAll();
+      await _alertService!.checkBudgetAlerts(
+        transactions: transactions,
+        monthlyBudget: _monthlyBudget,
+        warningThreshold: _warningThreshold,
+        criticalThreshold: _criticalThreshold,
+      );
+    } catch (_) {}
   }
 }
