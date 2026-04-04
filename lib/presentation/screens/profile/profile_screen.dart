@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:finance_companion/presentation/screens/profile/widgets/edit_profile_sheet.dart';
+import 'package:finance_companion/presentation/screens/profile/widgets/menu_item.dart';
+import 'package:finance_companion/presentation/screens/profile/widgets/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -11,7 +13,6 @@ import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../logic/transaction/transaction_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/user_model.dart';
 import '../../shared/widgets/custom_button.dart';
 
@@ -21,6 +22,8 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Use theme background — not hardcoded
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -38,8 +41,18 @@ class ProfileScreen extends StatelessWidget {
                   const Gap(32),
                   _buildAvatar(user.imagePath),
                   const Gap(16),
-                  Text(user.name, style: AppTextStyles.h3),
-                  Text(user.email, style: AppTextStyles.bodySmall),
+                  Text(
+                    user.name,
+                    style: AppTextStyles.h3.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    user.email,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   const Gap(24),
                   _buildStatsRow(context),
                   const Gap(24),
@@ -88,15 +101,15 @@ class ProfileScreen extends StatelessWidget {
 
         return Row(
           children: [
-            _StatCard(
+            StatCard(
               label: 'Balance',
               amount: balance,
               color: AppColors.primary,
             ),
             const Gap(8),
-            _StatCard(label: 'Income', amount: income, color: AppColors.income),
+            StatCard(label: 'Income', amount: income, color: AppColors.income),
             const Gap(8),
-            _StatCard(
+            StatCard(
               label: 'Expense',
               amount: expense,
               color: AppColors.expense,
@@ -110,39 +123,47 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenuItems(BuildContext context, UserModel user) {
     return Column(
       children: [
+        // ── Dark / Light toggle ─────────────────────────────────────────────
         BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, mode) {
+            final isDark = mode == ThemeMode.dark;
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
+                // Use theme surface so it respects light/dark
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: SwitchListTile(
-                value: mode == ThemeMode.dark,
-                activeThumbColor: AppColors.primary,
+                value: isDark,
+                activeColor: AppColors.primary,
                 title: Text(
-                  'Dark Mode',
+                  isDark ? 'Dark Mode' : 'Light Mode',
                   style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 secondary: Icon(
-                  mode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  color: isDark ? AppColors.primary : AppColors.savings,
                 ),
-                onChanged: (value) =>
-                    context.read<ThemeCubit>().toggleTheme(value),
+                onChanged: (value) {
+                  // This reads the SAME ThemeCubit provided in main.dart
+                  // so the entire MaterialApp rebuilds immediately
+                  context.read<ThemeCubit>().toggleTheme(value);
+                },
               ),
             );
           },
         ),
-        _MenuItem(
+
+        MenuItem(
           icon: Iconsax.edit,
           label: 'Edit Profile',
           onTap: () => _showEditProfile(context, user),
         ),
-        _MenuItem(
+        MenuItem(
           icon: Iconsax.logout,
           label: 'Logout',
           color: AppColors.expense,
@@ -213,85 +234,6 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String label;
-  final double amount;
-  final Color color;
-
-  const _StatCard({
-    required this.label,
-    required this.amount,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Text(
-              CurrencyFormatter.formatCompact(amount),
-              style: AppTextStyles.amountSmall.copyWith(color: color),
-            ),
-            const Gap(4),
-            Text(label, style: AppTextStyles.caption),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? color;
-
-  const _MenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: color ?? Theme.of(context).colorScheme.onSurface,
-          size: 20,
-        ),
-        title: Text(
-          label,
-          style: AppTextStyles.body.copyWith(
-            color: color ?? Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
-        onTap: onTap,
       ),
     );
   }

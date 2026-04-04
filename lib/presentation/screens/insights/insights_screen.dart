@@ -1,3 +1,4 @@
+// insights_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -19,14 +20,16 @@ class InsightsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => context.read<InsightsCubit>().loadInsights(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
             child: BlocBuilder<InsightsCubit, InsightsState>(
               builder: (context, state) {
+                // ── Loading ──────────────────────────────────────────
                 if (state is InsightsLoading) {
                   return const SizedBox(
                     height: 400,
@@ -34,6 +37,7 @@ class InsightsScreen extends StatelessWidget {
                   );
                 }
 
+                // ── Error ────────────────────────────────────────────
                 if (state is InsightsError) {
                   return SizedBox(
                     height: 400,
@@ -47,6 +51,7 @@ class InsightsScreen extends StatelessWidget {
 
                 if (state is! InsightsLoaded) return const SizedBox.shrink();
 
+                // ── Empty ────────────────────────────────────────────
                 final isEmpty = state.expensesByCategory.isEmpty &&
                     state.thisMonthExpense == 0 &&
                     state.lastMonthExpense == 0;
@@ -56,45 +61,51 @@ class InsightsScreen extends StatelessWidget {
                     height: 400,
                     child: EmptyStateWidget(
                       title: 'No data yet',
-                      subtitle: 'Add some transactions to start seeing insights',
+                      subtitle:
+                          'Add some transactions to start seeing insights',
                       icon: Iconsax.chart,
                     ),
                   );
                 }
 
+                // ── Content ──────────────────────────────────────────
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Gap(16),
-                    Text('Insights', style: AppTextStyles.h2),
+                    Text(
+                      'Insights',
+                      style: AppTextStyles.h2.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                     const Gap(20),
 
-                    // ── Top spending category ──────────────────────────
-                    TopCategoryCard(state: state),
-                    const Gap(16),
+                    // 1 ── Top spending category
+                    if (state.topCategory.isNotEmpty) ...[
+                      TopCategoryCard(state: state),
+                      const Gap(16),
+                    ],
 
-                    // ── Month vs last month ────────────────────────────
+                    // 2 ── Month comparison
                     MonthComparisonCard(state: state),
                     const Gap(16),
 
-                    // ── Frequent transaction type ──────────────────────
+                    // 3 ── Most frequent category
                     if (state.mostFrequentCategory.isNotEmpty) ...[
                       FrequentCategoryCard(state: state),
                       const Gap(16),
                     ],
 
-                    // ── Monthly trend (last 6 months) ──────────────────
+                    // 4 ── Monthly trend (last 6 months)
                     if (state.monthlyTrend.isNotEmpty) ...[
                       MonthlyTrendChart(state: state),
                       const Gap(16),
                     ],
 
-                    // ── Pie chart by category ──────────────────────────
-                    if (state.expensesByCategory.isNotEmpty) ...[
+                    // 5 ── Pie chart breakdown
+                    if (state.expensesByCategory.isNotEmpty)
                       CategoryPieChart(state: state),
-                    ],
-
-                    const Gap(24),
                   ],
                 );
               },
@@ -105,4 +116,3 @@ class InsightsScreen extends StatelessWidget {
     );
   }
 }
-

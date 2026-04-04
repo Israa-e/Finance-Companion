@@ -19,20 +19,26 @@ void main() async {
   runApp(FinanceApp(prefs: prefs));
 }
 
-class FinanceApp extends StatelessWidget {
+class FinanceApp extends StatefulWidget {
   final SharedPreferences prefs;
-  final transactionRepo = TransactionRepository();
-  final goalRepo = GoalRepository();
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  FinanceApp({required this.prefs, super.key});
+  const FinanceApp({required this.prefs, super.key});
+
+  @override
+  State<FinanceApp> createState() => _FinanceAppState();
+}
+
+class _FinanceAppState extends State<FinanceApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final _transactionRepo = TransactionRepository();
+  final _goalRepo = GoalRepository();
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => AuthCubit(AuthRepository())),
-        BlocProvider(create: (_) => ThemeCubit(prefs)),
+        BlocProvider(create: (_) => ThemeCubit(widget.prefs)),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
@@ -49,9 +55,19 @@ class FinanceApp extends StatelessWidget {
                 if (nav != null) {
                   nav.pushReplacement(
                     MaterialPageRoute(
-                      builder: (_) => AuthWrapper(
-                        transactionRepo: TransactionRepository(),
-                        goalRepo: GoalRepository(),
+                      builder: (_) => MultiBlocProvider(
+                        providers: [
+                          BlocProvider.value(
+                            value: context.read<AuthCubit>(),
+                          ),
+                          BlocProvider.value(
+                            value: context.read<ThemeCubit>(),
+                          ),
+                        ],
+                        child: AuthWrapper(
+                          transactionRepo: _transactionRepo,
+                          goalRepo: _goalRepo,
+                        ),
                       ),
                     ),
                   );

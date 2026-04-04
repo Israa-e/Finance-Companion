@@ -70,9 +70,7 @@ class TransactionListItem extends StatelessWidget {
                     child: CustomButton(
                       label: 'Delete',
                       color: AppColors.expense,
-                      onTap: () {
-                        Navigator.pop(ctx, true);
-                      },
+                      onTap: () => Navigator.pop(ctx, true),
                     ),
                   ),
                 ],
@@ -89,7 +87,8 @@ class TransactionListItem extends StatelessWidget {
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
           ),
         ),
         child: Row(
@@ -102,8 +101,11 @@ class TransactionListItem extends StatelessWidget {
                 color: accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child:
-                  Icon(_iconFor(transaction.category), color: accent, size: 22),
+              child: Icon(
+                _iconFor(transaction.category),
+                color: accent,
+                size: 22,
+              ),
             ),
             const Gap(14),
             // Info
@@ -160,13 +162,19 @@ class TransactionListItem extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
                       Iconsax.edit_2,
                       size: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
                     ),
                   ),
                 ),
@@ -178,32 +186,37 @@ class TransactionListItem extends StatelessWidget {
     );
   }
 
+  /// Maps AppConstants category names → icons.
+  /// Must match AppConstants.expenseCategories & AppConstants.incomeCategories
   IconData _iconFor(String category) {
     switch (category.toLowerCase()) {
+      // ── Expense categories ──────────────────────────────────────────────
       case 'food & drinks':
-      case 'food':
         return Iconsax.coffee;
       case 'shopping':
         return Iconsax.bag;
       case 'transport':
         return Iconsax.car;
       case 'housing':
-      case 'rent':
         return Iconsax.home;
-      case 'health':
-        return Iconsax.health;
       case 'entertainment':
         return Iconsax.music;
+      case 'health':
+        return Iconsax.health;
+      case 'travel':
+        return Iconsax.airplane;
       case 'education':
         return Iconsax.book;
+      // ── Income categories ───────────────────────────────────────────────
       case 'salary':
         return Iconsax.money;
       case 'freelance':
         return Iconsax.briefcase;
       case 'investment':
         return Iconsax.chart;
-      case 'travel':
-        return Iconsax.airplane;
+      case 'gift':
+        return Iconsax.gift;
+      // ── Fallback ────────────────────────────────────────────────────────
       default:
         return Iconsax.wallet;
     }

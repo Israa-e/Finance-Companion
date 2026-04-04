@@ -1,3 +1,4 @@
+// frequent_category_card.dart
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:gap/gap.dart';
@@ -7,7 +8,6 @@ import '../../../../logic/insights/insights_state.dart';
 
 class FrequentCategoryCard extends StatelessWidget {
   final InsightsLoaded state;
-
   const FrequentCategoryCard({super.key, required this.state});
 
   @override
@@ -20,6 +20,7 @@ class FrequentCategoryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // ── Icon ────────────────────────────────────────────────────
           Container(
             width: 48,
             height: 48,
@@ -34,6 +35,7 @@ class FrequentCategoryCard extends StatelessWidget {
             ),
           ),
           const Gap(14),
+          // ── Label + category ────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,28 +43,52 @@ class FrequentCategoryCard extends StatelessWidget {
                 Text(
                   'Most Frequent',
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.5),
                   ),
                 ),
+                const Gap(2),
                 Text(
                   state.mostFrequentCategory,
                   style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          // ── Count badge — bigger & clearer ──────────────────────────
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.savings.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.savings.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.savings.withValues(alpha: 0.3),
+              ),
             ),
-            child: Text(
-              '${state.mostFrequentCount}×',
-              style: AppTextStyles.label.copyWith(color: AppColors.savings),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Iconsax.receipt_item,
+                  size: 14,
+                  color: AppColors.savings,
+                ),
+                const Gap(5),
+                Text(
+                  '${state.mostFrequentCount} transactions',
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.savings,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

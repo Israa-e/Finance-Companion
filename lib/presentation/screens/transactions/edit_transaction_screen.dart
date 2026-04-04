@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../core/theme/app_colors.dart';
@@ -30,24 +31,10 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   late DateTime _date;
   bool _isSubmitting = false;
 
-  static const _expenseCategories = [
-    'Food',
-    'Transport',
-    'Shopping',
-    'Rent',
-    'Entertainment',
-    'Health',
-    'Travel',
-    'Other',
-  ];
-
-  static const _incomeCategories = [
-    'Salary',
-    'Freelance',
-    'Investment',
-    'Gift',
-    'Other',
-  ];
+  // ── Use AppConstants — single source of truth ───────────────────────────
+  List<String> get _currentCategories => _type == TransactionType.income
+      ? AppConstants.incomeCategories
+      : AppConstants.expenseCategories;
 
   @override
   void initState() {
@@ -60,10 +47,8 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     _type = t.type;
     _date = t.date;
 
-    // Ensure category is valid for the type
-    final validCategories = _type == TransactionType.income
-        ? _incomeCategories
-        : _expenseCategories;
+    // Ensure the stored category is valid; fall back to last if not found
+    final validCategories = _currentCategories;
     _category = validCategories.contains(t.category)
         ? t.category
         : validCategories.last;
@@ -76,9 +61,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     _noteController.dispose();
     super.dispose();
   }
-
-  List<String> get _currentCategories =>
-      _type == TransactionType.income ? _incomeCategories : _expenseCategories;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -112,7 +94,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         elevation: 0,
         leading: const BackButton(),
         actions: [
-          // Delete button in app bar
           IconButton(
             icon: const Icon(Iconsax.trash, color: AppColors.expense, size: 20),
             onPressed: () => _confirmDelete(context),
@@ -126,20 +107,20 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Type toggle ──────────────────────────────────────────
+              // ── Type toggle ──────────────────────────────────────────────
               _TypeToggle(
                 selected: _type,
                 onChanged: (type) {
                   setState(() {
                     _type = type;
-                    // Reset category to first valid option on type change
+                    // Reset to first valid category when switching type
                     _category = _currentCategories.first;
                   });
                 },
               ),
               const Gap(24),
 
-              // ── Amount ───────────────────────────────────────────────
+              // ── Amount ───────────────────────────────────────────────────
               CustomTextField(
                 label: 'Amount',
                 controller: _amountController,
@@ -158,7 +139,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               ),
               const Gap(20),
 
-              // ── Category ─────────────────────────────────────────────
+              // ── Category ─────────────────────────────────────────────────
               _CategoryDropdown(
                 categories: _currentCategories,
                 selected: _category,
@@ -166,7 +147,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               ),
               const Gap(20),
 
-              // ── Title ────────────────────────────────────────────────
+              // ── Title ────────────────────────────────────────────────────
               CustomTextField(
                 label: 'Title',
                 controller: _titleController,
@@ -176,14 +157,14 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               ),
               const Gap(20),
 
-              // ── Date picker ──────────────────────────────────────────
+              // ── Date picker ──────────────────────────────────────────────
               _DatePicker(
                 date: _date,
                 onPick: (picked) => setState(() => _date = picked),
               ),
               const Gap(20),
 
-              // ── Note ─────────────────────────────────────────────────
+              // ── Note ─────────────────────────────────────────────────────
               CustomTextField(
                 label: 'Note (Optional)',
                 controller: _noteController,
@@ -192,7 +173,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               ),
               const Gap(32),
 
-              // ── Save button ──────────────────────────────────────────
+              // ── Save ─────────────────────────────────────────────────────
               CustomButton(
                 label: 'Save Changes',
                 isLoading: _isSubmitting,
@@ -229,11 +210,11 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                   onPressed: () {
                     Navigator.pop(ctx);
                     cubit.deleteTransaction(widget.transaction.id);
-                    Navigator.pop(context); // also pop edit screen
+                    Navigator.pop(context);
                   },
                   child: const Text('Delete'),
                 ),
-              )
+              ),
             ],
           ),
         ],
@@ -343,6 +324,9 @@ class _CategoryDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final safeSelected =
+        categories.contains(selected) ? selected : categories.last;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -366,7 +350,7 @@ class _CategoryDropdown extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: categories.contains(selected) ? selected : categories.last,
+              value: safeSelected,
               isExpanded: true,
               icon: Icon(
                 Icons.keyboard_arrow_down,

@@ -141,10 +141,13 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
                           color: AppColors.primary,
                         ),
                         title: Text(
-                          'End Date: ${state.formEndDate?.day}/${state.formEndDate?.month}/${state.formEndDate?.year ?? 'Select Date'}',
+                          state.formEndDate != null
+                              ? 'End Date: ${state.formEndDate!.day}/${state.formEndDate!.month}/${state.formEndDate!.year}'
+                              : 'End Date: Select Date',
                           style: AppTextStyles.body,
                         ),
-                        onTap: () => _pickDate(context, cubit, state.formEndDate ?? DateTime.now()),
+                        onTap: () => _pickDate(context, cubit,
+                            state.formEndDate ?? DateTime.now()),
                       ),
                       const Gap(16),
                       CustomButton(
@@ -167,7 +170,8 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
     );
   }
 
-  Widget _buildEmojiPicker(BuildContext context, GoalCubit cubit, String activeEmoji) {
+  Widget _buildEmojiPicker(
+      BuildContext context, GoalCubit cubit, String activeEmoji) {
     return SizedBox(
       height: 44,
       child: ListView.separated(
@@ -198,12 +202,15 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
     );
   }
 
-  Future<void> _pickDate(BuildContext context, GoalCubit cubit, DateTime currentDate) async {
+  Future<void> _pickDate(
+      BuildContext context, GoalCubit cubit, DateTime currentDate) async {
+    final now = DateTime.now();
+    final initial = currentDate.isBefore(now) ? now : currentDate;
     final picked = await showDatePicker(
       context: context,
-      initialDate: currentDate,
-      firstDate: DateTime.now().add(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      initialDate: initial,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 5)),
     );
     if (picked != null) cubit.updateFormDate(picked);
   }

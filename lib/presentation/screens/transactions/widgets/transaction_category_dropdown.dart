@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../logic/transaction/transaction_cubit.dart';
 import '../../../../logic/transaction/transaction_state.dart';
 import '../../../../data/models/transaction_model.dart';
@@ -15,18 +16,15 @@ class TransactionCategoryDropdown extends StatelessWidget {
         if (state is! TransactionLoaded) return const SizedBox.shrink();
         final cubit = context.read<TransactionCubit>();
 
+        // ── Use AppConstants so names are always in sync ──────────────────
         final categories = state.formType == TransactionType.income
-            ? ['Salary', 'Freelance', 'Investment', 'Gift', 'Other']
-            : [
-                'Food',
-                'Transport',
-                'Shopping',
-                'Rent',
-                'Entertainment',
-                'Health',
-                'Travel',
-                'Other'
-              ];
+            ? AppConstants.incomeCategories
+            : AppConstants.expenseCategories;
+
+        // Guard: if current formCategory isn't in the list, fall back to last
+        final currentCategory = categories.contains(state.formCategory)
+            ? state.formCategory
+            : categories.last;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,9 +47,7 @@ class TransactionCategoryDropdown extends StatelessWidget {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
-                  value: categories.contains(state.formCategory)
-                      ? state.formCategory
-                      : categories.last,
+                  value: currentCategory,
                   isExpanded: true,
                   icon: Icon(
                     Icons.keyboard_arrow_down,
@@ -64,12 +60,12 @@ class TransactionCategoryDropdown extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                   dropdownColor: Theme.of(context).colorScheme.surface,
-                  items: categories.map((String category) {
-                    return DropdownMenuItem<String>(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
+                  items: categories
+                      .map((c) => DropdownMenuItem<String>(
+                            value: c,
+                            child: Text(c),
+                          ))
+                      .toList(),
                   onChanged: (v) {
                     if (v != null) cubit.updateFormCategory(v);
                   },

@@ -41,31 +41,22 @@ class _BalanceCardState extends State<BalanceCard>
   Widget build(BuildContext context) {
     return BlocBuilder<GoalCubit, GoalState>(
       builder: (context, goalState) {
-        final lockedAmount = goalState is GoalLoaded
-            ? goalState.totalLocked
-            : 0.0;
+        final lockedAmount =
+            goalState is GoalLoaded ? goalState.totalLocked : 0.0;
 
         return BlocBuilder<TransactionCubit, TransactionState>(
           builder: (context, txState) {
             return BlocBuilder<AuthCubit, AuthState>(
               builder: (context, authState) {
-                final balance = txState is TransactionLoaded
-                    ? txState.balance
-                    : 0.0;
+                final balance =
+                    txState is TransactionLoaded ? txState.balance : 0.0;
                 final isLoading = txState is TransactionLoading;
-                final userName = authState is AuthAuthenticated
-                    ? authState.user.name.split(' ').first
-                    : '';
-                final income = txState is TransactionLoaded
-                    ? txState.totalIncome
-                    : 0.0;
-                final expense = txState is TransactionLoaded
-                    ? txState.totalExpense
-                    : 0.0;
-                final availableBalance = (balance - lockedAmount).clamp(
-                  0.0,
-                  double.infinity,
-                );
+                final income =
+                    txState is TransactionLoaded ? txState.totalIncome : 0.0;
+                final expense =
+                    txState is TransactionLoaded ? txState.totalExpense : 0.0;
+                final availableBalance =
+                    (balance - lockedAmount).clamp(0.0, double.infinity);
 
                 return _AnimatedBalanceCard(
                   shimmerController: _shimmerController,
@@ -74,7 +65,6 @@ class _BalanceCardState extends State<BalanceCard>
                   availableBalance: availableBalance,
                   income: income,
                   expense: expense,
-                  userName: userName,
                   isLoading: isLoading,
                 );
               },
@@ -93,7 +83,6 @@ class _AnimatedBalanceCard extends StatelessWidget {
   final double availableBalance;
   final double income;
   final double expense;
-  final String userName;
   final bool isLoading;
 
   const _AnimatedBalanceCard({
@@ -103,7 +92,6 @@ class _AnimatedBalanceCard extends StatelessWidget {
     required this.availableBalance,
     required this.income,
     required this.expense,
-    required this.userName,
     required this.isLoading,
   });
 
@@ -126,22 +114,20 @@ class _AnimatedBalanceCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            // ✅ FIXED: removed the huge blurRadius:30 purple glow
+            // that was leaking outside the card boundary
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 30,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 16,
+                spreadRadius: 0,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
           child: Stack(
             children: [
-              // Decorative circles (like the reference image)
+              // ── Decorative circles ──────────────────────────────────
               Positioned(
                 top: -30,
                 right: -30,
@@ -178,22 +164,19 @@ class _AnimatedBalanceCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Moving shimmer line
+              // ── Shimmer ─────────────────────────────────────────────
               Positioned.fill(
                 child: CustomPaint(
                   painter: _ShimmerPainter(shimmerController.value),
                 ),
               ),
-              // Card dots pattern (top right area)
-              // Positioned(top: 16, right: 16, child: _CardChip()),
-              // Main content
+              // ── Content ─────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Gap(8),
-                    // Balance label
                     Text(
                       'Total Balance',
                       style: AppTextStyles.caption.copyWith(
@@ -203,11 +186,14 @@ class _AnimatedBalanceCard extends StatelessWidget {
                       ),
                     ),
                     const Gap(8),
-                    // Balance amount
                     isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
                           )
                         : TweenAnimationBuilder<double>(
                             tween: Tween(begin: 0, end: balance),
@@ -225,7 +211,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
                             ),
                           ),
                     const Gap(24),
-                    // Divider
+                    // ── Divider ──────────────────────────────────────
                     Container(
                       height: 1,
                       decoration: BoxDecoration(
@@ -243,11 +229,10 @@ class _AnimatedBalanceCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _StatPill(
-                            icon: Icons.lock,
+                            icon: Icons.lock_rounded,
                             label: 'Locked',
-                            value: CurrencyFormatter.formatCompact(
-                              lockedAmount,
-                            ),
+                            value:
+                                CurrencyFormatter.formatCompact(lockedAmount),
                             color: const Color(0xFFFFB3B3),
                           ),
                         ),
@@ -257,36 +242,12 @@ class _AnimatedBalanceCard extends StatelessWidget {
                             icon: Icons.wallet_rounded,
                             label: 'Available',
                             value: CurrencyFormatter.formatCompact(
-                              availableBalance,
-                            ),
+                                availableBalance),
                             color: const Color(0xFF81F5AE),
                           ),
                         ),
                       ],
                     ),
-                    // const Gap(12),
-                    // Row(
-                    //   children: [
-                    //     Expanded(
-                    //       child: _StatPill(
-                    //         icon: Icons.arrow_downward_rounded,
-                    //         label: 'Income',
-                    //         value: CurrencyFormatter.formatCompact(income),
-                    //         color: const Color(0xFF81F5AE),
-                    //       ),
-                    //     ),
-                    //     const Gap(12),
-                    //     Expanded(
-                    //       child: _StatPill(
-                    //         icon: Icons.arrow_upward_rounded,
-                    //         label: 'Expenses',
-                    //         value: CurrencyFormatter.formatCompact(expense),
-                    //         color: const Color(0xFFFFB3B3),
-                    //       ),
-                    //     ),
-                    //     // Mini donut chart
-                    //   ],
-                    // ),
                   ],
                 ),
               ),
@@ -297,6 +258,8 @@ class _AnimatedBalanceCard extends StatelessWidget {
     );
   }
 }
+
+// ─── Shimmer Painter ──────────────────────────────────────────────────────────
 
 class _ShimmerPainter extends CustomPainter {
   final double progress;
@@ -325,6 +288,8 @@ class _ShimmerPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ShimmerPainter old) => old.progress != progress;
 }
+
+// ─── Stat Pill ────────────────────────────────────────────────────────────────
 
 class _StatPill extends StatelessWidget {
   final IconData icon;
@@ -388,4 +353,3 @@ class _StatPill extends StatelessWidget {
     );
   }
 }
-

@@ -21,7 +21,13 @@ class TransactionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Resolve colors once — respects light & dark
+    final labelColor = Theme.of(context).colorScheme.onSurface;
+    final dividerColor =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -54,6 +60,7 @@ class TransactionsScreen extends StatelessWidget {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // ── Date group header ──────────────────────
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Row(
@@ -61,34 +68,33 @@ class TransactionsScreen extends StatelessWidget {
                                   Text(
                                     date,
                                     style: AppTextStyles.label.copyWith(
-                                      color: Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? Colors.black
-                                          : Colors.white70,
+                                      // ✅ theme-aware — works in both light & dark
+                                      color: labelColor,
                                       fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.1,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
                                   const Gap(12),
                                   Expanded(
                                     child: Container(
                                       height: 1,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.07),
+                                      // ✅ theme-aware divider
+                                      color: dividerColor,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            ...transactions.map((tx) => TransactionListItem(
-                                  transaction: tx,
-                                  onEdit: () => _navigateToEdit(context, tx),
-                                  onDelete: () => context
-                                      .read<TransactionCubit>()
-                                      .deleteTransaction(tx.id),
-                                )),
+                            // ── Transaction items ──────────────────────
+                            ...transactions.map(
+                              (tx) => TransactionListItem(
+                                transaction: tx,
+                                onEdit: () => _navigateToEdit(context, tx),
+                                onDelete: () => context
+                                    .read<TransactionCubit>()
+                                    .deleteTransaction(tx.id),
+                              ),
+                            ),
                           ],
                         );
                       },
@@ -96,7 +102,14 @@ class TransactionsScreen extends StatelessWidget {
                   }
 
                   if (state is TransactionError) {
-                    return Center(child: Text(state.message));
+                    return Center(
+                      child: Text(
+                        state.message,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.expense,
+                        ),
+                      ),
+                    );
                   }
 
                   return const SizedBox.shrink();
@@ -136,7 +149,9 @@ class TransactionsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             isSearching ? 'No transactions found' : 'No transactions yet',
-            style: AppTextStyles.h3,
+            style: AppTextStyles.h3.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -155,6 +170,8 @@ class TransactionsScreen extends StatelessWidget {
     );
   }
 }
+
+// ─── Header ───────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
   const _Header();
@@ -177,20 +194,26 @@ class _Header extends StatelessWidget {
                 children: [
                   Text(
                     'Transactions',
-                    style: AppTextStyles.h2,
+                    style: AppTextStyles.h2.copyWith(
+                      // ✅ theme-aware title
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   const Gap(4),
                   Text(
                     '$count entries',
                     style: AppTextStyles.caption.copyWith(
-                      color: Theme.of(context).brightness == Brightness.light
-                          ? Colors.black54
-                          : Colors.white60,
+                      // ✅ theme-aware subtitle
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
+              // ── Add button ───────────────────────────────────────────
               GestureDetector(
                 onTap: () {
                   final txCubit = context.read<TransactionCubit>();
@@ -214,15 +237,13 @@ class _Header extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                  
                   ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 28),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
             ],
