@@ -1,9 +1,10 @@
-import 'package:finance_companion/logic/home/streak_cubit.dart';
+import 'package:finance_companion/logic/streak/streak_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../data/models/streak_model.dart';
 
 class StreakCard extends StatelessWidget {
   const StreakCard({super.key});
@@ -18,22 +19,17 @@ class StreakCard extends StatelessWidget {
 
         if (state is! StreakLoaded) return const SizedBox.shrink();
 
-        final streak = state.streak;
+        final StreakModel streak =
+            state.streak; // FIX: explicit type annotation
 
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: streak.currentStreak >= 7
-                  ? [
-                      const Color(0xFFFF9F0A),
-                      const Color(0xFFFF6B00),
-                    ]
+                  ? [const Color(0xFFFF9F0A), const Color(0xFFFF6B00)]
                   : streak.currentStreak >= 1
-                      ? [
-                          AppColors.income,
-                          const Color(0xFF00B86B),
-                        ]
+                      ? [AppColors.income, const Color(0xFF00B86B)]
                       : [
                           AppColors.primary.withValues(alpha: 0.8),
                           AppColors.primaryDark,
@@ -43,20 +39,12 @@ class StreakCard extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(
-                color: (streak.currentStreak >= 7
-                        ? const Color(0xFFFF6B00)
-                        : AppColors.income)
-                    .withValues(alpha: 0.3),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // ── Header ────────────────────────────────────────────────
               Row(
                 children: [
                   Text(
@@ -88,8 +76,10 @@ class StreakCard extends StatelessWidget {
                   ),
                   // Current streak badge
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -119,39 +109,77 @@ class StreakCard extends StatelessWidget {
               ),
               const Gap(16),
 
-              // 7-day mini calendar dots
-              _SevenDayDots(streak: state.streak),
+              // ── 7-day mini calendar ─────────────────────────────────
+              _SevenDayDots(streak: streak),
 
               const Gap(14),
 
-              // Personal best
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.emoji_events_rounded,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      size: 16,
-                    ),
-                    const Gap(6),
-                    Text(
-                      'Personal best: ${streak.longestStreak} day${streak.longestStreak == 1 ? '' : 's'}',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+              // ── Confirm no-spend button (FIX: manual confirmation) ──
+              if (!streak.todayConfirmed)
+                GestureDetector(
+                  onTap: () =>
+                      context.read<StreakCubit>().confirmTodayNoSpend(),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const Gap(8),
+                        Text(
+                          'Confirm no-spend today',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.emoji_events_rounded,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        size: 16,
+                      ),
+                      const Gap(6),
+                      Text(
+                        'Personal best: ${streak.longestStreak} day${streak.longestStreak == 1 ? '' : 's'}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         );
@@ -160,10 +188,10 @@ class StreakCard extends StatelessWidget {
   }
 }
 
-// ── Seven-day dot row ─────────────────────────────────────────────────────────
+// ── Seven-day dot row (FIX: explicit StreakModel type) ────────────────────────
 
 class _SevenDayDots extends StatelessWidget {
-  final streak;
+  final StreakModel streak; // FIX: was `final streak` (untyped)
 
   const _SevenDayDots({required this.streak});
 
@@ -175,11 +203,14 @@ class _SevenDayDots extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
-        // Build the last 7 days: i=0 is 6 days ago, i=6 is today
         final day = DateTime(now.year, now.month, now.day)
             .subtract(Duration(days: 6 - i));
-        final isNoSpend = streak.noSpendDays.any((d) =>
-            d.year == day.year && d.month == day.month && d.day == day.day);
+        final isNoSpend = streak.noSpendDays.any(
+          (d) => d.year == day.year && d.month == day.month && d.day == day.day,
+        );
+        final isConfirmed = streak.confirmedDays.any(
+          (d) => d.year == day.year && d.month == day.month && d.day == day.day,
+        );
         final isToday = i == 6;
 
         return Column(
@@ -206,16 +237,25 @@ class _SevenDayDots extends StatelessWidget {
                     isToday ? Border.all(color: Colors.white, width: 2) : null,
               ),
               child: Center(
-                child: Text(
-                  isNoSpend ? '✓' : '•',
-                  style: TextStyle(
-                    fontSize: isNoSpend ? 12 : 16,
-                    color: isNoSpend
-                        ? const Color(0xFF00B86B)
-                        : Colors.white.withValues(alpha: 0.5),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: isNoSpend
+                    ? Text(
+                        isConfirmed ? '★' : '✓',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isConfirmed
+                              ? const Color(0xFFFF9F0A)
+                              : const Color(0xFF00B86B),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : Text(
+                        '•',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -262,7 +302,7 @@ class _StreakSkeletonState extends State<_StreakSkeleton>
       builder: (_, __) {
         final opacity = 0.05 + 0.08 * _anim.value;
         return Container(
-          height: 130,
+          height: 160,
           decoration: BoxDecoration(
             color: Theme.of(context)
                 .colorScheme

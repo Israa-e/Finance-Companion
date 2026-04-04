@@ -17,9 +17,24 @@ class GoalRepository {
     return _firestore.collection('users').doc(uid).collection('goals');
   }
 
+  // FIX: replaced db.delete('goals') + full re-insert with per-record upsert.
+  // The old pattern deleted ALL local goals before re-inserting from Firestore,
+  // which caused data loss if the network dropped mid-sync.
   Future<void> _cacheRemoteGoals(List<GoalModel> goals) async {
     final db = await _db;
-    await db.delete('goals');
+
+    // Get existing local IDs so we can delete goals removed from Firestore
+    final existing = await db.query('goals', columns: ['id']);
+    final existingIds = existing.map((r) => r['id'] as String).toSet();
+    final remoteIds = goals.map((g) => g.id).toSet();
+
+    // Remove goals that no longer exist remotely
+    final toDelete = existingIds.difference(remoteIds);
+    for (final id in toDelete) {
+      await db.delete('goals', where: 'id = ?', whereArgs: [id]);
+    }
+
+    // Upsert each remote goal individually — safe against network interruption
     for (final goal in goals) {
       await db.insert(
         'goals',
@@ -55,16 +70,27 @@ class GoalRepository {
       return maps.map((m) => GoalModel.fromMap(m)).toList();
     }
 
-    final snapshot = await ref.get();
-    final goals = snapshot.docs.map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
-      data['userId'] = data['userId'] ?? userId;
-      return GoalModel.fromMap(data);
-    }).toList();
+    try {
+      final snapshot = await ref.get();
+      final goals = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        data['userId'] = data['userId'] ?? userId;
+        return GoalModel.fromMap(data);
+      }).toList();
 
-    await _cacheRemoteGoals(goals);
-    return goals;
+      await _cacheRemoteGoals(goals); // FIX: now safe per-record upsert
+      return goals;
+    } catch (_) {
+      // Firestore unavailable — fall back to local cache
+      final db = await _db;
+      final maps = await db.query(
+        'goals',
+        where: 'userId = ?',
+        whereArgs: [userId],
+      );
+      return maps.map((m) => GoalModel.fromMap(m)).toList();
+    }
   }
 
   Future<List<GoalModel>> getActive(int userId) async {
@@ -87,12 +113,8 @@ class GoalRepository {
     }
   }
 
-  /// Returns the goal's [savedAmount] before deletion so the caller can
-  /// refund it to the user's balance.
   Future<double> delete(String id) async {
     final db = await _db;
-
-    // Fetch saved amount BEFORE deleting so we can return it.
     final maps = await db.query('goals', where: 'id = ?', whereArgs: [id]);
     final savedAmount = maps.isNotEmpty
         ? (maps.first['savedAmount'] as num).toDouble()

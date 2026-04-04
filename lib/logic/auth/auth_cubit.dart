@@ -113,6 +113,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String name,
     String? imagePath,
     required double initialBalance,
+    double monthlyBudget = 0.0,
   }) async {
     final current = state;
     if (current is! AuthAuthenticated) return;
@@ -123,6 +124,7 @@ class AuthCubit extends Cubit<AuthState> {
         name: name.trim(),
         imagePath: imagePath ?? current.user.imagePath,
         initialBalance: initialBalance,
+        monthlyBudget: monthlyBudget,
       );
       await _repo.updateProfile(updatedUser);
       emit(current.copyWith(

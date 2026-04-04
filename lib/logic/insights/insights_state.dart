@@ -1,5 +1,28 @@
 import 'package:equatable/equatable.dart';
 
+// FIX: Added InsightsPeriod enum for time period filtering
+enum InsightsPeriod {
+  thisMonth,
+  lastThreeMonths,
+  lastSixMonths,
+  allTime,
+}
+
+extension InsightsPeriodExt on InsightsPeriod {
+  String get label {
+    switch (this) {
+      case InsightsPeriod.thisMonth:
+        return 'This Month';
+      case InsightsPeriod.lastThreeMonths:
+        return 'Last 3 Months';
+      case InsightsPeriod.lastSixMonths:
+        return 'Last 6 Months';
+      case InsightsPeriod.allTime:
+        return 'All Time';
+    }
+  }
+}
+
 abstract class InsightsState extends Equatable {
   const InsightsState();
   @override
@@ -17,13 +40,10 @@ class InsightsLoaded extends InsightsState {
   final double lastMonthExpense;
   final String topCategory;
   final double topCategoryAmount;
-
-  /// Ordered map: 'Jan' → total expense amount (last 6 months, oldest first).
   final Map<String, double> monthlyTrend;
-
-  /// Category with the most transaction entries (not highest amount).
   final String mostFrequentCategory;
   final int mostFrequentCount;
+  final InsightsPeriod activePeriod; // FIX: track which period is active
 
   const InsightsLoaded({
     required this.expensesByCategory,
@@ -35,6 +55,7 @@ class InsightsLoaded extends InsightsState {
     required this.monthlyTrend,
     required this.mostFrequentCategory,
     required this.mostFrequentCount,
+    this.activePeriod = InsightsPeriod.allTime,
   });
 
   double get monthlyChange => thisMonthExpense - lastMonthExpense;
@@ -42,16 +63,17 @@ class InsightsLoaded extends InsightsState {
 
   @override
   List<Object?> get props => [
-    expensesByCategory,
-    weeklyExpenses,
-    thisMonthExpense,
-    lastMonthExpense,
-    topCategory,
-    topCategoryAmount,
-    monthlyTrend,
-    mostFrequentCategory,
-    mostFrequentCount,
-  ];
+        expensesByCategory,
+        weeklyExpenses,
+        thisMonthExpense,
+        lastMonthExpense,
+        topCategory,
+        topCategoryAmount,
+        monthlyTrend,
+        mostFrequentCategory,
+        mostFrequentCount,
+        activePeriod,
+      ];
 }
 
 class InsightsError extends InsightsState {

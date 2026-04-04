@@ -188,6 +188,7 @@ class GoalCubit extends Cubit<GoalState> {
             date: DateTime.now(),
             title: 'Refund: $goalTitle',
             note: 'Automatically refunded when goal was deleted.',
+            lastUpdated: DateTime.now(),
           ),
         );
       }

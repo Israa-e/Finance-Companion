@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_types_as_parameter_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finance_companion/data/services/database_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,20 +16,45 @@ class TransactionRepository {
   CollectionReference<Map<String, dynamic>>? get _transactionsRef {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return null;
-    return _firestore.collection('users').doc(uid).collection('transactions');
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('transactions');
   }
 
+  // FIX: same per-record upsert pattern — avoids destructive delete-all
   Future<void> _cacheRemoteTransactions(
     List<TransactionModel> transactions,
   ) async {
     final db = await _db;
-    await db.delete('transactions');
-    for (final transaction in transactions) {
-      await db.insert(
-        'transactions',
-        transaction.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+
+    final existing = await db.query('transactions', columns: ['id', 'lastUpdated']);
+    final existingIds = <String>{};
+    final localTimestamps = <String, DateTime>{};
+    for (final r in existing) {
+      final id = r['id'] as String;
+      existingIds.add(id);
+      final lastUpStr = r['lastUpdated'] as String?;
+      if (lastUpStr != null && lastUpStr.isNotEmpty) {
+        localTimestamps[id] = DateTime.parse(lastUpStr);
+      }
+    }
+    final remoteIds = transactions.map((t) => t.id).toSet();
+
+    final toDelete = existingIds.difference(remoteIds);
+    for (final id in toDelete) {
+      await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+    }
+
+    for (final t in transactions) {
+      final localTime = localTimestamps[t.id];
+      if (localTime == null || t.lastUpdated.isAfter(localTime)) {
+        await db.insert(
+          'transactions',
+          t.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     }
   }
 
@@ -53,16 +80,23 @@ class TransactionRepository {
       return maps.map((m) => TransactionModel.fromMap(m)).toList();
     }
 
-    final snapshot = await ref.orderBy('date', descending: true).get();
-    final transactions = snapshot.docs.map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
-      data['userId'] = data['userId'] ?? -1;
-      return TransactionModel.fromMap(data);
-    }).toList();
+    try {
+      final snapshot = await ref.orderBy('date', descending: true).get();
+      final transactions = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        data['userId'] = data['userId'] ?? -1;
+        return TransactionModel.fromMap(data);
+      }).toList();
 
-    await _cacheRemoteTransactions(transactions);
-    return transactions;
+      await _cacheRemoteTransactions(transactions); // FIX: safe upsert
+      return transactions;
+    } catch (_) {
+      // Firestore unavailable — serve from local cache
+      final db = await _db;
+      final maps = await db.query('transactions', orderBy: 'date DESC');
+      return maps.map((m) => TransactionModel.fromMap(m)).toList();
+    }
   }
 
   Future<void> update(TransactionModel t) async {
@@ -92,24 +126,16 @@ class TransactionRepository {
 
   Future<double> getTotalIncome() async {
     final transactions = await getAll();
-    var total = 0.0;
-    for (final t in transactions.where(
-      (t) => t.type == TransactionType.income,
-    )) {
-      total += t.amount;
-    }
-    return total;
+    return transactions
+        .where((t) => t.type == TransactionType.income)
+        .fold<double>(0.0, (sum, t) => sum + t.amount);
   }
 
   Future<double> getTotalExpense() async {
     final transactions = await getAll();
-    var total = 0.0;
-    for (final t in transactions.where(
-      (t) => t.type == TransactionType.expense,
-    )) {
-      total += t.amount;
-    }
-    return total;
+    return transactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold<double>(0.0, (sum, t) => sum + t.amount);
   }
 
   Future<double> getBalance() async {
@@ -135,11 +161,10 @@ class TransactionRepository {
   Future<Map<String, double>> getExpensesByCategory() async {
     final transactions = await getAll();
     final Map<String, double> result = {};
-    for (final transaction in transactions.where(
+    for (final t in transactions.where(
       (t) => t.type == TransactionType.expense,
     )) {
-      result[transaction.category] =
-          (result[transaction.category] ?? 0) + transaction.amount;
+      result[t.category] = (result[t.category] ?? 0) + t.amount;
     }
     return result;
   }
@@ -154,7 +179,7 @@ class TransactionRepository {
       final start = DateTime(day.year, day.month, day.day);
       final end = start.add(const Duration(days: 1));
       final key = '${day.day}/${day.month}';
-      final dailyTotal = transactions
+      map[key] = transactions
           .where((t) => t.type == TransactionType.expense)
           .where(
             (t) =>
@@ -163,9 +188,7 @@ class TransactionRepository {
                 ) &&
                 t.date.isBefore(end),
           )
-          // ignore: avoid_types_as_parameter_names
-          .fold(0.0, (sum, t) => sum + t.amount);
-      map[key] = dailyTotal;
+          .fold<double>(0.0, (sum, t) => sum + t.amount);
     }
     return map;
   }
@@ -187,15 +210,13 @@ class TransactionRepository {
     final transactions = await getAll();
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 1);
-    var total = 0.0;
-    for (final t in transactions.where(
-      (t) => t.type == TransactionType.expense,
-    )) {
-      if (t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
-          t.date.isBefore(end)) {
-        total += t.amount;
-      }
-    }
-    return total;
+    return transactions
+        .where((t) => t.type == TransactionType.expense)
+        .where(
+          (t) =>
+              t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
+              t.date.isBefore(end),
+        )
+        .fold<double>(0.0, (sum, t) => sum + t.amount);
   }
 }

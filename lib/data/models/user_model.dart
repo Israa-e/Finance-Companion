@@ -6,6 +6,7 @@ class UserModel extends Equatable {
   final String email;
   final String passwordHash;
   final double initialBalance;
+  final double monthlyBudget;
   final String? imagePath;
   final DateTime createdAt;
 
@@ -15,6 +16,7 @@ class UserModel extends Equatable {
     required this.email,
     required this.passwordHash,
     required this.initialBalance,
+    this.monthlyBudget = 0.0,
     this.imagePath,
     required this.createdAt,
   });
@@ -25,6 +27,7 @@ class UserModel extends Equatable {
         'email': email,
         'passwordHash': passwordHash,
         'initialBalance': initialBalance,
+        'monthlyBudget': monthlyBudget,
         'imagePath': imagePath,
         'createdAt': createdAt.toIso8601String(),
       };
@@ -35,6 +38,7 @@ class UserModel extends Equatable {
         email: map['email'],
         passwordHash: map['passwordHash'],
         initialBalance: (map['initialBalance'] as num).toDouble(),
+        monthlyBudget: (map['monthlyBudget'] as num?)?.toDouble() ?? 0.0,
         imagePath: map['imagePath'],
         createdAt: DateTime.parse(map['createdAt']),
       );
@@ -45,6 +49,7 @@ class UserModel extends Equatable {
     String? email,
     String? passwordHash,
     double? initialBalance,
+    double? monthlyBudget,
     String? imagePath,
     DateTime? createdAt,
   }) =>
@@ -54,11 +59,12 @@ class UserModel extends Equatable {
         email: email ?? this.email,
         passwordHash: passwordHash ?? this.passwordHash,
         initialBalance: initialBalance ?? this.initialBalance,
+        monthlyBudget: monthlyBudget ?? this.monthlyBudget,
         imagePath: imagePath ?? this.imagePath,
         createdAt: createdAt ?? this.createdAt,
       );
 
   @override
   List<Object?> get props =>
-      [id, name, email, passwordHash, initialBalance, imagePath];
+      [id, name, email, passwordHash, initialBalance, monthlyBudget, imagePath];
 }

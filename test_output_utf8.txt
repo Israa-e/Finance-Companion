@@ -1,0 +1,165 @@
+﻿00:00 +0: loading C:/Users/israa/finance-companion/test/widget_test.dart
+00:00 +0: App launches without crashing
+Pending timers:
+Timer (duration: 0:00:00.100000, periodic: false), created:
+#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
+#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)
+#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
+#6      SplashCubit.startSequence (package:finance_companion/logic/splash/splash_cubit.dart:9:18)
+#7      _SplashScreenState.build.<anonymous closure> (package:finance_companion/presentation/screens/splash/splash_screen.dart:135:43)
+#8      _CreateInheritedProviderState.value (package:provider/src/inherited_provider.dart:749:36)
+#9      _InheritedProviderScopeElement.value (package:provider/src/inherited_provider.dart:603:33)
+#10     Provider.of (package:provider/src/provider.dart:337:37)
+#11     ReadContext.read (package:provider/src/provider.dart:683:21)
+#12     _BlocConsumerState.initState (package:flutter_bloc/src/bloc_consumer.dart:130:36)
+#13     StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5953:55)
+#14     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5796:5)
+...     Normal element mounting (7 frames)
+#21     _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#28     SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#35     SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (268 frames)
+#303    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4590:20)
+#304    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7269:36)
+#305    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7285:32)
+...     Normal element mounting (456 frames)
+#761    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (15 frames)
+#776    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#783    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#790    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#797    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#804    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#811    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#818    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#825    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#832    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (9 frames)
+#841    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4590:20)
+#842    Element.updateChild (package:flutter/src/widgets/framework.dart:4053:20)
+#843    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#844    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#845    ProxyElement.update (package:flutter/src/widgets/framework.dart:6152:5)
+#846    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#847    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#848    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#849    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5985:11)
+#850    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#851    StatefulElement.update (package:flutter/src/widgets/framework.dart:6010:5)
+#852    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#853    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#854    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#855    ProxyElement.update (package:flutter/src/widgets/framework.dart:6152:5)
+#856    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#857    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#858    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#859    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5985:11)
+#860    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#861    StatefulElement.update (package:flutter/src/widgets/framework.dart:6010:5)
+#862    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#863    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#864    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5985:11)
+#865    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#866    StatefulElement.update (package:flutter/src/widgets/framework.dart:6010:5)
+#867    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#868    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#869    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#870    ProxyElement.update (package:flutter/src/widgets/framework.dart:6152:5)
+#871    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#872    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#873    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5985:11)
+#874    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#875    StatefulElement.update (package:flutter/src/widgets/framework.dart:6010:5)
+#876    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#877    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#878    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#879    ProxyElement.update (package:flutter/src/widgets/framework.dart:6152:5)
+#880    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#881    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#882    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#883    ProxyElement.update (package:flutter/src/widgets/framework.dart:6152:5)
+#884    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#885    _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:481:16)
+#886    _RawViewElement.update (package:flutter/src/widgets/view.dart:568:5)
+#887    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#888    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#889    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#890    StatelessElement.update (package:flutter/src/widgets/framework.dart:5898:5)
+#891    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#892    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5844:16)
+#893    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5985:11)
+#894    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#895    StatefulElement.update (package:flutter/src/widgets/framework.dart:6010:5)
+#896    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#897    RootElement._rebuild (package:flutter/src/widgets/binding.dart:1782:16)
+#898    RootElement.update (package:flutter/src/widgets/binding.dart:1760:5)
+#899    RootElement.performRebuild (package:flutter/src/widgets/binding.dart:1774:7)
+#900    Element.rebuild (package:flutter/src/widgets/framework.dart:5532:7)
+#901    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2750:15)
+#902    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2807:11)
+#903    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3111:18)
+#904    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:1506:19)
+#905    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)
+#906    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1434:15)
+#907    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1347:9)
+#908    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1335:9)
+#911    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#912    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1324:27)
+#913    WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#916    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#917    WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#918    main.<anonymous closure> (file:///C:/Users/israa/finance-companion/test/widget_test.dart:16:18)
+<asynchronous suspension>
+#919    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#920    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 8 frames from dart:async and package:stack_trace)
+
+ΓòÉΓòÉΓòí EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK Γò₧ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+The following assertion was thrown running a test:
+A Timer is still pending even after the widget tree was disposed.
+'package:flutter_test/src/binding.dart':
+Failed assertion: line 1617 pos 12: '!timersPending'
+
+When the exception was thrown, this was the stack:
+#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:1617:12)
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1078:7)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from class _AssertionError and package:stack_trace)
+
+The test description was:
+  App launches without crashing
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+00:01 +0 -1: App launches without crashing [E]
+  Test failed. See exception logs above.
+  The test description was: App launches without crashing
+  
+00:01 +0 -1: CurrencyFormatter format returns dollar sign with two decimal places
+00:01 +1 -1: CurrencyFormatter format handles zero correctly
+00:01 +2 -1: CurrencyFormatter formatCompact abbreviates thousands
+00:01 +3 -1: CurrencyFormatter formatCompact does not abbreviate below 1000
+00:01 +4 -1: CurrencyFormatter formatSigned prepends + for income
+00:01 +5 -1: CurrencyFormatter formatSigned prepends - for expense
+00:01 +6 -1: TransactionLoaded.filteredTransactions filter all returns all transactions
+00:01 +7 -1: TransactionLoaded.filteredTransactions filter income returns only income transactions
+00:01 +8 -1: TransactionLoaded.filteredTransactions filter expense returns only expense transactions
+00:01 +9 -1: TransactionLoaded.filteredTransactions search by title is case-insensitive
+00:01 +10 -1: TransactionLoaded.filteredTransactions search with no match returns empty list
+00:01 +11 -1: TransactionLoaded.filteredTransactions filter thisMonth excludes transactions from 60 days ago
+00:01 +12 -1: TransactionLoaded.filteredTransactions balance is correctly computed from income minus expense
+00:01 +13 -1: TransactionLoaded.groupedTransactions transactions from today are grouped under "Today"
+00:01 +14 -1: TransactionLoaded.groupedTransactions transactions from yesterday are grouped under "Yesterday"
+00:01 +15 -1: Some tests failed.

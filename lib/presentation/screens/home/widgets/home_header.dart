@@ -7,11 +7,15 @@ import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../logic/notification/notification_cubit.dart';
+import '../../notification/notifications_screen.dart';
 
 class HomeHeader extends StatelessWidget {
   final void Function(int tabIndex) onTabSwitch;
+  final void Function(int tabIndex)? onNotificationTap;
 
-  const HomeHeader({super.key, required this.onTabSwitch});
+  const HomeHeader(
+      {super.key, required this.onTabSwitch, this.onNotificationTap});
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +46,20 @@ class HomeHeader extends StatelessWidget {
             ),
             Row(
               children: [
-                // Notification bell — taps to Insights for now
+                // Notification bell
                 GestureDetector(
-                  onTap: () => onTabSwitch(3),
+                  onTap: () {
+                    final notifCubit = context.read<NotificationCubit>();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: notifCubit,
+                          child: const NotificationsScreen(),
+                        ),
+                      ),
+                    );
+                  },
                   child: Container(
                     width: 42,
                     height: 42,

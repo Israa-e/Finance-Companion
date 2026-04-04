@@ -11,6 +11,7 @@ class TransactionModel extends Equatable {
   final DateTime date;
   final String title;
   final String? note;
+  final DateTime lastUpdated;
 
   const TransactionModel({
     required this.id,
@@ -21,6 +22,7 @@ class TransactionModel extends Equatable {
     required this.date,
     required this.title,
     this.note,
+    required this.lastUpdated,
   });
 
   bool get isIncome => type == TransactionType.income;
@@ -35,6 +37,7 @@ class TransactionModel extends Equatable {
         'date': date.toIso8601String(),
         'title': title,
         'note': note,
+        'lastUpdated': lastUpdated.toIso8601String(),
       };
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) =>
@@ -47,6 +50,9 @@ class TransactionModel extends Equatable {
         date: DateTime.parse(map['date']),
         title: map['title'],
         note: map['note'],
+        lastUpdated: map['lastUpdated'] != null && map['lastUpdated'] != ""
+            ? DateTime.parse(map['lastUpdated'])
+            : DateTime.now(),
       );
 
   TransactionModel copyWith({
@@ -58,6 +64,7 @@ class TransactionModel extends Equatable {
     DateTime? date,
     String? title,
     String? note,
+    DateTime? lastUpdated,
   }) =>
       TransactionModel(
         id: id ?? this.id,
@@ -68,9 +75,10 @@ class TransactionModel extends Equatable {
         date: date ?? this.date,
         title: title ?? this.title,
         note: note ?? this.note,
+        lastUpdated: lastUpdated ?? this.lastUpdated,
       );
 
   @override
   List<Object?> get props =>
-      [id, userId, amount, type, category, date, title, note];
+      [id, userId, amount, type, category, date, title, note, lastUpdated];
 }

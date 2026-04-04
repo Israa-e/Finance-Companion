@@ -34,6 +34,7 @@ class QuickGoalsPreview extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Gap(8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -50,7 +51,6 @@ class QuickGoalsPreview extends StatelessWidget {
                 ),
               ],
             ),
-            const Gap(8),
             Text(
               '${CurrencyFormatter.formatCompact(totalSaved)} saved'
               ' of ${CurrencyFormatter.formatCompact(totalTarget)} total',
@@ -58,7 +58,7 @@ class QuickGoalsPreview extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-            const Gap(16),
+            const Gap(8),
             // 120px gives the chip content (≈96px) + padding (24px) = 120px
             // with 0px to spare — safe on all densities.
             SizedBox(

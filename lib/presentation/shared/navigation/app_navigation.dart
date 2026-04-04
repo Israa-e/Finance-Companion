@@ -1,4 +1,6 @@
-import 'package:finance_companion/logic/home/streak_cubit.dart';
+import 'package:finance_companion/data/repositories/notification_repository.dart';
+import 'package:finance_companion/logic/streak/streak_cubit.dart';
+import 'package:finance_companion/logic/notification/notification_cubit.dart';
 import 'package:finance_companion/presentation/screens/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,12 +40,15 @@ class _AppNavigationState extends State<AppNavigation> {
   static const int tabTransactions = 1;
   static const int tabGoals = 2;
   static const int tabInsights = 3;
+  
   static const int tabProfile = 4;
+
 
   late final TransactionCubit _txCubit;
   late final GoalCubit _goalCubit;
   late final InsightsCubit _insightsCubit;
-  late final StreakCubit _streakCubit; // FIX: added
+  late final StreakCubit _streakCubit;
+  late final NotificationCubit _notifCubit; // FIX: added
 
   @override
   void initState() {
@@ -52,14 +57,25 @@ class _AppNavigationState extends State<AppNavigation> {
     _insightsCubit = InsightsCubit(widget.transactionRepo)..loadInsights();
     _streakCubit = StreakCubit(widget.transactionRepo)..loadStreak();
 
+    final notifRepo = NotificationRepository();
+    _notifCubit = NotificationCubit(notifRepo)..load();
+
     _txCubit = TransactionCubit(widget.transactionRepo)
       ..setUser(widget.user.id!, widget.user.initialBalance)
       ..loadTransactions();
 
-    // FIX: refresh both insights AND streak on any transaction mutation
-    _txCubit.onMutated = () {
+    // FIX: refresh insights, streak, AND notifications on any transaction mutation
+    _txCubit.onMutated = () async {
       _insightsCubit.loadInsights();
       _streakCubit.loadStreak();
+
+      // Generate spending alerts based on updated transaction data
+      final transactions = await widget.transactionRepo.getAll();
+      await notifRepo.generateAlertsFromTransactions(
+        transactions: transactions,
+        monthlyBudget: widget.user.monthlyBudget,
+      );
+      _notifCubit.load();
     };
 
     _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo)
@@ -73,6 +89,7 @@ class _AppNavigationState extends State<AppNavigation> {
     _goalCubit.close();
     _insightsCubit.close();
     _streakCubit.close();
+    _notifCubit.close();
     super.dispose();
   }
 
@@ -85,7 +102,8 @@ class _AppNavigationState extends State<AppNavigation> {
         BlocProvider.value(value: _txCubit),
         BlocProvider.value(value: _goalCubit),
         BlocProvider.value(value: _insightsCubit),
-        BlocProvider.value(value: _streakCubit), // FIX: added
+        BlocProvider.value(value: _streakCubit),
+        BlocProvider.value(value: _notifCubit), // FIX: added
       ],
       child: Scaffold(
         body: IndexedStack(

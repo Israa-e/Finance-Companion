@@ -5,16 +5,12 @@ import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
-import '../../../logic/transaction/transaction_state.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 
-/// Edit screen that mirrors the Add flow — uses local controllers for text
-/// fields but delegates type/category state to cubit so onMutated fires and
-/// insights refresh correctly after every edit.
 class EditTransactionScreen extends StatefulWidget {
   final TransactionModel transaction;
 

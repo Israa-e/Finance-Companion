@@ -183,6 +183,7 @@ class ProfileScreen extends StatelessWidget {
           initialName: user.name,
           initialImage: user.imagePath,
           initialBalance: user.initialBalance, // FIX: now passed
+          initialMonthlyBudget: user.monthlyBudget,
         ),
       ),
     );

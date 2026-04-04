@@ -20,7 +20,6 @@ class WeeklyChart extends StatelessWidget {
         if (state is! InsightsLoaded) return const SizedBox.shrink();
 
         final data = state.weeklyExpenses;
-        final keys = data.keys.toList(); // format: "day/month"
         final values = data.values.toList();
         final maxVal =
             values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);

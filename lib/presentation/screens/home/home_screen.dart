@@ -1,4 +1,4 @@
-import 'package:finance_companion/logic/home/streak_cubit.dart';
+import 'package:finance_companion/logic/streak/streak_cubit.dart';
 import 'package:finance_companion/presentation/screens/home/widgets/shimmer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,13 +44,13 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     const Gap(16),
                     HomeHeader(onTabSwitch: onTabSwitch),
-                    const Gap(24),
+                    const Gap(16),
 
                     // Balance card — shimmer while loading
                     isLoading
                         ? const BalanceCardSkeleton()
                         : const BalanceCard(),
-                    const Gap(24),
+                    const Gap(16),
 
                     // Summary row — shimmer while loading
                     isLoading
@@ -70,20 +70,17 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ])
                         : const SummaryRow(),
-                    const Gap(24),
+                    const Gap(16),
 
                     // No-Spend Streak — new creative feature
                     const StreakCard(),
-                    const Gap(24),
+                    const Gap(16),
 
                     // Weekly chart
                     WeeklyChart(onSeeAll: () => onTabSwitch(3)),
-                    const Gap(24),
 
                     // Goals preview
                     QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
-                    const Gap(24),
-
                     // Recent transactions
                     RecentTransactions(onSeeAll: () => onTabSwitch(1)),
                     const Gap(32),

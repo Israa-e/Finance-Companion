@@ -9,18 +9,44 @@ class InsightsCubit extends Cubit<InsightsState> {
 
   InsightsCubit(this._repo) : super(InsightsInitial());
 
-  Future<void> loadInsights() async {
+  Future<void> loadInsights({InsightsPeriod period = InsightsPeriod.allTime}) async {
     emit(InsightsLoading());
     try {
       final now = DateTime.now();
       final lastMonthDate = DateTime(now.year, now.month - 1, 1);
 
-      final byCategory = await _repo.getExpensesByCategory();
-      final weekly = await _repo.getWeeklyExpenses();
+      // FIX: apply period filter to category and weekly data
+      final allTransactions = await _repo.getAll();
+      final filtered = _filterByPeriod(allTransactions, period, now);
+
+      // Expenses by category (filtered)
+      final Map<String, double> byCategory = {};
+      for (final t in filtered.where((t) => t.type == TransactionType.expense)) {
+        byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount;
+      }
+
+      // Weekly expenses from filtered data
+      final Map<String, double> weekly = {};
+      for (int i = 6; i >= 0; i--) {
+        final day = now.subtract(Duration(days: i));
+        final start = DateTime(day.year, day.month, day.day);
+        final end = start.add(const Duration(days: 1));
+        final key = '${day.day}/${day.month}';
+        weekly[key] = filtered
+            .where((t) => t.type == TransactionType.expense)
+            .where(
+              (t) =>
+                  t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
+                  t.date.isBefore(end),
+            )
+            .fold(0.0, (sum, t) => sum + t.amount);
+      }
+
+      // Month-over-month uses all-time data (not filtered) for context
       final thisMonth = await _repo.getMonthlyExpense(now);
       final lastMonth = await _repo.getMonthlyExpense(lastMonthDate);
 
-      // ── Top category by amount ─────────────────────────────────────
+      // Top category
       String topCategory = '';
       double topAmount = 0;
       byCategory.forEach((cat, amount) {
@@ -30,7 +56,7 @@ class InsightsCubit extends Cubit<InsightsState> {
         }
       });
 
-      // ── Monthly trend — last 6 months (oldest → newest) ────────────
+      // Monthly trend — last 6 months (all-time data for accuracy)
       final monthlyTrend = <String, double>{};
       for (int i = 5; i >= 0; i--) {
         final month = DateTime(now.year, now.month - i, 1);
@@ -38,12 +64,9 @@ class InsightsCubit extends Cubit<InsightsState> {
         monthlyTrend[label] = await _repo.getMonthlyExpense(month);
       }
 
-      // ── Most frequent category (by transaction count) ──────────────
-      final allTransactions = await _repo.getAll();
+      // Most frequent category
       final countMap = <String, int>{};
-      for (final t in allTransactions.where(
-        (t) => t.type == TransactionType.expense,
-      )) {
+      for (final t in filtered.where((t) => t.type == TransactionType.expense)) {
         countMap[t.category] = (countMap[t.category] ?? 0) + 1;
       }
       String mostFrequentCategory = '';
@@ -55,21 +78,45 @@ class InsightsCubit extends Cubit<InsightsState> {
         }
       });
 
-      emit(
-        InsightsLoaded(
-          expensesByCategory: byCategory,
-          weeklyExpenses: weekly,
-          thisMonthExpense: thisMonth,
-          lastMonthExpense: lastMonth,
-          topCategory: topCategory,
-          topCategoryAmount: topAmount,
-          monthlyTrend: monthlyTrend,
-          mostFrequentCategory: mostFrequentCategory,
-          mostFrequentCount: mostFrequentCount,
-        ),
-      );
+      emit(InsightsLoaded(
+        expensesByCategory: byCategory,
+        weeklyExpenses: weekly,
+        thisMonthExpense: thisMonth,
+        lastMonthExpense: lastMonth,
+        topCategory: topCategory,
+        topCategoryAmount: topAmount,
+        monthlyTrend: monthlyTrend,
+        mostFrequentCategory: mostFrequentCategory,
+        mostFrequentCount: mostFrequentCount,
+        activePeriod: period,
+      ));
     } catch (e) {
       emit(InsightsError(e.toString()));
     }
+  }
+
+  /// Filters transactions by the selected period.
+  List<TransactionModel> _filterByPeriod(
+    List<TransactionModel> all,
+    InsightsPeriod period,
+    DateTime now,
+  ) {
+    switch (period) {
+      case InsightsPeriod.thisMonth:
+        final start = DateTime(now.year, now.month, 1);
+        return all.where((t) => t.date.isAfter(start)).toList();
+      case InsightsPeriod.lastThreeMonths:
+        final start = DateTime(now.year, now.month - 2, 1);
+        return all.where((t) => t.date.isAfter(start)).toList();
+      case InsightsPeriod.lastSixMonths:
+        final start = DateTime(now.year, now.month - 5, 1);
+        return all.where((t) => t.date.isAfter(start)).toList();
+      case InsightsPeriod.allTime:
+        return all;
+    }
+  }
+
+  void changePeriod(InsightsPeriod period) {
+    loadInsights(period: period);
   }
 }

@@ -137,6 +137,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         note: current.formNote.trim().isEmpty
             ? null
             : current.formNote.trim(),
+        lastUpdated: DateTime.now(),
       );
 
       await _repo.add(transaction);
@@ -209,6 +210,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         date: date,
         title: title,
         note: note,
+        lastUpdated: DateTime.now(),
       );
       await _repo.add(transaction);
       await loadTransactions();

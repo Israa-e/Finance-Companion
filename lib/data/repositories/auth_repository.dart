@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:finance_companion/data/services/database_helper.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
@@ -15,26 +16,22 @@ class AuthRepository {
 
   static const String _loggedInUserKey = 'logged_in_user_id';
 
-  // ─── Password Hashing ────────────────────────────
-
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
     return sha256.convert(bytes).toString();
   }
-
-  // ─── Register ────────────────────────────────────
 
   Future<UserModel> register({
     required String name,
     required String email,
     required String password,
     required double initialBalance,
+    double monthlyBudget = 0.0,
     String? imagePath,
   }) async {
     final db = await _dbHelper.database;
     final normalizedEmail = email.toLowerCase().trim();
 
-    // Register in Firebase Auth
     final credential = await _auth.createUserWithEmailAndPassword(
       email: normalizedEmail,
       password: password,
@@ -42,7 +39,6 @@ class AuthRepository {
     final firebaseUser = credential.user;
     if (firebaseUser == null) throw Exception('Registration failed');
 
-    // Guard: email already exists locally
     final existing = await db.query(
       'users',
       where: 'email = ?',
@@ -58,20 +54,21 @@ class AuthRepository {
       email: normalizedEmail,
       passwordHash: _hashPassword(password),
       initialBalance: initialBalance,
+      monthlyBudget: monthlyBudget,
       imagePath: imagePath,
       createdAt: DateTime.now(),
     );
 
-    // Save profile to Firestore
     try {
       await _userCollection.doc(firebaseUser.uid).set({
         'name': user.name,
         'email': user.email,
         'initialBalance': user.initialBalance,
+        'monthlyBudget': user.monthlyBudget,
         'imagePath': user.imagePath,
         'createdAt': user.createdAt.toIso8601String(),
       });
-    } catch (_) {
+    } catch (e) {
       await firebaseUser.delete();
       throw Exception('Registration failed — please try again');
     }
@@ -82,15 +79,12 @@ class AuthRepository {
     return newUser;
   }
 
-  // ─── Login ───────────────────────────────────────
-
   Future<UserModel> login({
     required String email,
     required String password,
   }) async {
     final normalizedEmail = email.toLowerCase().trim();
 
-    // Step 1 — authenticate with Firebase
     try {
       await _auth.signInWithEmailAndPassword(
         email: normalizedEmail,
@@ -110,17 +104,15 @@ class AuthRepository {
       }
     }
 
-    // Step 2 — load or sync local profile
     final user = await _ensureLocalUser(normalizedEmail);
     await _saveSession(user.id!);
     return user;
   }
 
-  // ─── Ensure local profile exists (sync from Firestore if needed) ─────────
-
-  /// Looks up the local SQLite record for [email].
-  /// If not found (new device / cleared storage), fetches from Firestore
-  /// and inserts a local copy. Throws only if neither source has the record.
+  // FIX: _ensureLocalUser no longer silently swallows exceptions.
+  // Each failure path is explicit: if local lookup fails we try Firestore,
+  // if Firestore also fails we throw a descriptive error that surfaces in
+  // the AuthCubit as an AuthError state — not silently dropped.
   Future<UserModel> _ensureLocalUser(String normalizedEmail) async {
     final db = await _dbHelper.database;
 
@@ -134,19 +126,36 @@ class AuthRepository {
 
     // Slow path: sync from Firestore
     final firebaseUser = _auth.currentUser;
-    if (firebaseUser == null) throw Exception('Authentication error');
-
-    final doc = await _userCollection.doc(firebaseUser.uid).get();
-    if (!doc.exists || doc.data() == null) {
-      throw Exception('Account profile not found — please re-register');
+    if (firebaseUser == null) {
+      throw Exception('Authentication session lost — please log in again');
     }
 
-    final data = doc.data()!;
+    final QuerySnapshot<Map<String, dynamic>> querySnapshot;
+    try {
+      querySnapshot = await _userCollection
+          .where('email', isEqualTo: normalizedEmail)
+          .limit(1)
+          .get();
+    } catch (e) {
+      throw Exception(
+        'Could not reach the server to fetch your profile. '
+        'Please check your connection and try again.',
+      );
+    }
+
+    if (querySnapshot.docs.isEmpty) {
+      throw Exception(
+        'Account profile not found on server — please re-register',
+      );
+    }
+
+    final data = querySnapshot.docs.first.data();
     final user = UserModel(
       name: data['name'] as String,
       email: normalizedEmail,
-      passwordHash: _hashPassword(''), // hash not stored remotely — that's fine
+      passwordHash: _hashPassword(''), // password is not stored remotely
       initialBalance: (data['initialBalance'] as num).toDouble(),
+      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble() ?? 0.0,
       imagePath: data['imagePath'] as String?,
       createdAt: DateTime.parse(data['createdAt'] as String),
     );
@@ -154,8 +163,6 @@ class AuthRepository {
     final id = await db.insert('users', user.toMap());
     return user.copyWith(id: id);
   }
-
-  // ─── Session ─────────────────────────────────────
 
   Future<void> _saveSession(int userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -170,12 +177,15 @@ class AuthRepository {
         return await _ensureLocalUser(
           firebaseUser!.email!.toLowerCase().trim(),
         );
-      } catch (_) {
-        // Local sync failed — fall through to prefs lookup
+      } catch (e) {
+        // Firestore sync failed (e.g. offline first launch).
+        // Fall through to the local prefs lookup below.
+        // We log the error so it appears in debug output.
+        debugPrint('[AuthRepository] getLoggedInUser sync error: $e');
       }
     }
 
-    // Fallback: shared prefs session (offline / no Firebase user)
+    // Fallback: local prefs session (offline / no Firebase user)
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt(_loggedInUserKey);
     if (userId == null) return null;
@@ -211,6 +221,7 @@ class AuthRepository {
         'name': user.name,
         'email': user.email,
         'initialBalance': user.initialBalance,
+        'monthlyBudget': user.monthlyBudget,
         'imagePath': user.imagePath,
         'createdAt': user.createdAt.toIso8601String(),
       }, SetOptions(merge: true));

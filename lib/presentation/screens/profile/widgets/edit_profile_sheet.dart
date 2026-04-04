@@ -16,12 +16,14 @@ class EditProfileSheet extends StatefulWidget {
   final String initialName;
   final String? initialImage;
   final double initialBalance;
+  final double initialMonthlyBudget;
 
   const EditProfileSheet({
     super.key,
     required this.initialName,
     this.initialImage,
     required this.initialBalance,
+    required this.initialMonthlyBudget,
   });
 
   @override
@@ -31,6 +33,7 @@ class EditProfileSheet extends StatefulWidget {
 class _EditProfileSheetState extends State<EditProfileSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _balanceController;
+  late final TextEditingController _budgetController;
 
   @override
   void initState() {
@@ -39,13 +42,41 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     _balanceController = TextEditingController(
       text: widget.initialBalance.toStringAsFixed(2),
     );
+    _budgetController = TextEditingController(
+      text: widget.initialMonthlyBudget.toStringAsFixed(2),
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _balanceController.dispose();
+    _budgetController.dispose();
     super.dispose();
+  }
+
+  void _submit(BuildContext context, AuthAuthenticated state) {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name cannot be empty')),
+      );
+      return;
+    }
+
+    final newBalance =
+        double.tryParse(_balanceController.text) ?? widget.initialBalance;
+    final newBudget =
+        double.tryParse(_budgetController.text) ?? widget.initialMonthlyBudget;
+
+    // FIX: removed the dead `updatedUser` variable that was built but never
+    // used. We call updateProfileWithBalance directly with the correct values.
+    context.read<AuthCubit>().updateProfileWithBalance(
+          name: name,
+          imagePath: state.editImagePath ?? state.user.imagePath,
+          initialBalance: newBalance,
+          monthlyBudget: newBudget,
+        );
   }
 
   @override
@@ -53,10 +84,10 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated && state.updateSuccess) {
-          // Also refresh transaction balance when starting balance changes
-          context.read<TransactionCubit>().setInitialBalance(
-                state.user.initialBalance,
-              );
+          // Refresh transaction balance to reflect the new starting balance
+          context
+              .read<TransactionCubit>()
+              .setInitialBalance(state.user.initialBalance);
           context.read<TransactionCubit>().loadTransactions();
           Navigator.pop(context);
         }
@@ -112,8 +143,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                         height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color:
-                              AppColors.primary.withValues(alpha: 0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           image: hasImage
                               ? DecorationImage(
                                   image: FileImage(File(currentImage)),
@@ -143,7 +173,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                 ),
                 const Gap(16),
 
-                // FIX: Starting balance now editable
+                // Starting balance
                 CustomTextField(
                   label: 'Starting Balance',
                   controller: _balanceController,
@@ -152,10 +182,28 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                       const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}')),
+                      RegExp(r'^\d+\.?\d{0,2}'),
+                    ),
                   ],
                   prefixIcon:
                       const Icon(Iconsax.dollar_circle, size: 18),
+                ),
+                const Gap(16),
+
+                // Monthly budget
+                CustomTextField(
+                  label: 'Monthly Budget',
+                  controller: _budgetController,
+                  hint: '0.00',
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d+\.?\d{0,2}'),
+                    ),
+                  ],
+                  prefixIcon:
+                      const Icon(Iconsax.chart, size: 18),
                 ),
                 const Gap(6),
                 Padding(
@@ -172,38 +220,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                 CustomButton(
                   label: 'Save Changes',
                   isLoading: state.isUpdating,
-                  onTap: () {
-                    final name = _nameController.text.trim();
-                    if (name.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Name cannot be empty')),
-                      );
-                      return;
-                    }
-                    final newBalance =
-                        double.tryParse(_balanceController.text) ??
-                            widget.initialBalance;
-
-                    // Persist name + image via cubit
-                    cubit.updateEditName(name);
-
-                    // Update balance on the user model directly
-                    final updatedUser = state.user.copyWith(
-                      name: name,
-                      imagePath:
-                          state.editImagePath ?? state.user.imagePath,
-                      initialBalance: newBalance,
-                    );
-                    // Use submitProfileUpdate after setting balance
-                    context
-                        .read<AuthCubit>()
-                        .updateProfileWithBalance(
-                          name: name,
-                          imagePath: state.editImagePath,
-                          initialBalance: newBalance,
-                        );
-                  },
+                  onTap: () => _submit(context, state),
                 ),
               ],
             ),
