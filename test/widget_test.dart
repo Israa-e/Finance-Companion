@@ -14,10 +14,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(FinanceApp(prefs: prefs));
-    // Pump once to build the initial frame
-    await tester.pumpAndSettle();
-    // Drain all pending timers from SplashCubit.startSequence()
-    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(); // build frame
+    await tester.pump(const Duration(seconds: 4)); // drain splash timers
+    // Do NOT call pumpAndSettle — floatController repeats indefinitely
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 

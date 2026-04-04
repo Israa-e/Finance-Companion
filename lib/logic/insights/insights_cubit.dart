@@ -6,8 +6,11 @@ import 'insights_state.dart';
 
 class InsightsCubit extends Cubit<InsightsState> {
   final TransactionRepository _repo;
+  final double _userBudget;
 
-  InsightsCubit(this._repo) : super(InsightsInitial());
+  InsightsCubit(this._repo, {double userMonthlyBudget = 2000.0})
+      : _userBudget = userMonthlyBudget,
+        super(InsightsInitial());
 
   Future<void> loadInsights({InsightsPeriod period = InsightsPeriod.allTime}) async {
     emit(InsightsLoading());
@@ -84,7 +87,7 @@ class InsightsCubit extends Cubit<InsightsState> {
       
       // Default hypothetical budget for calculation if not explicitly set
       // (Value can be retrieved from UserSettings later)
-      const monthlyBudget = 2000.0;
+      final monthlyBudget = _userBudget;
       DateTime? predictedBreachDate;
       if (dailyBurnRate > 0 && thisMonth < monthlyBudget) {
         final remainingBudget = monthlyBudget - thisMonth;
@@ -149,6 +152,7 @@ class InsightsCubit extends Cubit<InsightsState> {
   }
 
   void changePeriod(InsightsPeriod period) {
+    
     loadInsights(period: period);
   }
 }

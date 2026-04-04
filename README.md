@@ -116,6 +116,21 @@ flutter run
 
 ---
 
+## 🚀 Enhancements (v1.2.0)
+
+| # | Feature | Improvement |
+|---|---|---|
+| 1 | Predictive Analytics | Added `BurnRateCard` to Insights (this month only) to project budget breach dates |
+| 2 | Advanced Filtering | Implemented multi-category selection and date-range filtering in the transaction list |
+| 3 | Visual Quality Assurance | Added **Golden UI Tests** with a custom `FontTestHelper` for cross-OS rendering consistency |
+| 4 | Offline First Design | Migrated to bundled local **Poppins** fonts for zero-latency offline typography |
+| 5 | Deep-linked Alerts | Tapped budget notifications now jump directly to the Transactions screen |
+| 6 | Smart Logic | Integrated weekday vs. weekend spending variance analysis into predictive insights |
+| 7 | Success Feedback | Added **Haptic Feedback** and **Confetti Celebrations** for significant goal milestones |
+| 8 | Connectivity Indicators | Added a "breathing" status bar to show SQLite ↔ Firebase synchronization status |
+
+---
+
 ## 🎨 Design System
 
 | Token | Value |
@@ -145,7 +160,7 @@ Tests cover:
 
 ## 📄 Assumptions
 
-- The monthly budget for spending alerts defaults to `0` (disabled) until a user-defined budget feature is added. The `NotificationRepository.generateAlertsFromTransactions` method accepts a `monthlyBudget` parameter ready for this.
+- The monthly budget for spending alerts is fetched from the **UserProfile** provided during session initialization. The `InsightsCubit` uses this value to calculate burn rates and projected breach dates.
 - The streak "benefit of the doubt" window is 7 days — days within the last week with no logged expenses are counted as no-spend without requiring confirmation. Days older than 7 days require explicit confirmation via the card button.
 - Firestore is the source of truth when online. SQLite is the fallback when offline. On reconnection, the next data fetch will re-sync.
 

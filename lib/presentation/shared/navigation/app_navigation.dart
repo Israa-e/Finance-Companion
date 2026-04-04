@@ -54,7 +54,10 @@ class _AppNavigationState extends State<AppNavigation> {
   void initState() {
     super.initState();
 
-    _insightsCubit = InsightsCubit(widget.transactionRepo)..loadInsights();
+    _insightsCubit = InsightsCubit(
+      widget.transactionRepo,
+      userMonthlyBudget: widget.user.monthlyBudget,
+    )..loadInsights();
     _streakCubit = StreakCubit(widget.transactionRepo)..loadStreak();
 
     final notifRepo = NotificationRepository();
@@ -80,6 +83,30 @@ class _AppNavigationState extends State<AppNavigation> {
     _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo, _alertService)
       ..setUser(widget.user.id!)
       ..loadGoals();
+
+    _runStartupChecks();
+  }
+
+  Future<void> _runStartupChecks() async {
+    try {
+      final transactions = await widget.transactionRepo.getAll();
+      await _alertService.checkBudgetAlerts(
+        transactions: transactions,
+        monthlyBudget: widget.user.monthlyBudget,
+        warningThreshold: widget.user.warningThreshold,
+        criticalThreshold: widget.user.criticalThreshold,
+      );
+      final goals = await widget.goalRepo.getAll(widget.user.id!);
+      await _alertService.checkGoalAlerts(goals);
+
+      // Restore: check streak on startup
+      final streakState = _streakCubit.state;
+      if (streakState is StreakLoaded) {
+        await _alertService.checkStreakAlerts(streakState.streak.currentStreak);
+      }
+
+      _notifCubit.load();
+    } catch (_) {}
   }
 
   @override

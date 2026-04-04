@@ -13,8 +13,7 @@ class BurnRateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state.activePeriod != InsightsPeriod.thisMonth && 
-        state.activePeriod != InsightsPeriod.allTime) {
+    if (state.activePeriod != InsightsPeriod.thisMonth) {
       return const SizedBox.shrink(); // Best viewed on current month
     }
 
