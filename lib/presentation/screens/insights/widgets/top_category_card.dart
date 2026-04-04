@@ -1,11 +1,13 @@
-// top_category_card.dart
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:gap/gap.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../logic/insights/insights_state.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 
 class TopCategoryCard extends StatelessWidget {
   final InsightsLoaded state;
@@ -32,7 +34,6 @@ class TopCategoryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // ── Icon box ────────────────────────────────────────────────
           Container(
             width: 52,
             height: 52,
@@ -41,13 +42,12 @@ class TopCategoryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
-              Iconsax.chart_21,   // cleaner chart icon
+              Iconsax.chart_21,
               color: Colors.white,
               size: 26,
             ),
           ),
           const Gap(16),
-          // ── Text ────────────────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,16 +69,23 @@ class TopCategoryCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const Gap(2),
-                Text(
-                  CurrencyFormatter.format(state.topCategoryAmount),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
+                Builder(
+                  builder: (context) {
+                    final authState = context.watch<AuthCubit>().state;
+                    final formatter = authState is AuthAuthenticated
+                        ? authState.formatter
+                        : const CurrencyFormatter();
+                    return Text(
+                      formatter.format(state.topCategoryAmount),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
           ),
-          // ── Percentage badge ─────────────────────────────────────────
           if (state.topCategoryAmount > 0 && _totalExpenses > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

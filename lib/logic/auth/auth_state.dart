@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../data/models/user_model.dart';
 
 abstract class AuthState extends Equatable {
@@ -26,6 +28,11 @@ class AuthAuthenticated extends AuthState {
     this.updateSuccess = false,
     this.errorMessage,
   });
+
+  CurrencyFormatter get formatter => CurrencyFormatter(
+        symbol: AppConstants.supportedCurrencies[user.currency] ??
+            AppConstants.currencySymbol,
+      );
 
   AuthAuthenticated copyWith({
     UserModel? user,

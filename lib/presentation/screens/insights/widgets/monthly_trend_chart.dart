@@ -1,11 +1,13 @@
-// monthly_trend_chart.dart
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:gap/gap.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../logic/insights/insights_state.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 
 class MonthlyTrendChart extends StatelessWidget {
   final InsightsLoaded state;
@@ -182,14 +184,20 @@ class MonthlyTrendChart extends StatelessWidget {
                   touchTooltipData: BarTouchTooltipData(
                     tooltipBgColor: Theme.of(context).colorScheme.surface,
                     tooltipRoundedRadius: 10,
-                    getTooltipItem: (group, _, rod, __) => BarTooltipItem(
-                      CurrencyFormatter.formatCompact(rod.toY),
-                      TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    getTooltipItem: (group, _, rod, __) {
+                      final authState = context.read<AuthCubit>().state;
+                      final formatter = authState is AuthAuthenticated
+                          ? authState.formatter
+                          : const CurrencyFormatter();
+                      return BarTooltipItem(
+                        formatter.formatCompact(rod.toY),
+                        TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

@@ -11,6 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 import 'package:finance_companion/presentation/shared/widgets/custom_text_field.dart';
 
 class GoalCard extends StatelessWidget {
@@ -27,6 +29,11 @@ class GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    final formatter = authState is AuthAuthenticated
+        ? authState.formatter
+        : const CurrencyFormatter();
+
     final progress = goal.progressPercent;
     return Container(
       padding: const EdgeInsets.all(18),
@@ -69,7 +76,7 @@ class GoalCard extends StatelessWidget {
                     Iconsax.add_circle,
                     color: AppColors.primary,
                   ),
-                  onPressed: () => _showAddSavings(context, goal),
+                  onPressed: () => _showAddSavings(context, goal, formatter),
                 ),
               // Delete — shows confirmation first
               IconButton(
@@ -87,13 +94,13 @@ class GoalCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                CurrencyFormatter.format(goal.savedAmount),
+                formatter.format(goal.savedAmount),
                 style: AppTextStyles.amountSmall.copyWith(
                   color: AppColors.primary,
                 ),
               ),
               Text(
-                CurrencyFormatter.format(goal.targetAmount),
+                formatter.format(goal.targetAmount),
                 style: AppTextStyles.bodySmall,
               ),
             ],
@@ -117,7 +124,7 @@ class GoalCard extends StatelessWidget {
           ),
           if (!goal.isCompleted)
             Text(
-              'Remaining: ${CurrencyFormatter.format(goal.remainingAmount)}',
+              'Remaining: ${formatter.format(goal.remainingAmount)}',
               style: AppTextStyles.caption,
             ),
         ],
@@ -167,7 +174,11 @@ class GoalCard extends StatelessWidget {
 
   // ─── Add savings sheet ───────────────────────────────────────────────────
 
-  void _showAddSavings(BuildContext context, GoalModel goal) {
+  void _showAddSavings(
+    BuildContext context,
+    GoalModel goal,
+    CurrencyFormatter formatter,
+  ) {
     final txState = context.read<TransactionCubit>().state;
     final goalState = context.read<GoalCubit>().state;
     final lockedAmount = goalState is GoalLoaded
@@ -221,7 +232,7 @@ class GoalCard extends StatelessWidget {
                     Text('Add to Savings', style: AppTextStyles.h3),
                     const Gap(4),
                     Text(
-                      'Available: ${CurrencyFormatter.format(availableBalance)}',
+                      'Available: ${formatter.format(availableBalance)}',
                       style: AppTextStyles.caption,
                     ),
                     const Gap(16),
@@ -264,7 +275,7 @@ class GoalCard extends StatelessWidget {
                                 ScaffoldMessenger.of(sheetContext).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Only ${CurrencyFormatter.format(availableBalance)} available.',
+                                      'Only ${formatter.format(availableBalance)} available.',
                                     ),
                                   ),
                                 );
@@ -274,7 +285,7 @@ class GoalCard extends StatelessWidget {
                                 ScaffoldMessenger.of(sheetContext).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Goal only needs ${CurrencyFormatter.format(goal.remainingAmount)} more.',
+                                      'Goal only needs ${formatter.format(goal.remainingAmount)} more.',
                                     ),
                                   ),
                                 );

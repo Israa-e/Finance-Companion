@@ -46,7 +46,6 @@ class HomeHeader extends StatelessWidget {
             ),
             Row(
               children: [
-                // Notification bell
                 GestureDetector(
                   onTap: () {
                     final notifCubit = context.read<NotificationCubit>();
@@ -82,17 +81,24 @@ class HomeHeader extends StatelessWidget {
                           color: AppColors.primary,
                           size: 20,
                         ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(
-                              color: AppColors.expense,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
+                        // FIX: read real unread count instead of hardcoded dot
+                        BlocBuilder<NotificationCubit, NotificationState>(
+                          builder: (context, notifState) {
+                            if (notifState.unreadCount == 0)
+                              return const SizedBox.shrink();
+                            return Positioned(
+                              top: 10,
+                              right: 10,
+                              child: Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.expense,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

@@ -1,10 +1,13 @@
 import 'package:finance_companion/presentation/shared/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/transaction_model.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 import 'package:gap/gap.dart';
 
 class TransactionListItem extends StatelessWidget {
@@ -145,16 +148,24 @@ class TransactionListItem extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  CurrencyFormatter.formatSigned(
-                    transaction.amount,
-                    isExpense: !isIncome,
-                  ),
-                  style: AppTextStyles.h3.copyWith(
-                    color: isIncome ? AppColors.income : AppColors.expense,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final authState = context.watch<AuthCubit>().state;
+                    final formatter = authState is AuthAuthenticated
+                        ? authState.formatter
+                        : const CurrencyFormatter();
+                    return Text(
+                      formatter.formatSigned(
+                        transaction.amount,
+                        isExpense: !isIncome,
+                      ),
+                      style: AppTextStyles.h3.copyWith(
+                        color: isIncome ? AppColors.income : AppColors.expense,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
                 ),
                 const Gap(8),
                 GestureDetector(

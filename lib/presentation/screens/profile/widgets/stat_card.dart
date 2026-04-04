@@ -1,18 +1,18 @@
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
-import 'package:finance_companion/core/theme/app_text_styles.dart';
-import 'package:finance_companion/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 
 class StatCard extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
 
-  const StatCard({super.key, 
-
+  const StatCard({
+    super.key,
     required this.label,
     required this.amount,
     required this.color,
@@ -29,9 +29,17 @@ class StatCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
-              CurrencyFormatter.formatCompact(amount),
-              style: AppTextStyles.amountSmall.copyWith(color: color),
+            Builder(
+              builder: (context) {
+                final authState = context.watch<AuthCubit>().state;
+                final formatter = authState is AuthAuthenticated
+                    ? authState.formatter
+                    : const CurrencyFormatter();
+                return Text(
+                  formatter.formatCompact(amount),
+                  style: AppTextStyles.amountSmall.copyWith(color: color),
+                );
+              },
             ),
             const Gap(4),
             Text(

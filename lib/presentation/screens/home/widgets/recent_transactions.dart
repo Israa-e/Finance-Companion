@@ -4,6 +4,8 @@ import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../logic/transaction/transaction_cubit.dart';
 import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -111,14 +113,22 @@ class _TransactionTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                CurrencyFormatter.formatSigned(
-                  transaction.amount,
-                  isExpense: !isIncome,
-                ),
-                style: AppTextStyles.amountSmall.copyWith(
-                  color: isIncome ? AppColors.income : AppColors.expense,
-                ),
+              Builder(
+                builder: (context) {
+                  final authState = context.watch<AuthCubit>().state;
+                  final formatter = authState is AuthAuthenticated
+                      ? authState.formatter
+                      : const CurrencyFormatter();
+                  return Text(
+                    formatter.formatSigned(
+                      transaction.amount,
+                      isExpense: !isIncome,
+                    ),
+                    style: AppTextStyles.amountSmall.copyWith(
+                      color: isIncome ? AppColors.income : AppColors.expense,
+                    ),
+                  );
+                },
               ),
               Text(
                 DateFormatter.formatShort(transaction.date),

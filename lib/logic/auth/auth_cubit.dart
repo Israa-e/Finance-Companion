@@ -1,7 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/utils/currency_formatter.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'auth_state.dart';
 
@@ -15,7 +13,6 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repo.getLoggedInUser();
       if (user != null) {
-        CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[user.currency] ?? AppConstants.currencySymbol;
         emit(AuthAuthenticated(user: user));
       } else {
         emit(AuthUnauthenticated());
@@ -41,7 +38,6 @@ class AuthCubit extends Cubit<AuthState> {
         initialBalance: initialBalance,
         imagePath: imagePath,
       );
-      CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[user.currency] ?? AppConstants.currencySymbol;
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
@@ -55,7 +51,6 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repo.login(email: email, password: password);
-      CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[user.currency] ?? AppConstants.currencySymbol;
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
@@ -83,38 +78,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(current.copyWith(editImagePath: path));
     }
   }
-
-  Future<void> submitProfileUpdate() async {
-    final current = state;
-    if (current is! AuthAuthenticated) return;
-
-    final name = current.editName?.trim() ?? current.user.name;
-    final imagePath = current.editImagePath ?? current.user.imagePath;
-
-    if (name.isEmpty) {
-      emit(current.copyWith(errorMessage: 'Name cannot be empty.'));
-      return;
-    }
-
-    emit(current.copyWith(isUpdating: true, errorMessage: null));
-    try {
-      final updatedUser = current.user.copyWith(
-        name: name,
-        imagePath: imagePath,
-      );
-      await _repo.updateProfile(updatedUser);
-      emit(current.copyWith(
-        user: updatedUser,
-        isUpdating: false,
-        updateSuccess: true,
-      ));
-    } catch (e) {
-      emit(current.copyWith(isUpdating: false, errorMessage: e.toString()));
-    }
-  }
-
-  /// FIX: new method that also persists the starting balance
-  Future<void> updateProfileWithBalance({
+  Future<void> saveProfile({
     required String name,
     String? imagePath,
     required double initialBalance,
@@ -134,7 +98,6 @@ class AuthCubit extends Cubit<AuthState> {
         currency: currency,
       );
       await _repo.updateProfile(updatedUser);
-      CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[currency] ?? AppConstants.currencySymbol;
       emit(current.copyWith(
         user: updatedUser,
         isUpdating: false,
@@ -143,27 +106,7 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(current.copyWith(isUpdating: false, errorMessage: e.toString()));
     }
-  }
-
-  Future<void> updateProfile({
-    required String name,
-    String? imagePath,
-  }) async {
-    final current = state;
-    if (current is! AuthAuthenticated) return;
-    try {
-      final updated = current.user.copyWith(
-        name: name,
-        imagePath: imagePath ?? current.user.imagePath,
-      );
-      await _repo.updateProfile(updated);
-      emit(AuthAuthenticated(user: updated));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
-  }
-
-  Future<String?> pickImage() async {
+  }  Future<String?> pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: ImageSource.gallery,

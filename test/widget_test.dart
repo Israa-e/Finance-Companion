@@ -14,37 +14,41 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(FinanceApp(prefs: prefs));
+    // Pump once to build the initial frame
     await tester.pumpAndSettle();
-    // Splash screen should be visible (not a blank screen)
+    // Drain all pending timers from SplashCubit.startSequence()
+    await tester.pump(const Duration(seconds: 4));
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
   // ── CurrencyFormatter unit tests ───────────────────────────────────────────
 
   group('CurrencyFormatter', () {
+    const formatter = CurrencyFormatter(symbol: '\$');
+
     test('format returns dollar sign with two decimal places', () {
-      expect(CurrencyFormatter.format(1234.5), '\$1,234.50');
+      expect(formatter.format(1234.5), '\$1,234.50');
     });
 
     test('format handles zero correctly', () {
-      expect(CurrencyFormatter.format(0), '\$0.00');
+      expect(formatter.format(0), '\$0.00');
     });
 
     test('formatCompact abbreviates thousands', () {
-      expect(CurrencyFormatter.formatCompact(1500), '\$1.5k');
+      expect(formatter.formatCompact(1500), '\$1.5k');
     });
 
     test('formatCompact does not abbreviate below 1000', () {
-      expect(CurrencyFormatter.formatCompact(999), '\$999.00');
+      expect(formatter.formatCompact(999), '\$999.00');
     });
 
     test('formatSigned prepends + for income', () {
-      expect(CurrencyFormatter.formatSigned(100), '+\$100.00');
+      expect(formatter.formatSigned(100), '+\$100.00');
     });
 
     test('formatSigned prepends - for expense', () {
       expect(
-        CurrencyFormatter.formatSigned(100, isExpense: true),
+        formatter.formatSigned(100, isExpense: true),
         '-\$100.00',
       );
     });

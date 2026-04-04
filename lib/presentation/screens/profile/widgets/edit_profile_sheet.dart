@@ -76,7 +76,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
 
     // FIX: removed the dead `updatedUser` variable that was built but never
     // used. We call updateProfileWithBalance directly with the correct values.
-    context.read<AuthCubit>().updateProfileWithBalance(
+    context.read<AuthCubit>().saveProfile(
           name: name,
           imagePath: state.editImagePath ?? state.user.imagePath,
           initialBalance: newBalance,

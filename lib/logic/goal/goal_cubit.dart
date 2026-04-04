@@ -71,12 +71,13 @@ class GoalCubit extends Cubit<GoalState> {
         targetAmount: current.formAmount,
         savedAmount: 0,
         startDate: DateTime.now(),
-        endDate: current.formEndDate ?? DateTime.now().add(const Duration(days: 30)),
+        endDate:
+            current.formEndDate ?? DateTime.now().add(const Duration(days: 30)),
         status: GoalStatus.active,
         emoji: current.formEmoji,
       );
       await _repo.add(goal);
-      
+
       // Reset form on success and reload
       final goals = await _repo.getAll(_userId);
       final active = await _repo.getActive(_userId);
@@ -86,32 +87,8 @@ class GoalCubit extends Cubit<GoalState> {
         submitSuccess: true,
       ));
     } catch (e) {
-      emit(current.copyWith(isSubmitting: false, formErrorMessage: e.toString()));
-    }
-  }
-
-  Future<void> addGoal({
-    required String title,
-    required double targetAmount,
-    required DateTime endDate,
-    String? emoji,
-  }) async {
-    try {
-      final goal = GoalModel(
-        id: _uuid.v4(),
-        userId: _userId,
-        title: title,
-        targetAmount: targetAmount,
-        savedAmount: 0,
-        startDate: DateTime.now(),
-        endDate: endDate,
-        status: GoalStatus.active,
-        emoji: emoji,
-      );
-      await _repo.add(goal);
-      await loadGoals();
-    } catch (e) {
-      emit(GoalError(e.toString()));
+      emit(current.copyWith(
+          isSubmitting: false, formErrorMessage: e.toString()));
     }
   }
 
@@ -162,20 +139,20 @@ class GoalCubit extends Cubit<GoalState> {
       if (savedAmount > 0) {
         final goalTitle = currentState is GoalLoaded
             ? currentState.goals
-                  .firstWhere(
-                    (g) => g.id == id,
-                    orElse: () => GoalModel(
-                      id: id,
-                      userId: _userId,
-                      title: 'Deleted Goal',
-                      targetAmount: 0,
-                      savedAmount: 0,
-                      startDate: DateTime.now(),
-                      endDate: DateTime.now(),
-                      status: GoalStatus.active,
-                    ),
-                  )
-                  .title
+                .firstWhere(
+                  (g) => g.id == id,
+                  orElse: () => GoalModel(
+                    id: id,
+                    userId: _userId,
+                    title: 'Deleted Goal',
+                    targetAmount: 0,
+                    savedAmount: 0,
+                    startDate: DateTime.now(),
+                    endDate: DateTime.now(),
+                    status: GoalStatus.active,
+                  ),
+                )
+                .title
             : 'Deleted Goal';
 
         await _txRepo.add(

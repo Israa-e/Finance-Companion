@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import '../../../../logic/goal/goal_cubit.dart';
 import '../../../../logic/goal/goal_state.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -51,16 +53,22 @@ class QuickGoalsPreview extends StatelessWidget {
                 ),
               ],
             ),
-            Text(
-              '${CurrencyFormatter.formatCompact(totalSaved)} saved'
-              ' of ${CurrencyFormatter.formatCompact(totalTarget)} total',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            Builder(
+              builder: (context) {
+                final authState = context.watch<AuthCubit>().state;
+                final formatter = authState is AuthAuthenticated
+                    ? authState.formatter
+                    : const CurrencyFormatter();
+                return Text(
+                  '${formatter.formatCompact(totalSaved)} saved'
+                  ' of ${formatter.formatCompact(totalTarget)} total',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                );
+              },
             ),
             const Gap(8),
-            // 120px gives the chip content (≈96px) + padding (24px) = 120px
-            // with 0px to spare — safe on all densities.
             SizedBox(
               height: 130,
               child: ListView.separated(
@@ -86,11 +94,13 @@ class _GoalChip extends StatelessWidget {
     final progress = goal.progressPercent;
     final color = _colorForProgress(progress);
 
+    final authState = context.watch<AuthCubit>().state;
+    final formatter = authState is AuthAuthenticated
+        ? authState.formatter
+        : const CurrencyFormatter();
+
     return Container(
       width: 160,
-      // Padding reduced from 14→12 so total vertical content fits in 120px.
-      // Content budget: 12 top + 29(emoji row) + 6 + 17(title) + 6 +
-      //                 5(bar) + 5 + 16(amount) + 12 bottom = 108px ✓
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -105,13 +115,9 @@ class _GoalChip extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        // Use start + explicit gaps instead of spaceBetween.
-        // spaceBetween distributes leftover space unpredictably when
-        // text height varies across font scales / screen densities.
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
         children: [
-          // ── Emoji row ──────────────────────────────────────────────
           Row(
             children: [
               Text(goal.emoji ?? '🎯', style: const TextStyle(fontSize: 20)),
@@ -126,7 +132,6 @@ class _GoalChip extends StatelessWidget {
             ],
           ),
           const Gap(8),
-          // ── Goal title ─────────────────────────────────────────────
           Text(
             goal.title,
             maxLines: 1,
@@ -136,7 +141,6 @@ class _GoalChip extends StatelessWidget {
             ),
           ),
           const Gap(8),
-          // ── Progress bar ───────────────────────────────────────────
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -147,10 +151,9 @@ class _GoalChip extends StatelessWidget {
             ),
           ),
           const Gap(8),
-          // ── Saved / target amounts ─────────────────────────────────
           Text(
-            '${CurrencyFormatter.formatCompact(goal.savedAmount)}'
-            ' / ${CurrencyFormatter.formatCompact(goal.targetAmount)}',
+            '${formatter.formatCompact(goal.savedAmount)}'
+            ' / ${formatter.formatCompact(goal.targetAmount)}',
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textSecondary,
             ),

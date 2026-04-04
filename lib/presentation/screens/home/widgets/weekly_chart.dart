@@ -4,6 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:gap/gap.dart';
 import '../../../../logic/insights/insights_cubit.dart';
 import '../../../../logic/insights/insights_state.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -24,12 +26,10 @@ class WeeklyChart extends StatelessWidget {
         final maxVal =
             values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
 
-        // Build short labels like "Mon 4" from the "day/month" keys
         final now = DateTime.now();
         final shortLabels = List.generate(7, (i) {
           final day = now.subtract(Duration(days: 6 - i));
           const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-          // weekday: Mon=1 … Sun=7
           return names[day.weekday - 1];
         });
 
@@ -52,7 +52,7 @@ class WeeklyChart extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Weekly Spending', style: AppTextStyles.h3),
+                   Text('Weekly Spending', style: AppTextStyles.h3),
                   if (onSeeAll != null)
                     TextButton(
                       onPressed: onSeeAll,
@@ -67,7 +67,6 @@ class WeeklyChart extends StatelessWidget {
                 ],
               ),
               const Gap(4),
-              // FIX: show the date range so context is clear
               Text(
                 _dateRange(now),
                 style: AppTextStyles.caption.copyWith(
@@ -101,16 +100,20 @@ class WeeklyChart extends StatelessWidget {
                         tooltipBgColor:
                             Theme.of(context).colorScheme.surface,
                         tooltipRoundedRadius: 10,
-                        getTooltipItem: (group, _, rod, __) =>
-                            BarTooltipItem(
-                          CurrencyFormatter.formatCompact(rod.toY),
-                          TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurface,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        getTooltipItem: (group, _, rod, __) {
+                          final authState = context.read<AuthCubit>().state;
+                          final formatter = authState is AuthAuthenticated
+                              ? authState.formatter
+                              : const CurrencyFormatter();
+                          return BarTooltipItem(
+                            formatter.formatCompact(rod.toY),
+                            TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     titlesData: FlTitlesData(

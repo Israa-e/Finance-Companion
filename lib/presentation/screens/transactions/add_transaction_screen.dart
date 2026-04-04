@@ -7,6 +7,8 @@ import '../../../logic/goal/goal_cubit.dart';
 import '../../../logic/goal/goal_state.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../logic/transaction/transaction_state.dart';
+import '../../../logic/auth/auth_cubit.dart';
+import '../../../logic/auth/auth_state.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -125,14 +127,62 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       if (v == null || v.isEmpty) return 'Enter amount';
                       final val = double.tryParse(v);
                       if (val == null || val <= 0) return 'Invalid amount';
+                      
+                      final authState = context.read<AuthCubit>().state;
+                      final formatter = authState is AuthAuthenticated 
+                          ? authState.formatter 
+                          : const CurrencyFormatter();
+                          
                       if (state.formType == TransactionType.expense &&
                           val > availableToSpend) {
-                        return 'Only ${CurrencyFormatter.format(availableToSpend)} available';
+                        return 'Only ${formatter.format(availableToSpend)} available';
                       }
                       return null;
                     },
                   ),
-                  const Gap(20),
+                  BlocBuilder<TransactionCubit, TransactionState>(
+                    builder: (context, state) {
+                      if (state is! TransactionLoaded) return const SizedBox.shrink();
+                      if (state.formType != TransactionType.expense) return const SizedBox.shrink();
+
+                      final goalState = context.watch<GoalCubit>().state;
+                      final lockedAmount =
+                          goalState is GoalLoaded ? goalState.totalLocked : 0.0;
+                      final availableToSpend =
+                          (state.balance - lockedAmount).clamp(0.0, double.infinity);
+
+                      final authState = context.watch<AuthCubit>().state;
+                      final formatter = authState is AuthAuthenticated 
+                          ? authState.formatter 
+                          : const CurrencyFormatter();
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline_rounded,
+                              size: 13,
+                              color: availableToSpend < 50
+                                  ? AppColors.expense
+                                  : AppColors.textSecondary,
+                            ),
+                            const Gap(5),
+                            Text(
+                              'Available to spend: ${formatter.formatCompact(availableToSpend)}',
+                              style: AppTextStyles.caption.copyWith(
+                                color: availableToSpend < 50
+                                    ? AppColors.expense
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const Gap(14),
 
                   // ── Category ────────────────────────────────────────
                   const TransactionCategoryDropdown(),

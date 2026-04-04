@@ -1,11 +1,13 @@
-// month_comparison_card.dart
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:gap/gap.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../logic/insights/insights_state.dart';
+import '../../../../logic/auth/auth_cubit.dart';
+import '../../../../logic/auth/auth_state.dart';
 
 class MonthComparisonCard extends StatelessWidget {
   final InsightsLoaded state;
@@ -26,7 +28,6 @@ class MonthComparisonCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Title ────────────────────────────────────────────────────
           Text(
             'Monthly Comparison',
             style: AppTextStyles.h3.copyWith(
@@ -34,10 +35,8 @@ class MonthComparisonCard extends StatelessWidget {
             ),
           ),
           const Gap(16),
-          // ── Two columns ──────────────────────────────────────────────
           Row(
             children: [
-              // This month
               Expanded(
                 child: _MonthBlock(
                   label: 'This Month',
@@ -45,7 +44,6 @@ class MonthComparisonCard extends StatelessWidget {
                   isHighlighted: true,
                 ),
               ),
-              // Arrow in the middle
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Icon(
@@ -54,7 +52,6 @@ class MonthComparisonCard extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              // Last month
               Expanded(
                 child: _MonthBlock(
                   label: 'Last Month',
@@ -65,7 +62,6 @@ class MonthComparisonCard extends StatelessWidget {
             ],
           ),
           const Gap(14),
-          // ── Change summary banner ─────────────────────────────────────
           Container(
             width: double.infinity,
             padding:
@@ -85,12 +81,20 @@ class MonthComparisonCard extends StatelessWidget {
                   size: 16,
                 ),
                 const Gap(8),
-                Text(
-                  '${CurrencyFormatter.format(state.monthlyChange.abs())}  $changeLabel',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: changeColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final authState = context.watch<AuthCubit>().state;
+                    final formatter = authState is AuthAuthenticated
+                        ? authState.formatter
+                        : const CurrencyFormatter();
+                    return Text(
+                      '${formatter.format(state.monthlyChange.abs())}  $changeLabel',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: changeColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -138,14 +142,22 @@ class _MonthBlock extends StatelessWidget {
             ),
           ),
           const Gap(4),
-          Text(
-            CurrencyFormatter.format(amount),
-            style: AppTextStyles.amountSmall.copyWith(
-              color: isHighlighted
-                  ? AppColors.primary
-                  : Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
+          Builder(
+            builder: (context) {
+              final authState = context.watch<AuthCubit>().state;
+              final formatter = authState is AuthAuthenticated
+                  ? authState.formatter
+                  : const CurrencyFormatter();
+              return Text(
+                formatter.format(amount),
+                style: AppTextStyles.amountSmall.copyWith(
+                  color: isHighlighted
+                      ? AppColors.primary
+                      : Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              );
+            },
           ),
         ],
       ),

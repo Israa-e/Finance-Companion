@@ -199,16 +199,22 @@ class _AnimatedBalanceCard extends StatelessWidget {
                             tween: Tween(begin: 0, end: balance),
                             duration: const Duration(milliseconds: 800),
                             curve: Curves.easeOutCubic,
-                            builder: (_, val, __) => Text(
-                              CurrencyFormatter.format(val),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1,
-                                height: 1.1,
-                              ),
-                            ),
+                            builder: (_, val, __) {
+                              final authState = context.watch<AuthCubit>().state;
+                              final formatter = authState is AuthAuthenticated
+                                  ? authState.formatter
+                                  : const CurrencyFormatter();
+                              return Text(
+                                formatter.format(val),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -1,
+                                  height: 1.1,
+                                ),
+                              );
+                            },
                           ),
                     const Gap(24),
                     // ── Divider ──────────────────────────────────────
@@ -231,8 +237,10 @@ class _AnimatedBalanceCard extends StatelessWidget {
                           child: _StatPill(
                             icon: Icons.lock_rounded,
                             label: 'Locked',
-                            value:
-                                CurrencyFormatter.formatCompact(lockedAmount),
+                            value: (context.watch<AuthCubit>().state as AuthAuthenticated?)
+                                    ?.formatter
+                                    .formatCompact(lockedAmount) ??
+                                '\$0.0',
                             color: const Color(0xFFFFB3B3),
                           ),
                         ),
@@ -241,8 +249,10 @@ class _AnimatedBalanceCard extends StatelessWidget {
                           child: _StatPill(
                             icon: Icons.wallet_rounded,
                             label: 'Available',
-                            value: CurrencyFormatter.formatCompact(
-                                availableBalance),
+                            value: (context.watch<AuthCubit>().state as AuthAuthenticated?)
+                                    ?.formatter
+                                    .formatCompact(availableBalance) ??
+                                '\$0.0',
                             color: const Color(0xFF81F5AE),
                           ),
                         ),

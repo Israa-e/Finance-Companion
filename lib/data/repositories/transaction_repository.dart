@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_types_as_parameter_names
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finance_companion/data/services/database_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,10 +14,7 @@ class TransactionRepository {
   CollectionReference<Map<String, dynamic>>? get _transactionsRef {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return null;
-    return _firestore
-        .collection('users')
-        .doc(uid)
-        .collection('transactions');
+    return _firestore.collection('users').doc(uid).collection('transactions');
   }
 
   // FIX: same per-record upsert pattern — avoids destructive delete-all
@@ -28,7 +23,8 @@ class TransactionRepository {
   ) async {
     final db = await _db;
 
-    final existing = await db.query('transactions', columns: ['id', 'lastUpdated']);
+    final existing =
+        await db.query('transactions', columns: ['id', 'lastUpdated']);
     final existingIds = <String>{};
     final localTimestamps = <String, DateTime>{};
     for (final r in existing) {
@@ -128,14 +124,14 @@ class TransactionRepository {
     final transactions = await getAll();
     return transactions
         .where((t) => t.type == TransactionType.income)
-        .fold<double>(0.0, (sum, t) => sum + t.amount);
+        .fold<double>(0.0, (total, t) => total + t.amount);
   }
 
   Future<double> getTotalExpense() async {
     final transactions = await getAll();
     return transactions
         .where((t) => t.type == TransactionType.expense)
-        .fold<double>(0.0, (sum, t) => sum + t.amount);
+        .fold<double>(0.0, (total, t) => total + t.amount);
   }
 
   Future<double> getBalance() async {
