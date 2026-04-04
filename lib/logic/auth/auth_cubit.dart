@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'auth_state.dart';
 
@@ -13,6 +15,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repo.getLoggedInUser();
       if (user != null) {
+        CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[user.currency] ?? AppConstants.currencySymbol;
         emit(AuthAuthenticated(user: user));
       } else {
         emit(AuthUnauthenticated());
@@ -38,6 +41,7 @@ class AuthCubit extends Cubit<AuthState> {
         initialBalance: initialBalance,
         imagePath: imagePath,
       );
+      CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[user.currency] ?? AppConstants.currencySymbol;
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
@@ -51,6 +55,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repo.login(email: email, password: password);
+      CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[user.currency] ?? AppConstants.currencySymbol;
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(e.toString().replaceAll('Exception: ', '')));
@@ -114,6 +119,7 @@ class AuthCubit extends Cubit<AuthState> {
     String? imagePath,
     required double initialBalance,
     double monthlyBudget = 0.0,
+    String currency = 'USD',
   }) async {
     final current = state;
     if (current is! AuthAuthenticated) return;
@@ -125,8 +131,10 @@ class AuthCubit extends Cubit<AuthState> {
         imagePath: imagePath ?? current.user.imagePath,
         initialBalance: initialBalance,
         monthlyBudget: monthlyBudget,
+        currency: currency,
       );
       await _repo.updateProfile(updatedUser);
+      CurrencyFormatter.activeSymbol = AppConstants.supportedCurrencies[currency] ?? AppConstants.currencySymbol;
       emit(current.copyWith(
         user: updatedUser,
         isUpdating: false,

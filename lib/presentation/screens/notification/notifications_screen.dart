@@ -1,6 +1,7 @@
 import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:finance_companion/core/theme/app_text_styles.dart';
 import 'package:finance_companion/data/models/notification_model.dart';
+import 'package:finance_companion/data/services/notification_service.dart';
 import 'package:finance_companion/logic/notification/notification_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -104,6 +105,29 @@ class NotificationsScreen extends StatelessWidget {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          // Fire the OS notification
+          await NotificationService.instance.showNotification(
+            id: 999,
+            title: '🎉 Test Notification',
+            body: 'Notifications are working correctly!',
+          );
+          // Also save it to the in-app list so it appears here
+          if (context.mounted) {
+            await context.read<NotificationCubit>().addTestNotification();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notification sent — check your status bar!'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+        icon: const Icon(Iconsax.notification),
+        label: const Text('Test Notification'),
+        backgroundColor: AppColors.primary,
       ),
     );
   }

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/date_picker_sheet.dart';
 
 class AddGoalSheet extends StatefulWidget {
   const AddGoalSheet({super.key});
@@ -202,16 +203,21 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
     );
   }
 
-  Future<void> _pickDate(
-      BuildContext context, GoalCubit cubit, DateTime currentDate) async {
+  void _pickDate(
+      BuildContext context, GoalCubit cubit, DateTime currentDate) {
     final now = DateTime.now();
     final initial = currentDate.isBefore(now) ? now : currentDate;
-    final picked = await showDatePicker(
+    
+    showModalBottomSheet(
       context: context,
-      initialDate: initial,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365 * 5)),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => DatePickerSheet(
+        initialDate: initial,
+        firstDate: now,
+        lastDate: now.add(const Duration(days: 365 * 5)),
+        onDateSelected: (newDate) => cubit.updateFormDate(newDate),
+      ),
     );
-    if (picked != null) cubit.updateFormDate(picked);
   }
 }

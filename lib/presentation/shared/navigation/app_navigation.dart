@@ -10,12 +10,14 @@ import '../../../data/repositories/transaction_repository.dart';
 import '../../../data/repositories/goal_repository.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
 import '../../../logic/goal/goal_cubit.dart';
+import '../../../logic/goal/goal_state.dart';
 import '../../../logic/insights/insights_cubit.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/transactions/transactions_screen.dart';
 import '../../screens/goals/goals_screen.dart';
 import '../../screens/insights/insights_screen.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/services/alert_service.dart';
 
 class AppNavigation extends StatefulWidget {
   final TransactionRepository transactionRepo;
@@ -40,15 +42,14 @@ class _AppNavigationState extends State<AppNavigation> {
   static const int tabTransactions = 1;
   static const int tabGoals = 2;
   static const int tabInsights = 3;
-  
   static const int tabProfile = 4;
-
 
   late final TransactionCubit _txCubit;
   late final GoalCubit _goalCubit;
   late final InsightsCubit _insightsCubit;
   late final StreakCubit _streakCubit;
-  late final NotificationCubit _notifCubit; // FIX: added
+  late final NotificationCubit _notifCubit;
+  late final AlertService _alertService;
 
   @override
   void initState() {
@@ -58,20 +59,27 @@ class _AppNavigationState extends State<AppNavigation> {
     _streakCubit = StreakCubit(widget.transactionRepo)..loadStreak();
 
     final notifRepo = NotificationRepository();
+    _alertService = AlertService(notifRepo);
     _notifCubit = NotificationCubit(notifRepo)..load();
 
     _txCubit = TransactionCubit(widget.transactionRepo)
       ..setUser(widget.user.id!, widget.user.initialBalance)
       ..loadTransactions();
 
-    // FIX: refresh insights, streak, AND notifications on any transaction mutation
+    // After every transaction mutation: refresh insights, streak, and alerts
     _txCubit.onMutated = () async {
       _insightsCubit.loadInsights();
-      _streakCubit.loadStreak();
 
-      // Generate spending alerts based on updated transaction data
+      // Reload streak and check for streak milestones
+      await _streakCubit.loadStreak();
+      final streakState = _streakCubit.state;
+      if (streakState is StreakLoaded) {
+        await _alertService.checkStreakAlerts(streakState.streak.currentStreak);
+      }
+
+      // Check monthly budget alerts
       final transactions = await widget.transactionRepo.getAll();
-      await notifRepo.generateAlertsFromTransactions(
+      await _alertService.checkBudgetAlerts(
         transactions: transactions,
         monthlyBudget: widget.user.monthlyBudget,
       );
@@ -81,6 +89,30 @@ class _AppNavigationState extends State<AppNavigation> {
     _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo)
       ..setUser(widget.user.id!)
       ..loadGoals();
+
+    // Listen to goal state changes (add/save) for alerts
+    _goalCubit.stream.listen((state) async {
+      if (state is GoalLoaded) {
+        await _alertService.checkGoalAlerts(state.goals);
+        _notifCubit.load();
+      }
+    });
+
+    // On start, run full check against existing data
+    _runStartupChecks();
+  }
+
+  Future<void> _runStartupChecks() async {
+    try {
+      final transactions = await widget.transactionRepo.getAll();
+      await _alertService.checkBudgetAlerts(
+        transactions: transactions,
+        monthlyBudget: widget.user.monthlyBudget,
+      );
+      final goals = await widget.goalRepo.getAll(widget.user.id!);
+      await _alertService.checkGoalAlerts(goals);
+      _notifCubit.load();
+    } catch (_) {}
   }
 
   @override
@@ -103,7 +135,7 @@ class _AppNavigationState extends State<AppNavigation> {
         BlocProvider.value(value: _goalCubit),
         BlocProvider.value(value: _insightsCubit),
         BlocProvider.value(value: _streakCubit),
-        BlocProvider.value(value: _notifCubit), // FIX: added
+        BlocProvider.value(value: _notifCubit),
       ],
       child: Scaffold(
         body: IndexedStack(
@@ -180,6 +212,8 @@ class _AppNavigationState extends State<AppNavigation> {
     );
   }
 }
+
+// ── Standard nav item ─────────────────────────────────────────────────────────
 
 class _NavItem extends StatelessWidget {
   final IconData icon;

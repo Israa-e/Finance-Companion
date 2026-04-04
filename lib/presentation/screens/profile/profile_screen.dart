@@ -182,8 +182,9 @@ class ProfileScreen extends StatelessWidget {
         child: EditProfileSheet(
           initialName: user.name,
           initialImage: user.imagePath,
-          initialBalance: user.initialBalance, // FIX: now passed
+          initialBalance: user.initialBalance,
           initialMonthlyBudget: user.monthlyBudget,
+          initialCurrency: user.currency,
         ),
       ),
     );

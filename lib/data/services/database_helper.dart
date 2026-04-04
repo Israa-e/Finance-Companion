@@ -18,7 +18,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 3, // FIX: bumped version to add notifications table, monthlyBudget and lastUpdated
+      version: 4, // FIX: bumped version to add currency
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -33,6 +33,7 @@ class DatabaseHelper {
         passwordHash TEXT NOT NULL,
         initialBalance REAL NOT NULL DEFAULT 0,
         monthlyBudget REAL NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT "USD",
         imagePath TEXT,
         createdAt TEXT NOT NULL
       )
@@ -80,6 +81,9 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE users ADD COLUMN monthlyBudget REAL NOT NULL DEFAULT 0');
       await db.execute('ALTER TABLE transactions ADD COLUMN lastUpdated TEXT NOT NULL DEFAULT ""');
+    }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT "USD"');
     }
   }
 

@@ -10,6 +10,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
+import '../../shared/widgets/category_picker_sheet.dart';
+import '../../shared/widgets/date_picker_sheet.dart';
 
 class EditTransactionScreen extends StatefulWidget {
   final TransactionModel transaction;
@@ -26,7 +28,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _noteController;
 
-  // Local state for fields not driven by cubit
   late DateTime _date;
   late TransactionType _type;
   late String _category;
@@ -75,7 +76,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     );
 
     try {
-      // FIX: goes through cubit — triggers onMutated → insights refresh
       await context.read<TransactionCubit>().updateTransaction(updated);
       if (mounted) Navigator.pop(context);
     } catch (_) {
@@ -142,7 +142,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Type toggle ─────────────────────────────────────────
               _TypeToggle(
                 selected: _type,
                 onChanged: (type) => setState(() {
@@ -151,8 +150,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 }),
               ),
               const Gap(24),
-
-              // ── Amount ──────────────────────────────────────────────
               CustomTextField(
                 label: 'Amount',
                 controller: _amountController,
@@ -171,16 +168,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 },
               ),
               const Gap(20),
-
-              // ── Category ────────────────────────────────────────────
-              _CategoryDropdown(
-                categories: _currentCategories,
+              _CategorySelection(
                 selected: _category,
+                isIncome: _type == TransactionType.income,
                 onChanged: (cat) => setState(() => _category = cat),
               ),
               const Gap(20),
-
-              // ── Title ───────────────────────────────────────────────
               CustomTextField(
                 label: 'Title',
                 controller: _titleController,
@@ -189,15 +182,11 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                     (v == null || v.isEmpty) ? 'Enter title' : null,
               ),
               const Gap(20),
-
-              // ── Date picker ──────────────────────────────────────────
               _DatePicker(
                 date: _date,
                 onPick: (picked) => setState(() => _date = picked),
               ),
               const Gap(20),
-
-              // ── Note ────────────────────────────────────────────────
               CustomTextField(
                 label: 'Note (Optional)',
                 controller: _noteController,
@@ -205,8 +194,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 maxLines: 3,
               ),
               const Gap(32),
-
-              // ── Save ────────────────────────────────────────────────
               CustomButton(
                 label: 'Save Changes',
                 isLoading: _isSubmitting,
@@ -221,7 +208,135 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   }
 }
 
-// ─── Type Toggle ─────────────────────────────────────────────────────────────
+// ─── Internal Widgets ────────────────────────────────────────────────────────
+
+class _CategorySelection extends StatelessWidget {
+  final String selected;
+  final bool isIncome;
+  final ValueChanged<String> onChanged;
+
+  const _CategorySelection({
+    required this.selected,
+    required this.isIncome,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = CategoryPickerSheet.getIcon(selected);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Category',
+          style: AppTextStyles.label.copyWith(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (_) => CategoryPickerSheet(
+                selectedCategory: selected,
+                isIncome: isIncome,
+                onCategorySelected: onChanged,
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Theme.of(context).inputDecorationTheme.fillColor ??
+                  (Theme.of(context).brightness == Brightness.light
+                      ? Colors.grey[100]
+                      : Theme.of(context).colorScheme.surface),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 22, color: AppColors.primary),
+                const Gap(12),
+                Expanded(
+                  child: Text(selected, style: AppTextStyles.body),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DatePicker extends StatelessWidget {
+  final DateTime date;
+  final ValueChanged<DateTime> onPick;
+
+  const _DatePicker({required this.date, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Date',
+          style: AppTextStyles.label.copyWith(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+        const Gap(8),
+        InkWell(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (_) => DatePickerSheet(
+                initialDate: date,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+                onDateSelected: onPick,
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Theme.of(context).inputDecorationTheme.fillColor ??
+                  (Theme.of(context).brightness == Brightness.light
+                      ? Colors.grey[100]
+                      : Theme.of(context).colorScheme.surface),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Iconsax.calendar, size: 20, color: AppColors.primary),
+                const Gap(12),
+                Text(
+                  '${date.day}/${date.month}/${date.year}',
+                  style: AppTextStyles.body,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _TypeToggle extends StatelessWidget {
   final TransactionType selected;
@@ -293,145 +408,12 @@ class _ToggleButton extends StatelessWidget {
           child: Text(
             label,
             style: AppTextStyles.body.copyWith(
-              color: isSelected
-                  ? Colors.white
-                  : (Theme.of(context).brightness == Brightness.light
-                      ? Colors.black54
-                      : Colors.white),
-              fontWeight:
-                  isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? Colors.white : Colors.grey,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-// ─── Category Dropdown ───────────────────────────────────────────────────────
-
-class _CategoryDropdown extends StatelessWidget {
-  final List<String> categories;
-  final String selected;
-  final ValueChanged<String> onChanged;
-
-  const _CategoryDropdown({
-    required this.categories,
-    required this.selected,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final safeSelected =
-        categories.contains(selected) ? selected : categories.last;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Category',
-          style: AppTextStyles.label.copyWith(
-            color: Theme.of(context).brightness == Brightness.light
-                ? Colors.black54
-                : Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).inputDecorationTheme.fillColor ??
-                (Theme.of(context).brightness == Brightness.light
-                    ? Colors.grey[100]
-                    : Theme.of(context).colorScheme.surface),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: safeSelected,
-              isExpanded: true,
-              icon: Icon(
-                Icons.keyboard_arrow_down,
-                color: Theme.of(context).brightness == Brightness.light
-                    ? Colors.black54
-                    : Colors.white,
-              ),
-              style: AppTextStyles.body.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              dropdownColor: Theme.of(context).colorScheme.surface,
-              items: categories
-                  .map((c) =>
-                      DropdownMenuItem<String>(value: c, child: Text(c)))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) onChanged(v);
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Date Picker ─────────────────────────────────────────────────────────────
-
-class _DatePicker extends StatelessWidget {
-  final DateTime date;
-  final ValueChanged<DateTime> onPick;
-
-  const _DatePicker({required this.date, required this.onPick});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Date',
-          style: AppTextStyles.label.copyWith(
-            color: Theme.of(context).brightness == Brightness.light
-                ? Colors.black54
-                : Colors.white,
-          ),
-        ),
-        const Gap(8),
-        InkWell(
-          onTap: () async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: date,
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now(),
-            );
-            if (picked != null) onPick(picked);
-          },
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).inputDecorationTheme.fillColor ??
-                  (Theme.of(context).brightness == Brightness.light
-                      ? Colors.grey[100]
-                      : Theme.of(context).colorScheme.surface),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Iconsax.calendar,
-                    size: 20, color: AppColors.primary),
-                const Gap(12),
-                Text(
-                  '${date.day}/${date.month}/${date.year}',
-                  style: AppTextStyles.body,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -15,6 +15,7 @@ import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import 'widgets/transaction_type_toggle.dart';
 import 'widgets/transaction_category_dropdown.dart';
+import '../../shared/widgets/date_picker_sheet.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -202,14 +203,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         const Gap(8),
         InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () async {
-            final picked = await showDatePicker(
+          onTap: () {
+            showModalBottomSheet(
               context: context,
-              initialDate: date,
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now(),
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (_) => DatePickerSheet(
+                initialDate: date,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+                onDateSelected: (newDate) => cubit.updateFormDate(newDate),
+              ),
             );
-            if (picked != null) cubit.updateFormDate(picked);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

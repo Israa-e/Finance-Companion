@@ -3,6 +3,7 @@ import 'package:finance_companion/logic/auth/auth_cubit.dart';
 import 'package:finance_companion/logic/theme/theme_cubit.dart';
 import 'package:finance_companion/presentation/screens/splash/splash_screen.dart';
 import 'package:finance_companion/presentation/shared/navigation/auth_wrapper.dart';
+import 'package:finance_companion/data/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.initialize();
   final prefs = await SharedPreferences.getInstance();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(FinanceApp(prefs: prefs));

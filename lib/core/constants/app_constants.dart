@@ -26,4 +26,15 @@ class AppConstants {
   // ── Currency ─────────────────────────────────────────────────────────────
   static const String defaultCurrency = 'USD';
   static const String currencySymbol = '\$';
+
+  static const Map<String, String> supportedCurrencies = {
+    'USD': '\$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'EGP': 'E£',
+    'CAD': 'C\$',
+    'AUD': 'A\$',
+    'INR': '₹',
+  };
 }

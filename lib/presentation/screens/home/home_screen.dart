@@ -1,5 +1,6 @@
 import 'package:finance_companion/logic/streak/streak_cubit.dart';
 import 'package:finance_companion/presentation/screens/home/widgets/shimmer_widgets.dart';
+import 'package:finance_companion/data/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -16,10 +17,25 @@ import 'widgets/quickgoals_preview.dart';
 import 'widgets/home_header.dart';
 import 'widgets/streak_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final void Function(int tabIndex) onTabSwitch;
 
   const HomeScreen({super.key, required this.onTabSwitch});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Request notification permission once the Activity is visible.
+    // Must be done here (not in main()) so Android can show the dialog.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.requestPermission();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +59,7 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Gap(16),
-                    HomeHeader(onTabSwitch: onTabSwitch),
+                    HomeHeader(onTabSwitch: widget.onTabSwitch),
                     const Gap(16),
 
                     // Balance card — shimmer while loading
@@ -77,12 +93,12 @@ class HomeScreen extends StatelessWidget {
                     const Gap(16),
 
                     // Weekly chart
-                    WeeklyChart(onSeeAll: () => onTabSwitch(3)),
+                    WeeklyChart(onSeeAll: () => widget.onTabSwitch(3)),
 
                     // Goals preview
-                    QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
+                    QuickGoalsPreview(onSeeAll: () => widget.onTabSwitch(2)),
                     // Recent transactions
-                    RecentTransactions(onSeeAll: () => onTabSwitch(1)),
+                    RecentTransactions(onSeeAll: () => widget.onTabSwitch(1)),
                     const Gap(32),
                   ],
                 ),
@@ -94,3 +110,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+

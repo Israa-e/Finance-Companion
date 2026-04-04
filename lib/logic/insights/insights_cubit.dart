@@ -89,6 +89,7 @@ class InsightsCubit extends Cubit<InsightsState> {
         mostFrequentCategory: mostFrequentCategory,
         mostFrequentCount: mostFrequentCount,
         activePeriod: period,
+        transactions: filtered, // ADDED
       ));
     } catch (e) {
       emit(InsightsError(e.toString()));

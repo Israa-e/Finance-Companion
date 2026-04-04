@@ -9,6 +9,7 @@ import '../../../../logic/auth/auth_state.dart';
 import '../../../../logic/transaction/transaction_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 
@@ -17,6 +18,7 @@ class EditProfileSheet extends StatefulWidget {
   final String? initialImage;
   final double initialBalance;
   final double initialMonthlyBudget;
+  final String initialCurrency;
 
   const EditProfileSheet({
     super.key,
@@ -24,6 +26,7 @@ class EditProfileSheet extends StatefulWidget {
     this.initialImage,
     required this.initialBalance,
     required this.initialMonthlyBudget,
+    required this.initialCurrency,
   });
 
   @override
@@ -34,6 +37,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _balanceController;
   late final TextEditingController _budgetController;
+  late String _selectedCurrency;
 
   @override
   void initState() {
@@ -45,6 +49,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     _budgetController = TextEditingController(
       text: widget.initialMonthlyBudget.toStringAsFixed(2),
     );
+    _selectedCurrency = widget.initialCurrency;
   }
 
   @override
@@ -76,6 +81,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           imagePath: state.editImagePath ?? state.user.imagePath,
           initialBalance: newBalance,
           monthlyBudget: newBudget,
+          currency: _selectedCurrency,
         );
   }
 
@@ -205,15 +211,43 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   prefixIcon:
                       const Icon(Iconsax.chart, size: 18),
                 ),
-                const Gap(6),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: Text(
-                    'Changing this adjusts your total balance calculation.',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
+                const Gap(16),
+
+                // Currency Dropdown
+                DropdownButtonFormField<String>(
+                  value: AppConstants.supportedCurrencies.containsKey(_selectedCurrency) 
+                      ? _selectedCurrency 
+                      : AppConstants.supportedCurrencies.keys.first,
+                  decoration: InputDecoration(
+                    labelText: 'Currency',
+                    labelStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
+                    prefixIcon: const Icon(Iconsax.global, size: 18, color: AppColors.textHint),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                     ),
                   ),
+                  dropdownColor: Theme.of(context).colorScheme.surface,
+                  items: AppConstants.supportedCurrencies.keys.map((code) {
+                    final symbol = AppConstants.supportedCurrencies[code];
+                    return DropdownMenuItem(
+                      value: code,
+                      child: Text('$code ($symbol)', style: AppTextStyles.body),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedCurrency = val);
+                  },
                 ),
                 const Gap(24),
 

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/repositories/notification_repository.dart';
 
@@ -75,5 +76,18 @@ class NotificationCubit extends Cubit<NotificationState> {
   Future<void> clearAll() async {
     await _repo.deleteAll();
     emit(state.copyWith(notifications: [], unreadCount: 0));
+  }
+
+  /// Saves a test notification to the in-app list and reloads state.
+  Future<void> addTestNotification() async {
+    const uuid = Uuid();
+    await _repo.add(NotificationModel(
+      id: uuid.v4(),
+      title: '🎉 Test Notification',
+      body: 'Notifications are working correctly!',
+      type: NotificationType.streakMilestone,
+      createdAt: DateTime.now(),
+    ));
+    await load();
   }
 }

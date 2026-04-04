@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../data/models/transaction_model.dart';
 
 // FIX: Added InsightsPeriod enum for time period filtering
 enum InsightsPeriod {
@@ -43,7 +44,8 @@ class InsightsLoaded extends InsightsState {
   final Map<String, double> monthlyTrend;
   final String mostFrequentCategory;
   final int mostFrequentCount;
-  final InsightsPeriod activePeriod; // FIX: track which period is active
+  final InsightsPeriod activePeriod;
+  final List<TransactionModel> transactions; // ADDED
 
   const InsightsLoaded({
     required this.expensesByCategory,
@@ -55,6 +57,7 @@ class InsightsLoaded extends InsightsState {
     required this.monthlyTrend,
     required this.mostFrequentCategory,
     required this.mostFrequentCount,
+    required this.transactions, // ADDED
     this.activePeriod = InsightsPeriod.allTime,
   });
 
@@ -73,6 +76,7 @@ class InsightsLoaded extends InsightsState {
         mostFrequentCategory,
         mostFrequentCount,
         activePeriod,
+        transactions, // ADDED
       ];
 }
 

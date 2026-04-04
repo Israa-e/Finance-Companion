@@ -7,6 +7,7 @@ class UserModel extends Equatable {
   final String passwordHash;
   final double initialBalance;
   final double monthlyBudget;
+  final String currency;
   final String? imagePath;
   final DateTime createdAt;
 
@@ -17,6 +18,7 @@ class UserModel extends Equatable {
     required this.passwordHash,
     required this.initialBalance,
     this.monthlyBudget = 0.0,
+    this.currency = 'USD',
     this.imagePath,
     required this.createdAt,
   });
@@ -28,6 +30,7 @@ class UserModel extends Equatable {
         'passwordHash': passwordHash,
         'initialBalance': initialBalance,
         'monthlyBudget': monthlyBudget,
+        'currency': currency,
         'imagePath': imagePath,
         'createdAt': createdAt.toIso8601String(),
       };
@@ -39,6 +42,7 @@ class UserModel extends Equatable {
         passwordHash: map['passwordHash'],
         initialBalance: (map['initialBalance'] as num).toDouble(),
         monthlyBudget: (map['monthlyBudget'] as num?)?.toDouble() ?? 0.0,
+        currency: map['currency'] as String? ?? 'USD',
         imagePath: map['imagePath'],
         createdAt: DateTime.parse(map['createdAt']),
       );
@@ -50,6 +54,7 @@ class UserModel extends Equatable {
     String? passwordHash,
     double? initialBalance,
     double? monthlyBudget,
+    String? currency,
     String? imagePath,
     DateTime? createdAt,
   }) =>
@@ -60,11 +65,20 @@ class UserModel extends Equatable {
         passwordHash: passwordHash ?? this.passwordHash,
         initialBalance: initialBalance ?? this.initialBalance,
         monthlyBudget: monthlyBudget ?? this.monthlyBudget,
+        currency: currency ?? this.currency,
         imagePath: imagePath ?? this.imagePath,
         createdAt: createdAt ?? this.createdAt,
       );
 
   @override
-  List<Object?> get props =>
-      [id, name, email, passwordHash, initialBalance, monthlyBudget, imagePath];
+  List<Object?> get props => [
+        id,
+        name,
+        email,
+        passwordHash,
+        initialBalance,
+        monthlyBudget,
+        currency,
+        imagePath,
+      ];
 }
