@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
+import '../../../../logic/transaction/transaction_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -13,11 +15,13 @@ import '../../../shared/widgets/custom_text_field.dart';
 class EditProfileSheet extends StatefulWidget {
   final String initialName;
   final String? initialImage;
+  final double initialBalance;
 
   const EditProfileSheet({
     super.key,
     required this.initialName,
     this.initialImage,
+    required this.initialBalance,
   });
 
   @override
@@ -26,16 +30,21 @@ class EditProfileSheet extends StatefulWidget {
 
 class _EditProfileSheetState extends State<EditProfileSheet> {
   late final TextEditingController _nameController;
+  late final TextEditingController _balanceController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
+    _balanceController = TextEditingController(
+      text: widget.initialBalance.toStringAsFixed(2),
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _balanceController.dispose();
     super.dispose();
   }
 
@@ -44,6 +53,11 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated && state.updateSuccess) {
+          // Also refresh transaction balance when starting balance changes
+          context.read<TransactionCubit>().setInitialBalance(
+                state.user.initialBalance,
+              );
+          context.read<TransactionCubit>().loadTransactions();
           Navigator.pop(context);
         }
         if (state is AuthAuthenticated && state.errorMessage != null) {
@@ -55,8 +69,6 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       builder: (context, state) {
         if (state is! AuthAuthenticated) return const SizedBox.shrink();
         final cubit = context.read<AuthCubit>();
-
-        // Fallback to user data if buffers are null
         final currentImage = state.editImagePath ?? state.user.imagePath;
 
         return Container(
@@ -68,67 +80,133 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textHint,
-                  borderRadius: BorderRadius.circular(2),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textHint,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const Gap(16),
-              Text('Edit Profile', style: AppTextStyles.h3),
-              const Gap(20),
-              // Avatar picker
-              GestureDetector(
-                onTap: () => cubit.pickEditImage(),
-                child: Builder(
-                  builder: (context) {
-                    final hasImage = currentImage != null && File(currentImage).existsSync();
-                    return Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        image: hasImage
-                            ? DecorationImage(
-                                image: FileImage(File(currentImage)),
-                                fit: BoxFit.cover,
+                const Gap(16),
+                Text('Edit Profile', style: AppTextStyles.h3),
+                const Gap(20),
+
+                // Avatar picker
+                GestureDetector(
+                  onTap: () => cubit.pickEditImage(),
+                  child: Builder(
+                    builder: (context) {
+                      final hasImage = currentImage != null &&
+                          File(currentImage).existsSync();
+                      return Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color:
+                              AppColors.primary.withValues(alpha: 0.1),
+                          image: hasImage
+                              ? DecorationImage(
+                                  image: FileImage(File(currentImage)),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: !hasImage
+                            ? const Icon(
+                                Iconsax.camera,
+                                color: AppColors.primary,
+                                size: 28,
                               )
                             : null,
-                      ),
-                      child: !hasImage
-                          ? const Icon(
-                              Iconsax.camera,
-                              color: AppColors.primary,
-                              size: 28,
-                            )
-                          : null,
+                      );
+                    },
+                  ),
+                ),
+                const Gap(20),
+
+                // Name field
+                CustomTextField(
+                  label: 'Name',
+                  controller: _nameController,
+                  hint: 'Enter your name',
+                  onChanged: (v) => cubit.updateEditName(v),
+                ),
+                const Gap(16),
+
+                // FIX: Starting balance now editable
+                CustomTextField(
+                  label: 'Starting Balance',
+                  controller: _balanceController,
+                  hint: '0.00',
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}')),
+                  ],
+                  prefixIcon:
+                      const Icon(Iconsax.dollar_circle, size: 18),
+                ),
+                const Gap(6),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Text(
+                    'Changing this adjusts your total balance calculation.',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                const Gap(24),
+
+                CustomButton(
+                  label: 'Save Changes',
+                  isLoading: state.isUpdating,
+                  onTap: () {
+                    final name = _nameController.text.trim();
+                    if (name.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Name cannot be empty')),
+                      );
+                      return;
+                    }
+                    final newBalance =
+                        double.tryParse(_balanceController.text) ??
+                            widget.initialBalance;
+
+                    // Persist name + image via cubit
+                    cubit.updateEditName(name);
+
+                    // Update balance on the user model directly
+                    final updatedUser = state.user.copyWith(
+                      name: name,
+                      imagePath:
+                          state.editImagePath ?? state.user.imagePath,
+                      initialBalance: newBalance,
                     );
+                    // Use submitProfileUpdate after setting balance
+                    context
+                        .read<AuthCubit>()
+                        .updateProfileWithBalance(
+                          name: name,
+                          imagePath: state.editImagePath,
+                          initialBalance: newBalance,
+                        );
                   },
                 ),
-              ),
-              const Gap(20),
-              CustomTextField(
-                label: 'Name',
-                controller: _nameController,
-                hint: 'Enter your name',
-                onChanged: (v) => cubit.updateEditName(v),
-              ),
-              const Gap(24),
-              CustomButton(
-                label: 'Save Changes',
-                isLoading: state.isUpdating,
-                onTap: () => cubit.submitProfileUpdate(),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

@@ -8,7 +8,6 @@ class AuthCubit extends Cubit<AuthState> {
 
   AuthCubit(this._repo) : super(AuthInitial());
 
-  // Check session on app start
   Future<void> checkAuth() async {
     emit(AuthLoading());
     try {
@@ -63,7 +62,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthUnauthenticated());
   }
 
-  // --- Profile Editing (Consolidated) ---
+  // ── Profile editing helpers ───────────────────────────────────────────────
 
   void updateEditName(String name) {
     final current = state;
@@ -104,7 +103,33 @@ class AuthCubit extends Cubit<AuthState> {
         isUpdating: false,
         updateSuccess: true,
       ));
-      // Reset success flag after emit (optional, depends on UI)
+    } catch (e) {
+      emit(current.copyWith(isUpdating: false, errorMessage: e.toString()));
+    }
+  }
+
+  /// FIX: new method that also persists the starting balance
+  Future<void> updateProfileWithBalance({
+    required String name,
+    String? imagePath,
+    required double initialBalance,
+  }) async {
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+
+    emit(current.copyWith(isUpdating: true, errorMessage: null));
+    try {
+      final updatedUser = current.user.copyWith(
+        name: name.trim(),
+        imagePath: imagePath ?? current.user.imagePath,
+        initialBalance: initialBalance,
+      );
+      await _repo.updateProfile(updatedUser);
+      emit(current.copyWith(
+        user: updatedUser,
+        isUpdating: false,
+        updateSuccess: true,
+      ));
     } catch (e) {
       emit(current.copyWith(isUpdating: false, errorMessage: e.toString()));
     }

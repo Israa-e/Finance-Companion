@@ -1,7 +1,15 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/transaction_model.dart';
 
-enum TransactionFilter { all, income, expense, today, thisWeek, thisMonth, lastMonth }
+enum TransactionFilter {
+  all,
+  income,
+  expense,
+  today,
+  thisWeek,
+  thisMonth,
+  lastMonth,
+}
 
 enum DateRangeFilter { today, thisWeek, thisMonth, lastMonth, all }
 
@@ -21,8 +29,6 @@ extension DateRangeFilterExt on DateRangeFilter {
     }
   }
 
-  /// Returns a [_DateRange] for filtering, or null if "all time".
-  // ignore: library_private_types_in_public_api
   _DateRange? resolve() {
     final now = DateTime.now();
     switch (this) {
@@ -37,11 +43,8 @@ extension DateRangeFilterExt on DateRangeFilter {
         return _DateRange(DateTime(now.year, now.month, 1), now);
       case DateRangeFilter.lastMonth:
         final first = DateTime(now.year, now.month - 1, 1);
-        final last = DateTime(
-          now.year,
-          now.month,
-          1,
-        ).subtract(const Duration(milliseconds: 1));
+        final last = DateTime(now.year, now.month, 1)
+            .subtract(const Duration(milliseconds: 1));
         return _DateRange(first, last);
       case DateRangeFilter.all:
         return null;
@@ -67,11 +70,11 @@ extension FilterExt on TransactionFilter {
       case TransactionFilter.today:
         return 'Today';
       case TransactionFilter.thisWeek:
-        return 'This week';
+        return 'This Week';
       case TransactionFilter.thisMonth:
-        return 'This month';
+        return 'This Month';
       case TransactionFilter.lastMonth:
-        return 'Last month';
+        return 'Last Month';
     }
   }
 
@@ -97,14 +100,6 @@ extension FilterExt on TransactionFilter {
   }
 }
 
-extension DateExt on DateTime {
-  bool isWithinRange(DateRangeFilter rangeFilter) {
-    final range = rangeFilter.resolve();
-    if (range == null) return true;
-    return !isBefore(range.start) && !isAfter(range.end);
-  }
-}
-
 abstract class TransactionState extends Equatable {
   const TransactionState();
   @override
@@ -112,6 +107,7 @@ abstract class TransactionState extends Equatable {
 }
 
 class TransactionInitial extends TransactionState {}
+
 class TransactionLoading extends TransactionState {}
 
 class TransactionLoaded extends TransactionState {
@@ -121,11 +117,11 @@ class TransactionLoaded extends TransactionState {
   final double totalExpense;
   final double initialBalance;
 
-  // Search & Filter (Consolidated)
+  // Search & Filter
   final String searchQuery;
   final TransactionFilter activeFilter;
 
-  // Form states (Consolidated)
+  // Form states
   final TransactionType formType;
   final String formCategory;
   final double formAmount;
@@ -145,7 +141,7 @@ class TransactionLoaded extends TransactionState {
     this.searchQuery = '',
     this.activeFilter = TransactionFilter.all,
     this.formType = TransactionType.expense,
-    this.formCategory = 'Food',
+    this.formCategory = 'Food & Drinks',
     this.formAmount = 0.0,
     required this.formDate,
     this.formTitle = '',
@@ -188,28 +184,42 @@ class TransactionLoaded extends TransactionState {
       formTitle: formTitle ?? this.formTitle,
       formNote: formNote ?? this.formNote,
       isSubmitting: isSubmitting ?? this.isSubmitting,
-      submitSuccess: submitSuccess ?? this.submitSuccess,
+      // FIX: submitSuccess must be explicitly passed — never inherit true
+      submitSuccess: submitSuccess ?? false,
       formErrorMessage: formErrorMessage,
     );
   }
 
-  // Filtered list helper
+  /// Filters transactions by type AND date range AND search query.
+  /// Now correctly applies all seven filter variants.
   List<TransactionModel> get filteredTransactions {
-    // Note: The UI now uses a separate set of filters (All, Income, Expense)
-    // and groups by Date. We'll filter by Type and Search, and then group.
-    
     return transactions.where((tx) {
-      final matchesSearch = tx.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          tx.category.toLowerCase().contains(searchQuery.toLowerCase());
-      
-      final type = activeFilter.type;
-      bool matchesFilter = type == null || tx.type == type;
-      
-      return matchesSearch && matchesFilter;
+      // ── Search ──────────────────────────────────────────────────────────
+      final q = searchQuery.toLowerCase();
+      final matchesSearch = q.isEmpty ||
+          tx.title.toLowerCase().contains(q) ||
+          tx.category.toLowerCase().contains(q) ||
+          (tx.note?.toLowerCase().contains(q) ?? false);
+
+      // ── Type filter ──────────────────────────────────────────────────────
+      final typeFilter = activeFilter.type;
+      final matchesType = typeFilter == null || tx.type == typeFilter;
+
+      // ── Date range filter ────────────────────────────────────────────────
+      final rangeFilter = activeFilter.dateRange;
+      bool matchesDate = true;
+      if (rangeFilter != null) {
+        final range = rangeFilter.resolve();
+        if (range != null) {
+          matchesDate =
+              !tx.date.isBefore(range.start) && !tx.date.isAfter(range.end);
+        }
+      }
+
+      return matchesSearch && matchesType && matchesDate;
     }).toList();
   }
 
-  /// Groups the filtered transactions by date (Today, Yesterday, etc.)
   Map<String, List<TransactionModel>> get groupedTransactions {
     final filtered = filteredTransactions;
     final groups = <String, List<TransactionModel>>{};
@@ -221,20 +231,16 @@ class TransactionLoaded extends TransactionState {
     for (final tx in filtered) {
       final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
       String key;
-      
+
       if (txDate.isAtSameMomentAs(today)) {
         key = 'Today';
       } else if (txDate.isAtSameMomentAs(yesterday)) {
         key = 'Yesterday';
       } else {
-        // Format as "MMM dd, yyyy" or similar
         key = '${_monthName(txDate.month)} ${txDate.day}, ${txDate.year}';
       }
 
-      if (!groups.containsKey(key)) {
-        groups[key] = [];
-      }
-      groups[key]!.add(tx);
+      groups.putIfAbsent(key, () => []).add(tx);
     }
 
     return groups;
@@ -243,7 +249,7 @@ class TransactionLoaded extends TransactionState {
   String _monthName(int month) {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return months[month - 1];
   }

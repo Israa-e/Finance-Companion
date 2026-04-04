@@ -1,3 +1,4 @@
+import 'package:finance_companion/logic/home/streak_cubit.dart';
 import 'package:finance_companion/presentation/screens/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,23 +40,27 @@ class _AppNavigationState extends State<AppNavigation> {
   static const int tabInsights = 3;
   static const int tabProfile = 4;
 
-  // Hold cubit references so we can pass them to child routes.
   late final TransactionCubit _txCubit;
   late final GoalCubit _goalCubit;
   late final InsightsCubit _insightsCubit;
+  late final StreakCubit _streakCubit; // FIX: added
 
   @override
   void initState() {
     super.initState();
 
     _insightsCubit = InsightsCubit(widget.transactionRepo)..loadInsights();
+    _streakCubit = StreakCubit(widget.transactionRepo)..loadStreak();
 
     _txCubit = TransactionCubit(widget.transactionRepo)
       ..setUser(widget.user.id!, widget.user.initialBalance)
       ..loadTransactions();
 
-    // Wire auto-refresh: every mutation re-loads insights immediately.
-    _txCubit.onMutated = () => _insightsCubit.loadInsights();
+    // FIX: refresh both insights AND streak on any transaction mutation
+    _txCubit.onMutated = () {
+      _insightsCubit.loadInsights();
+      _streakCubit.loadStreak();
+    };
 
     _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo)
       ..setUser(widget.user.id!)
@@ -67,6 +72,7 @@ class _AppNavigationState extends State<AppNavigation> {
     _txCubit.close();
     _goalCubit.close();
     _insightsCubit.close();
+    _streakCubit.close();
     super.dispose();
   }
 
@@ -79,6 +85,7 @@ class _AppNavigationState extends State<AppNavigation> {
         BlocProvider.value(value: _txCubit),
         BlocProvider.value(value: _goalCubit),
         BlocProvider.value(value: _insightsCubit),
+        BlocProvider.value(value: _streakCubit), // FIX: added
       ],
       child: Scaffold(
         body: IndexedStack(
@@ -156,8 +163,6 @@ class _AppNavigationState extends State<AppNavigation> {
   }
 }
 
-// ─── Nav item ─────────────────────────────────────────────────────────────────
-
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -194,9 +199,10 @@ class _NavItem extends StatelessWidget {
               icon,
               color: isActive
                   ? AppColors.primary
-                  : Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.55),
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.55),
               size: 22,
             ),
             const SizedBox(height: 2),
@@ -209,9 +215,10 @@ class _NavItem extends StatelessWidget {
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 color: isActive
                     ? AppColors.primary
-                    : Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.55),
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.55),
               ),
             ),
           ],

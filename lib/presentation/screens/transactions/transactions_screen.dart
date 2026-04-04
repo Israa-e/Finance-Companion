@@ -1,3 +1,4 @@
+import 'package:finance_companion/presentation/screens/home/widgets/shimmer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
@@ -14,14 +15,12 @@ import 'edit_transaction_screen.dart';
 import 'add_transaction_screen.dart';
 import 'widgets/transaction_list_item.dart';
 import 'widgets/transaction_search_bar.dart';
-import 'widgets/transaction_filter_row.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Resolve colors once — respects light & dark
     final labelColor = Theme.of(context).colorScheme.onSurface;
     final dividerColor =
         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
@@ -33,12 +32,12 @@ class TransactionsScreen extends StatelessWidget {
           children: [
             const _Header(),
             const TransactionSearchBar(),
-            const TransactionFilterRow(),
             Expanded(
               child: BlocBuilder<TransactionCubit, TransactionState>(
                 builder: (context, state) {
+                  // FIX: shimmer skeleton instead of center spinner
                   if (state is TransactionLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const TransactionListSkeleton();
                   }
 
                   if (state is TransactionLoaded) {
@@ -60,7 +59,6 @@ class TransactionsScreen extends StatelessWidget {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ── Date group header ──────────────────────
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Row(
@@ -68,7 +66,6 @@ class TransactionsScreen extends StatelessWidget {
                                   Text(
                                     date,
                                     style: AppTextStyles.label.copyWith(
-                                      // ✅ theme-aware — works in both light & dark
                                       color: labelColor,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.5,
@@ -78,14 +75,12 @@ class TransactionsScreen extends StatelessWidget {
                                   Expanded(
                                     child: Container(
                                       height: 1,
-                                      // ✅ theme-aware divider
                                       color: dividerColor,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            // ── Transaction items ──────────────────────
                             ...transactions.map(
                               (tx) => TransactionListItem(
                                 transaction: tx,
@@ -105,9 +100,8 @@ class TransactionsScreen extends StatelessWidget {
                     return Center(
                       child: Text(
                         state.message,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.expense,
-                        ),
+                        style: AppTextStyles.body
+                            .copyWith(color: AppColors.expense),
                       ),
                     );
                   }
@@ -149,9 +143,8 @@ class TransactionsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             isSearching ? 'No transactions found' : 'No transactions yet',
-            style: AppTextStyles.h3.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+            style: AppTextStyles.h3
+                .copyWith(color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 8),
           Text(
@@ -170,8 +163,6 @@ class TransactionsScreen extends StatelessWidget {
     );
   }
 }
-
-// ─── Header ───────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
   const _Header();
@@ -195,7 +186,6 @@ class _Header extends StatelessWidget {
                   Text(
                     'Transactions',
                     style: AppTextStyles.h2.copyWith(
-                      // ✅ theme-aware title
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -203,7 +193,6 @@ class _Header extends StatelessWidget {
                   Text(
                     '$count entries',
                     style: AppTextStyles.caption.copyWith(
-                      // ✅ theme-aware subtitle
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
@@ -213,7 +202,6 @@ class _Header extends StatelessWidget {
                   ),
                 ],
               ),
-              // ── Add button ───────────────────────────────────────────
               GestureDetector(
                 onTap: () {
                   final txCubit = context.read<TransactionCubit>();
@@ -237,13 +225,8 @@ class _Header extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
-                  
                   ),
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 28),
                 ),
               ),
             ],

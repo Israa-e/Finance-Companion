@@ -1,7 +1,10 @@
+import 'package:finance_companion/logic/home/streak_cubit.dart';
+import 'package:finance_companion/presentation/screens/home/widgets/shimmer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
+import '../../../logic/transaction/transaction_state.dart';
 import '../../../logic/goal/goal_cubit.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -11,9 +14,9 @@ import 'widgets/recent_transactions.dart';
 import 'widgets/weekly_chart.dart';
 import 'widgets/quickgoals_preview.dart';
 import 'widgets/home_header.dart';
+import 'widgets/streak_card.dart';
 
 class HomeScreen extends StatelessWidget {
-
   final void Function(int tabIndex) onTabSwitch;
 
   const HomeScreen({super.key, required this.onTabSwitch});
@@ -27,31 +30,67 @@ class HomeScreen extends StatelessWidget {
           onRefresh: () async {
             context.read<TransactionCubit>().loadTransactions();
             context.read<GoalCubit>().loadGoals();
+            context.read<StreakCubit>().loadStreak();
           },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Gap(16),
-                HomeHeader(onTabSwitch: onTabSwitch),
-                const Gap(24),
-                const BalanceCard(),
-                const Gap(24),
-                const SummaryRow(),
-                const Gap(24),
-                // ── Weekly chart — "See all" goes to Insights tab ────────
-                WeeklyChart(onSeeAll: () => onTabSwitch(3)),
-                const Gap(24),
-                // ── Goals preview — "See all" goes to Goals tab ──────────
-                QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
-                const Gap(24),
-                // ── Recent transactions — "See all" goes to Transactions ─
-                RecentTransactions(onSeeAll: () => onTabSwitch(1)),
-                const Gap(32),
-              ],
-            ),
+          child: BlocBuilder<TransactionCubit, TransactionState>(
+            builder: (context, txState) {
+              final isLoading = txState is TransactionLoading;
+
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Gap(16),
+                    HomeHeader(onTabSwitch: onTabSwitch),
+                    const Gap(24),
+
+                    // Balance card — shimmer while loading
+                    isLoading
+                        ? const BalanceCardSkeleton()
+                        : const BalanceCard(),
+                    const Gap(24),
+
+                    // Summary row — shimmer while loading
+                    isLoading
+                        ? Row(children: [
+                            Expanded(
+                              child: ShimmerBox(
+                                  width: double.infinity,
+                                  height: 80,
+                                  borderRadius: 16),
+                            ),
+                            const Gap(12),
+                            Expanded(
+                              child: ShimmerBox(
+                                  width: double.infinity,
+                                  height: 80,
+                                  borderRadius: 16),
+                            ),
+                          ])
+                        : const SummaryRow(),
+                    const Gap(24),
+
+                    // No-Spend Streak — new creative feature
+                    const StreakCard(),
+                    const Gap(24),
+
+                    // Weekly chart
+                    WeeklyChart(onSeeAll: () => onTabSwitch(3)),
+                    const Gap(24),
+
+                    // Goals preview
+                    QuickGoalsPreview(onSeeAll: () => onTabSwitch(2)),
+                    const Gap(24),
+
+                    // Recent transactions
+                    RecentTransactions(onSeeAll: () => onTabSwitch(1)),
+                    const Gap(32),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),

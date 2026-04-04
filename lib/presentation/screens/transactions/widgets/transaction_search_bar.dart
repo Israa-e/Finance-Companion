@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../logic/transaction/transaction_cubit.dart';
 import '../../../../logic/transaction/transaction_state.dart';
 import 'package:iconsax/iconsax.dart';
+import 'transaction_filter_sheet.dart';
 
 class TransactionSearchBar extends StatelessWidget {
   const TransactionSearchBar({super.key});
@@ -24,6 +25,27 @@ class TransactionSearchBar extends StatelessWidget {
                     ? Colors.black45
                     : Colors.white60,
                 size: 20,
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  Iconsax.setting_4,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black45
+                      : Colors.white60,
+                  size: 20,
+                ),
+                onPressed: () {
+                  final cubit = context.read<TransactionCubit>();
+                  showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => BlocProvider.value(
+                      value: cubit,
+                      child: const TransactionFilterSheet(),
+                    ),
+                  );
+                },
               ),
             ),
           ),

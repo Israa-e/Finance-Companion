@@ -22,7 +22,6 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Use theme background — not hardcoded
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -102,18 +101,12 @@ class ProfileScreen extends StatelessWidget {
         return Row(
           children: [
             StatCard(
-              label: 'Balance',
-              amount: balance,
-              color: AppColors.primary,
-            ),
+                label: 'Balance', amount: balance, color: AppColors.primary),
             const Gap(8),
             StatCard(label: 'Income', amount: income, color: AppColors.income),
             const Gap(8),
             StatCard(
-              label: 'Expense',
-              amount: expense,
-              color: AppColors.expense,
-            ),
+                label: 'Expense', amount: expense, color: AppColors.expense),
           ],
         );
       },
@@ -123,14 +116,13 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenuItems(BuildContext context, UserModel user) {
     return Column(
       children: [
-        // ── Dark / Light toggle ─────────────────────────────────────────────
+        // Dark / Light toggle
         BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, mode) {
             final isDark = mode == ThemeMode.dark;
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                // Use theme surface so it respects light/dark
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -148,11 +140,8 @@ class ProfileScreen extends StatelessWidget {
                   isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
                   color: isDark ? AppColors.primary : AppColors.savings,
                 ),
-                onChanged: (value) {
-                  // This reads the SAME ThemeCubit provided in main.dart
-                  // so the entire MaterialApp rebuilds immediately
-                  context.read<ThemeCubit>().toggleTheme(value);
-                },
+                onChanged: (value) =>
+                    context.read<ThemeCubit>().toggleTheme(value),
               ),
             );
           },
@@ -161,6 +150,7 @@ class ProfileScreen extends StatelessWidget {
         MenuItem(
           icon: Iconsax.edit,
           label: 'Edit Profile',
+          // FIX: pass initialBalance to sheet
           onTap: () => _showEditProfile(context, user),
         ),
         MenuItem(
@@ -174,6 +164,8 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showEditProfile(BuildContext context, UserModel user) {
+    final authCubit = context.read<AuthCubit>();
+    final txCubit = context.read<TransactionCubit>();
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -182,11 +174,15 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       clipBehavior: Clip.antiAlias,
-      builder: (_) => BlocProvider.value(
-        value: context.read<AuthCubit>(),
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: authCubit),
+          BlocProvider.value(value: txCubit),
+        ],
         child: EditProfileSheet(
           initialName: user.name,
           initialImage: user.imagePath,
+          initialBalance: user.initialBalance, // FIX: now passed
         ),
       ),
     );

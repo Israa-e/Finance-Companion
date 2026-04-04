@@ -5,12 +5,16 @@ import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../logic/transaction/transaction_cubit.dart';
+import '../../../logic/transaction/transaction_state.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 
+/// Edit screen that mirrors the Add flow — uses local controllers for text
+/// fields but delegates type/category state to cubit so onMutated fires and
+/// insights refresh correctly after every edit.
 class EditTransactionScreen extends StatefulWidget {
   final TransactionModel transaction;
 
@@ -26,12 +30,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _noteController;
 
+  // Local state for fields not driven by cubit
+  late DateTime _date;
   late TransactionType _type;
   late String _category;
-  late DateTime _date;
   bool _isSubmitting = false;
 
-  // ── Use AppConstants — single source of truth ───────────────────────────
   List<String> get _currentCategories => _type == TransactionType.income
       ? AppConstants.incomeCategories
       : AppConstants.expenseCategories;
@@ -44,14 +48,10 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         TextEditingController(text: t.amount.toStringAsFixed(2));
     _titleController = TextEditingController(text: t.title);
     _noteController = TextEditingController(text: t.note ?? '');
-    _type = t.type;
     _date = t.date;
-
-    // Ensure the stored category is valid; fall back to last if not found
-    final validCategories = _currentCategories;
-    _category = validCategories.contains(t.category)
-        ? t.category
-        : validCategories.last;
+    _type = t.type;
+    final valid = _currentCategories;
+    _category = valid.contains(t.category) ? t.category : valid.last;
   }
 
   @override
@@ -63,6 +63,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   }
 
   Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
@@ -78,113 +79,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     );
 
     try {
+      // FIX: goes through cubit — triggers onMutated → insights refresh
       await context.read<TransactionCubit>().updateTransaction(updated);
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (mounted) setState(() => _isSubmitting = false);
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Transaction', style: AppTextStyles.h3),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const BackButton(),
-        actions: [
-          IconButton(
-            icon: const Icon(Iconsax.trash, color: AppColors.expense, size: 20),
-            onPressed: () => _confirmDelete(context),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Type toggle ──────────────────────────────────────────────
-              _TypeToggle(
-                selected: _type,
-                onChanged: (type) {
-                  setState(() {
-                    _type = type;
-                    // Reset to first valid category when switching type
-                    _category = _currentCategories.first;
-                  });
-                },
-              ),
-              const Gap(24),
-
-              // ── Amount ───────────────────────────────────────────────────
-              CustomTextField(
-                label: 'Amount',
-                controller: _amountController,
-                hint: '0.00',
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Enter amount';
-                  final val = double.tryParse(v);
-                  if (val == null || val <= 0) return 'Invalid amount';
-                  return null;
-                },
-              ),
-              const Gap(20),
-
-              // ── Category ─────────────────────────────────────────────────
-              _CategoryDropdown(
-                categories: _currentCategories,
-                selected: _category,
-                onChanged: (cat) => setState(() => _category = cat),
-              ),
-              const Gap(20),
-
-              // ── Title ────────────────────────────────────────────────────
-              CustomTextField(
-                label: 'Title',
-                controller: _titleController,
-                hint: 'e.g. Grocery Shopping',
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Enter title' : null,
-              ),
-              const Gap(20),
-
-              // ── Date picker ──────────────────────────────────────────────
-              _DatePicker(
-                date: _date,
-                onPick: (picked) => setState(() => _date = picked),
-              ),
-              const Gap(20),
-
-              // ── Note ─────────────────────────────────────────────────────
-              CustomTextField(
-                label: 'Note (Optional)',
-                controller: _noteController,
-                hint: 'Add some details...',
-                maxLines: 3,
-              ),
-              const Gap(32),
-
-              // ── Save ─────────────────────────────────────────────────────
-              CustomButton(
-                label: 'Save Changes',
-                isLoading: _isSubmitting,
-                onTap: _submit,
-              ),
-              const Gap(16),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _confirmDelete(BuildContext context) {
@@ -203,6 +103,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                   child: const Text('Cancel'),
                 ),
               ),
+              const Gap(8),
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -221,9 +122,110 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Transaction', style: AppTextStyles.h3),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const BackButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Iconsax.trash,
+                color: AppColors.expense, size: 20),
+            onPressed: () => _confirmDelete(context),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Type toggle ─────────────────────────────────────────
+              _TypeToggle(
+                selected: _type,
+                onChanged: (type) => setState(() {
+                  _type = type;
+                  _category = _currentCategories.first;
+                }),
+              ),
+              const Gap(24),
+
+              // ── Amount ──────────────────────────────────────────────
+              CustomTextField(
+                label: 'Amount',
+                controller: _amountController,
+                hint: '0.00',
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d+\.?\d{0,2}')),
+                ],
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Enter amount';
+                  final val = double.tryParse(v);
+                  if (val == null || val <= 0) return 'Invalid amount';
+                  return null;
+                },
+              ),
+              const Gap(20),
+
+              // ── Category ────────────────────────────────────────────
+              _CategoryDropdown(
+                categories: _currentCategories,
+                selected: _category,
+                onChanged: (cat) => setState(() => _category = cat),
+              ),
+              const Gap(20),
+
+              // ── Title ───────────────────────────────────────────────
+              CustomTextField(
+                label: 'Title',
+                controller: _titleController,
+                hint: 'e.g. Grocery Shopping',
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Enter title' : null,
+              ),
+              const Gap(20),
+
+              // ── Date picker ──────────────────────────────────────────
+              _DatePicker(
+                date: _date,
+                onPick: (picked) => setState(() => _date = picked),
+              ),
+              const Gap(20),
+
+              // ── Note ────────────────────────────────────────────────
+              CustomTextField(
+                label: 'Note (Optional)',
+                controller: _noteController,
+                hint: 'Add some details...',
+                maxLines: 3,
+              ),
+              const Gap(32),
+
+              // ── Save ────────────────────────────────────────────────
+              CustomButton(
+                label: 'Save Changes',
+                isLoading: _isSubmitting,
+                onTap: _submit,
+              ),
+              const Gap(16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-// ─── Type Toggle ──────────────────────────────────────────────────────────────
+// ─── Type Toggle ─────────────────────────────────────────────────────────────
 
 class _TypeToggle extends StatelessWidget {
   final TransactionType selected;
@@ -300,7 +302,8 @@ class _ToggleButton extends StatelessWidget {
                   : (Theme.of(context).brightness == Brightness.light
                       ? Colors.black54
                       : Colors.white),
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontWeight:
+                  isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ),
@@ -363,8 +366,8 @@ class _CategoryDropdown extends StatelessWidget {
               ),
               dropdownColor: Theme.of(context).colorScheme.surface,
               items: categories
-                  .map(
-                      (c) => DropdownMenuItem<String>(value: c, child: Text(c)))
+                  .map((c) =>
+                      DropdownMenuItem<String>(value: c, child: Text(c)))
                   .toList(),
               onChanged: (v) {
                 if (v != null) onChanged(v);
@@ -410,7 +413,8 @@ class _DatePicker extends StatelessWidget {
             if (picked != null) onPick(picked);
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Theme.of(context).inputDecorationTheme.fillColor ??
                   (Theme.of(context).brightness == Brightness.light

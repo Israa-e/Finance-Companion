@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show VoidCallback;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/transaction_model.dart';
@@ -11,6 +12,8 @@ class TransactionCubit extends Cubit<TransactionState> {
   double _initialBalance = 0.0;
   int _userId = 0;
 
+  /// Called after any mutation (add / update / delete) so that
+  /// InsightsCubit and other listeners can refresh.
   VoidCallback? onMutated;
 
   TransactionCubit(this._repo) : super(TransactionInitial());
@@ -24,6 +27,8 @@ class TransactionCubit extends Cubit<TransactionState> {
     _initialBalance = balance;
   }
 
+  // ── Load ──────────────────────────────────────────────────────────────────
+
   Future<void> loadTransactions() async {
     emit(TransactionLoading());
     try {
@@ -31,23 +36,21 @@ class TransactionCubit extends Cubit<TransactionState> {
       final income = await _repo.getTotalIncome();
       final expense = await _repo.getTotalExpense();
       final balance = _initialBalance + income - expense;
-      
-      emit(
-        TransactionLoaded(
-          transactions: transactions,
-          balance: balance,
-          totalIncome: income,
-          totalExpense: expense,
-          initialBalance: _initialBalance,
-          formDate: DateTime.now(), // Default for loaded state
-        ),
-      );
+
+      emit(TransactionLoaded(
+        transactions: transactions,
+        balance: balance,
+        totalIncome: income,
+        totalExpense: expense,
+        initialBalance: _initialBalance,
+        formDate: DateTime.now(),
+      ));
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
   }
 
-  // --- Search & Filter (Consolidated) ---
+  // ── Search & Filter ───────────────────────────────────────────────────────
 
   void updateSearchQuery(String query) {
     final current = state;
@@ -63,13 +66,13 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
   }
 
-  // --- Transaction Form (Consolidated) ---
+  // ── Form field updates ────────────────────────────────────────────────────
 
   void updateFormType(TransactionType type) {
     final current = state;
     if (current is TransactionLoaded) {
-      // Auto-set category if changing type to expense
-      final category = type == TransactionType.expense ? 'Food' : 'Salary';
+      final category =
+          type == TransactionType.expense ? 'Food & Drinks' : 'Salary';
       emit(current.copyWith(formType: type, formCategory: category));
     }
   }
@@ -109,12 +112,15 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
   }
 
+  // ── Submit (Add) ──────────────────────────────────────────────────────────
+
   Future<void> submitTransactionForm() async {
     final current = state;
     if (current is! TransactionLoaded) return;
 
     if (current.formTitle.trim().isEmpty || current.formAmount <= 0) {
-      emit(current.copyWith(formErrorMessage: 'Please fill all required fields.'));
+      emit(current.copyWith(
+          formErrorMessage: 'Please fill all required fields.'));
       return;
     }
 
@@ -128,17 +134,19 @@ class TransactionCubit extends Cubit<TransactionState> {
         category: current.formCategory,
         date: current.formDate,
         title: current.formTitle.trim(),
-        note: current.formNote.trim().isEmpty ? null : current.formNote.trim(),
+        note: current.formNote.trim().isEmpty
+            ? null
+            : current.formNote.trim(),
       );
-      
+
       await _repo.add(transaction);
-      
-      // Success: Clear form and reload everything
+
       final transactions = await _repo.getAll();
       final income = await _repo.getTotalIncome();
       final expense = await _repo.getTotalExpense();
       final balance = _initialBalance + income - expense;
 
+      // FIX: emit fresh state — submitSuccess: true, form reset to defaults
       emit(TransactionLoaded(
         transactions: transactions,
         balance: balance,
@@ -146,14 +154,42 @@ class TransactionCubit extends Cubit<TransactionState> {
         totalExpense: expense,
         initialBalance: _initialBalance,
         formDate: DateTime.now(),
-        submitSuccess: true, // UI will listen to this
+        submitSuccess: true, // triggers pop in UI
+        // All form fields intentionally left at defaults (empty)
       ));
-      
+
       onMutated?.call();
     } catch (e) {
-      emit(current.copyWith(isSubmitting: false, formErrorMessage: e.toString()));
+      emit(current.copyWith(
+          isSubmitting: false, formErrorMessage: e.toString()));
     }
   }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+
+  Future<void> updateTransaction(TransactionModel transaction) async {
+    try {
+      await _repo.update(transaction);
+      await loadTransactions();
+      onMutated?.call(); // FIX: was missing — insights won't refresh on edit
+    } catch (e) {
+      emit(TransactionError(e.toString()));
+    }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+
+  Future<void> deleteTransaction(String id) async {
+    try {
+      await _repo.delete(id);
+      await loadTransactions();
+      onMutated?.call();
+    } catch (e) {
+      emit(TransactionError(e.toString()));
+    }
+  }
+
+  // ── Legacy helpers (kept for compatibility) ───────────────────────────────
 
   Future<void> addTransaction({
     required double amount,
@@ -181,26 +217,4 @@ class TransactionCubit extends Cubit<TransactionState> {
       emit(TransactionError(e.toString()));
     }
   }
-
-  Future<void> updateTransaction(TransactionModel transaction) async {
-    try {
-      await _repo.update(transaction);
-      await loadTransactions();
-      onMutated?.call();
-    } catch (e) {
-      emit(TransactionError(e.toString()));
-    }
-  }
-
-  Future<void> deleteTransaction(String id) async {
-    try {
-      await _repo.delete(id);
-      await loadTransactions();
-      onMutated?.call();
-    } catch (e) {
-      emit(TransactionError(e.toString()));
-    }
-  }
 }
-
-typedef VoidCallback = void Function();
