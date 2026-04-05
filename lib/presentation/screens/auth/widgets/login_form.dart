@@ -73,6 +73,7 @@ class _LoginFormState extends State<LoginForm> {
                 label: l10n.password,
                 hint: '••••••••',
                 controller: _passwordController,
+                obscureText: _obscurePassword,
                 prefixIcon: const Icon(
                   Iconsax.lock,
                   size: 18,

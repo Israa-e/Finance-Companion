@@ -687,4 +687,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get monthly => 'मासिक';
+
+  @override
+  String get currency => 'मुद्रा';
 }

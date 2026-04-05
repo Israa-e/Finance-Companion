@@ -683,4 +683,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get monthly => 'شهرياً';
+
+  @override
+  String get currency => 'العملة';
 }

@@ -315,7 +315,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                     Padding(
                       padding: const EdgeInsets.only(left: 4, bottom: 8),
                       child: Text(
-                        l10n.language, // Reusing 'language' or should I use 'currency'?
+                        l10n.currency,
                         style:
                             Theme.of(context).textTheme.labelMedium?.copyWith(
                                   fontSize: 13,

@@ -64,6 +64,8 @@ class AuthCubit extends Cubit<AuthState> {
 
   // ── Profile editing helpers ───────────────────────────────────────────────
 
+  bool _isPickingImage = false;
+
   void updateEditName(String name) {
     final current = state;
     if (current is AuthAuthenticated) {
@@ -118,13 +120,19 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<String?> pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 80,
-    );
-    return picked?.path;
+    if (_isPickingImage) return null;
+    _isPickingImage = true;
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+      return picked?.path;
+    } finally {
+      _isPickingImage = false;
+    }
   }
 }

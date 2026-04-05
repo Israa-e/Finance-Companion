@@ -684,4 +684,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get monthly => 'Monthly';
+
+  @override
+  String get currency => 'Currency';
 }

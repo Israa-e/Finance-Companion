@@ -227,5 +227,6 @@
   "confirm": "Confirm",
   "daily": "Daily",
   "weekly": "Weekly",
-  "monthly": "Monthly"
+  "monthly": "Monthly",
+  "currency": "Currency"
 }

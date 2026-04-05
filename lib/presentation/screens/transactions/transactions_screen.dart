@@ -2,6 +2,9 @@ import 'package:finance_companion/logic/goal/goal_cubit.dart';
 import 'package:finance_companion/logic/transaction/transaction_form_cubit.dart';
 import 'package:finance_companion/logic/category/category_cubit.dart';
 import 'package:finance_companion/presentation/screens/home/widgets/shimmer_widgets.dart';
+import 'package:finance_companion/presentation/screens/transactions/add_transaction_screen.dart';
+import 'package:finance_companion/presentation/screens/transactions/edit_transaction_screen.dart';
+import 'package:finance_companion/presentation/screens/transactions/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
@@ -16,11 +19,7 @@ import '../../../data/models/transaction_model.dart';
 import 'package:finance_companion/l10n/app_localizations.dart';
 
 import '../../../data/services/csv_export_service.dart';
-import 'edit_transaction_screen.dart';
-import 'add_transaction_screen.dart';
-import 'widgets/transaction_list_item.dart';
 import 'widgets/transaction_search_bar.dart';
-import '../../shared/widgets/sync_indicator.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -207,7 +206,6 @@ class _Header extends StatelessWidget {
               ),
               Row(
                 children: [
-                  const SyncIndicator(),
                   const Gap(12),
                   GestureDetector(
                     onTap: () {

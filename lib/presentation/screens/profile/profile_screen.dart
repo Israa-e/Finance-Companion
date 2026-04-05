@@ -150,7 +150,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 secondary: Icon(
                   isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                  color: isDark ? AppColors.primary : AppColors.savings,
+                  color: AppColors.primary,
                 ),
                 onChanged: (value) =>
                     context.read<ThemeCubit>().toggleTheme(value),
@@ -332,6 +332,7 @@ class ProfileScreen extends StatelessWidget {
 
   void _showEditProfile(BuildContext context, UserModel user) {
     final authCubit = context.read<AuthCubit>();
+    final filterCubit = context.read<TransactionFilterCubit>();
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -340,8 +341,11 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       clipBehavior: Clip.antiAlias,
-      builder: (_) => BlocProvider.value(
-        value: authCubit,
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: authCubit),
+          BlocProvider.value(value: filterCubit),
+        ],
         child: EditProfileSheet(
           initialName: user.name,
           initialImage: user.imagePath,

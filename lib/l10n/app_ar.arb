@@ -227,5 +227,6 @@
   "confirm": "تأكيد",
   "daily": "يومياً",
   "weekly": "أسبوعياً",
-  "monthly": "شهرياً"
+  "monthly": "شهرياً",
+  "currency": "العملة"
 }
