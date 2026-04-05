@@ -1,10 +1,9 @@
+import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:finance_companion/l10n/app_localizations.dart';
+import 'package:finance_companion/logic/transaction/transaction_filter_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:gap/gap.dart';
-import '../../../../logic/transaction/transaction_filter_cubit.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'transaction_filter_sheet.dart';
 
@@ -44,43 +43,6 @@ class _TransactionSearchBarState extends State<TransactionSearchBar> {
         value: filterCubit,
         child: const TransactionFilterSheet(),
       ),
-    );
-  }
-
-  void _onSaveView() {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: Text(l10n.saveCurrentView),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: l10n.viewNameHint,
-            ),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  context
-                      .read<TransactionFilterCubit>()
-                      .saveCurrentView(controller.text);
-                  Navigator.pop(ctx);
-                }
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -127,15 +89,6 @@ class _TransactionSearchBarState extends State<TransactionSearchBar> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: _onSaveView,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    color: Colors.transparent, // expand tap area
-                    child: Icon(Iconsax.save_2,
-                        color: AppColors.primary, size: 22),
-                  ),
-                ),
-                GestureDetector(
                   onTap: _onFilter,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -144,7 +97,6 @@ class _TransactionSearchBarState extends State<TransactionSearchBar> {
                         color: AppColors.textSecondary, size: 22),
                   ),
                 ),
-                const Gap(4),
               ],
             ),
           ),

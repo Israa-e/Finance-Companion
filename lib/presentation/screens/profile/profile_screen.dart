@@ -104,18 +104,28 @@ class ProfileScreen extends StatelessWidget {
       builder: (context, state) {
         return Row(
           children: [
-            StatCard(label: l10n.totalBalance, amount: state.balance, color: AppColors.primary),
+            StatCard(
+                label: l10n.totalBalance,
+                amount: state.balance,
+                color: AppColors.primary),
             const Gap(8),
-            StatCard(label: l10n.income, amount: state.totalIncome, color: AppColors.income),
+            StatCard(
+                label: l10n.income,
+                amount: state.totalIncome,
+                color: AppColors.income),
             const Gap(8),
-            StatCard(label: l10n.expense, amount: state.totalExpense, color: AppColors.expense),
+            StatCard(
+                label: l10n.expense,
+                amount: state.totalExpense,
+                color: AppColors.expense),
           ],
         );
       },
     );
   }
 
-  Widget _buildMenuItems(BuildContext context, UserModel user, AppLocalizations l10n) {
+  Widget _buildMenuItems(
+      BuildContext context, UserModel user, AppLocalizations l10n) {
     return Column(
       children: [
         // Dark / Light toggle
@@ -152,7 +162,6 @@ class ProfileScreen extends StatelessWidget {
         // Language selection
         BlocBuilder<LocaleCubit, Locale>(
           builder: (context, locale) {
-            final isArabic = locale.languageCode == 'ar';
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
@@ -173,17 +182,31 @@ class ProfileScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isArabic ? 'العربية' : 'English',
+                      locale.languageCode == 'ar'
+                          ? 'العربية'
+                          : locale.languageCode == 'hi'
+                              ? 'हिन्दी'
+                              : 'English',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                     const Gap(8),
-                    const Icon(
-                      Iconsax.arrow_right_3,
-                      size: 16,
-                      color: AppColors.textHint,
-                    ),
+                    if (locale.languageCode == 'ar')
+                      const RotatedBox(
+                        quarterTurns: 2,
+                        child: Icon(
+                          Iconsax.arrow_right_3,
+                          size: 16,
+                          color: AppColors.textHint,
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Iconsax.arrow_right_3,
+                        size: 16,
+                        color: AppColors.textHint,
+                      ),
                   ],
                 ),
               ),
@@ -237,7 +260,7 @@ class ProfileScreen extends StatelessWidget {
 
         MenuItem(
           icon: Iconsax.edit,
-          label: l10n.editProfile, 
+          label: l10n.editProfile,
           onTap: () => _showEditProfile(context, user),
         ),
         MenuItem(
@@ -260,7 +283,8 @@ class ProfileScreen extends StatelessWidget {
           label: l10n.exportData,
           onTap: () async {
             final filterState = context.read<TransactionFilterCubit>().state;
-            await CSVExportService.exportTransactions(filterState.filteredTransactions);
+            await CSVExportService.exportTransactions(
+                filterState.filteredTransactions);
           },
         ),
 
@@ -389,6 +413,17 @@ class ProfileScreen extends StatelessWidget {
                     : null,
                 onTap: () {
                   context.read<LocaleCubit>().setLocale('ar');
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                leading: const Text('🇮🇳', style: TextStyle(fontSize: 24)),
+                title: const Text('हिन्दी'),
+                trailing: context.read<LocaleCubit>().state.languageCode == 'hi'
+                    ? const Icon(Icons.check_circle, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  context.read<LocaleCubit>().setLocale('hi');
                   Navigator.pop(ctx);
                 },
               ),

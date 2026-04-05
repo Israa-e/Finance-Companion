@@ -20,6 +20,11 @@ A masterfully crafted, production-quality personal finance application built wit
 |---|---|
 | ![Home Arabic](screenshots/home_rtl.png) | ![Transactions Arabic](screenshots/transactions_rtl.png) |
 
+### 🇮🇳 Hindi Language Integration
+| Hindi Dashboard | Hindi Insights |
+|---|---|
+| ![Home Hindi](screenshots/home_hindi.png) | ![Insights Hindi](screenshots/insights_hindi.png) |
+
 ### 📊 Modern UI (English)
 | Dashboard (Dark) | Dashboard (Light) |
 |---|---|

@@ -108,6 +108,7 @@ class _FinanceAppState extends State<FinanceApp> {
                 supportedLocales: const [
                   Locale('en'),
                   Locale('ar'),
+                  Locale('hi'),
                 ],
                 home: SplashScreen(
                   isTestMode: widget.isTestMode,
