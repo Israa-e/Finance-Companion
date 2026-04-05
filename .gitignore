@@ -44,6 +44,6 @@ ios/Flutter/flutter_export_environment.sh
 #   flutterfire configure
 # to regenerate this file with their own project credentials.
 # Use firebase_options_exmp.dart as a reference template.
-lib/firebase_options.dart
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
+# lib/firebase_options.dart
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
