@@ -40,7 +40,7 @@ class SplashBranding extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                         width: 2,
                       ),
                     ),
@@ -57,7 +57,7 @@ class SplashBranding extends StatelessWidget {
                     height: 110,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.07),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.07),
                     ),
                   ),
                 ),
@@ -72,7 +72,7 @@ class SplashBranding extends StatelessWidget {
                     height: 86,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.15),
@@ -101,10 +101,10 @@ class SplashBranding extends StatelessWidget {
             position: textSlide,
             child: Column(
               children: [
-                const Text(
+                Text(
                   'Finance Companion',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
@@ -114,7 +114,7 @@ class SplashBranding extends StatelessWidget {
                 Text(
                   'Smart money, better life',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     letterSpacing: 0.3,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/transaction/transaction_form_cubit.dart';
 import '../../../../data/models/transaction_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -11,10 +10,9 @@ class TransactionTypeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TransactionCubit, TransactionState>(
+    return BlocBuilder<TransactionFormCubit, TransactionFormState>(
       builder: (context, state) {
-        if (state is! TransactionLoaded) return const SizedBox.shrink();
-        final cubit = context.read<TransactionCubit>();
+        final cubit = context.read<TransactionFormCubit>();
 
         return Container(
           padding: const EdgeInsets.all(6),
@@ -30,18 +28,18 @@ class TransactionTypeToggle extends StatelessWidget {
               Expanded(
                 child: _ToggleButton(
                   label: 'Expense',
-                  isSelected: state.formType == TransactionType.expense,
+                  isSelected: state.type == TransactionType.expense,
                   color: AppColors.expense,
-                  onTap: () => cubit.updateFormType(TransactionType.expense),
+                  onTap: () => cubit.updateType(TransactionType.expense),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _ToggleButton(
                   label: 'Income',
-                  isSelected: state.formType == TransactionType.income,
+                  isSelected: state.type == TransactionType.income,
                   color: AppColors.income,
-                  onTap: () => cubit.updateFormType(TransactionType.income),
+                  onTap: () => cubit.updateType(TransactionType.income),
                 ),
               ),
             ],

@@ -2,19 +2,16 @@ import 'package:finance_companion/presentation/screens/home/widgets/summary_row.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import '../../../../logic/goal/goal_cubit.dart';
 import '../../../../logic/goal/goal_state.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
-/// P3 FIX: Replaced 3-nested BlocBuilder (GoalCubit > TransactionCubit > AuthCubit)
-/// with BlocSelector calls. Each selector subscribes only to the specific field it
-/// needs, so a change in GoalCubit doesn't trigger rebuilds of the balance text, etc.
 class BalanceCard extends StatefulWidget {
   const BalanceCard({super.key});
 
@@ -48,12 +45,10 @@ class _BalanceCardState extends State<BalanceCard>
         c.state is GoalLoaded ? (c.state as GoalLoaded).totalLocked : 0.0);
 
     // BlocSelector: only rebuild when the scalar fields we need change
-    final balance = context.select<TransactionCubit, double>((c) =>
-        c.state is TransactionLoaded
-            ? (c.state as TransactionLoaded).balance
-            : 0.0);
-    final isLoading = context
-        .select<TransactionCubit, bool>((c) => c.state is TransactionLoading);
+    final balance =
+        context.select<TransactionFilterCubit, double>((c) => c.state.balance);
+    final isLoading =
+        context.select<TransactionFilterCubit, bool>((c) => c.state.isLoading);
 
     // BlocSelector: only rebuild when formatter changes (currency switch)
     final formatter = context.select<AuthCubit, CurrencyFormatter>((c) =>
@@ -63,6 +58,8 @@ class _BalanceCardState extends State<BalanceCard>
 
     final availableBalance =
         (balance - lockedAmount).clamp(0.0, double.infinity);
+
+    final l10n = AppLocalizations.of(context)!;
 
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -148,7 +145,7 @@ class _BalanceCardState extends State<BalanceCard>
                       Semantics(
                         label: 'Total Balance Label',
                         child: Text(
-                          'Total Balance',
+                          l10n.totalBalance,
                           style: AppTextStyles.caption.copyWith(
                             color: Colors.white.withValues(alpha: 0.75),
                             letterSpacing: 1.2,
@@ -202,7 +199,7 @@ class _BalanceCardState extends State<BalanceCard>
                           Expanded(
                             child: _StatPill(
                               icon: Icons.lock_rounded,
-                              label: 'Locked',
+                              label: l10n.locked,
                               value: formatter.formatCompact(lockedAmount),
                               color: const Color(0xFFFFB3B3),
                             ),
@@ -211,7 +208,7 @@ class _BalanceCardState extends State<BalanceCard>
                           Expanded(
                             child: _StatPill(
                               icon: Icons.wallet_rounded,
-                              label: 'Available',
+                              label: l10n.available,
                               value: formatter.formatCompact(availableBalance),
                               color: const Color(0xFF81F5AE),
                             ),

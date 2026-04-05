@@ -9,6 +9,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../logic/insights/insights_state.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 /// Surfaces weekday vs. weekend spending variance — always visible regardless
 /// of the selected [InsightsPeriod], as long as there is enough data.
 class SpendingPatternCard extends StatelessWidget {
@@ -18,6 +20,7 @@ class SpendingPatternCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final weekdayAvg = state.weekdayAverage;
     final weekendAvg = state.weekendAverage;
 
@@ -58,7 +61,7 @@ class SpendingPatternCard extends StatelessWidget {
               ),
               const Gap(12),
               Text(
-                'Spending Patterns',
+                l10n.spendingPatterns,
                 style: AppTextStyles.label.copyWith(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
@@ -84,8 +87,8 @@ class SpendingPatternCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       isWeekendHigher
-                          ? 'You spend ${percent.toStringAsFixed(0)}% more on weekends than weekdays.'
-                          : 'Great! You spend ${percent.toStringAsFixed(0)}% less on weekends than weekdays.',
+                          ? l10n.spendingPatternWeekendMore(percent.toStringAsFixed(0))
+                          : l10n.spendingPatternWeekendLess(percent.toStringAsFixed(0)),
                       style: AppTextStyles.caption.copyWith(
                         color: accentColor,
                         fontWeight: FontWeight.w600,

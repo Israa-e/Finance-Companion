@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/streak_model.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class StreakCard extends StatelessWidget {
   const StreakCard({super.key});
@@ -38,8 +39,7 @@ class StreakCard extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-            ],
+            boxShadow: [],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +57,7 @@ class StreakCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'No-Spend Streak',
+                          AppLocalizations.of(context)!.noSpendStreak,
                           style: AppTextStyles.label.copyWith(
                             color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 11,
@@ -65,7 +65,10 @@ class StreakCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          streak.streakMessage,
+                          streak.currentStreak > 0
+                              ? AppLocalizations.of(context)!
+                                  .daysStrong(streak.currentStreak)
+                              : streak.streakMessage,
                           style: AppTextStyles.body.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -96,7 +99,7 @@ class StreakCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          streak.currentStreak == 1 ? 'day' : 'days',
+                          AppLocalizations.of(context)!.days,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 10,
@@ -139,7 +142,7 @@ class StreakCard extends StatelessWidget {
                         ),
                         const Gap(8),
                         Text(
-                          'Confirm no-spend today',
+                          AppLocalizations.of(context)!.confirmNoSpendToday,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.95),
                             fontSize: 13,
@@ -170,7 +173,8 @@ class StreakCard extends StatelessWidget {
                       ),
                       const Gap(6),
                       Text(
-                        'Personal best: ${streak.longestStreak} day${streak.longestStreak == 1 ? '' : 's'}',
+                        AppLocalizations.of(context)!
+                            .personalBest(streak.longestStreak),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
@@ -197,8 +201,17 @@ class _SevenDayDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
-    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final days = [
+      l10n.mondayShort,
+      l10n.tuesdayShort,
+      l10n.wednesdayShort,
+      l10n.thursdayShort,
+      l10n.fridayShort,
+      l10n.saturdayShort,
+      l10n.sundayShort
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

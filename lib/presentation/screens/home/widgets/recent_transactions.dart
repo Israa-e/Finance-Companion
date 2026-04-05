@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -12,6 +11,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../data/models/transaction_model.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class RecentTransactions extends StatelessWidget {
   final VoidCallback? onSeeAll;
@@ -20,12 +20,11 @@ class RecentTransactions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TransactionCubit, TransactionState>(
+    return BlocBuilder<TransactionFilterCubit, TransactionFilterState>(
       builder: (context, state) {
-        if (state is TransactionLoading) {
+        if (state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state is! TransactionLoaded) return const SizedBox.shrink();
 
         final recent = state.transactions.take(3).toList();
 
@@ -35,12 +34,12 @@ class RecentTransactions extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Recent', style: AppTextStyles.h3),
+                Text(AppLocalizations.of(context)!.recent, style: AppTextStyles.h3),
                 if (state.transactions.isNotEmpty)
                   TextButton(
                     onPressed: onSeeAll,
                     child: Text(
-                      'See all',
+                      AppLocalizations.of(context)!.seeAll,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -51,9 +50,9 @@ class RecentTransactions extends StatelessWidget {
             ),
             const Gap(8),
             if (recent.isEmpty)
-              const EmptyStateWidget(
-                title: 'No transactions yet',
-                subtitle: 'Add your first transaction to get started',
+              EmptyStateWidget(
+                title: AppLocalizations.of(context)!.noTransactionsTitle,
+                subtitle: AppLocalizations.of(context)!.noTransactionsSubtitle,
                 icon: Iconsax.receipt,
               )
             else

@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../data/models/transaction_model.dart';
 
 // FIX: Added InsightsPeriod enum for time period filtering
@@ -11,18 +13,19 @@ enum InsightsPeriod {
 }
 
 extension InsightsPeriodExt on InsightsPeriod {
-  String get label {
+  String label(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (this) {
       case InsightsPeriod.thisMonth:
-        return 'This Month';
+        return l10n.thisMonth;
       case InsightsPeriod.lastThreeMonths:
-        return 'Last 3 Months';
+        return l10n.last3Months;
       case InsightsPeriod.lastSixMonths:
-        return 'Last 6 Months';
+        return l10n.last6Months;
       case InsightsPeriod.thisYear:
-        return 'This Year';
+        return l10n.year;
       case InsightsPeriod.allTime:
-        return 'All Time';
+        return l10n.all;
     }
   }
 }

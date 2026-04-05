@@ -1,3 +1,4 @@
+import 'package:finance_companion/l10n/app_localizations.dart';
 import 'package:confetti/confetti.dart';
 import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:finance_companion/core/theme/app_text_styles.dart';
@@ -5,8 +6,8 @@ import 'package:finance_companion/core/utils/currency_formatter.dart';
 import 'package:finance_companion/data/models/goal_model.dart';
 import 'package:finance_companion/logic/goal/goal_cubit.dart';
 import 'package:finance_companion/logic/goal/goal_state.dart';
-import 'package:finance_companion/logic/transaction/transaction_cubit.dart';
-import 'package:finance_companion/logic/transaction/transaction_state.dart';
+import 'package:finance_companion/logic/transaction/transaction_filter_cubit.dart';
+import 'package:finance_companion/presentation/shared/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,7 +38,8 @@ class _GoalCardState extends State<GoalCard> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
     _lastProgress = widget.goal.progressPercent;
   }
 
@@ -45,7 +47,7 @@ class _GoalCardState extends State<GoalCard> {
   void didUpdateWidget(GoalCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     final currentProgress = widget.goal.progressPercent;
-    
+
     // Trigger celebration if crossing 50% or 100%
     if ((_lastProgress < 0.5 && currentProgress >= 0.5) ||
         (_lastProgress < 1.0 && currentProgress >= 1.0)) {
@@ -63,6 +65,7 @@ class _GoalCardState extends State<GoalCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = context.watch<AuthCubit>().state;
     final formatter = authState is AuthAuthenticated
         ? authState.formatter
@@ -74,7 +77,8 @@ class _GoalCardState extends State<GoalCard> {
         Semantics(
           label: 'Goal: ${widget.goal.title}',
           value: '${(progress * 100).toStringAsFixed(0)} percent complete',
-          hint: widget.goal.isCompleted ? 'Goal achieved' : 'Tap the plus icon to add savings',
+          hint:
+              widget.goal.isCompleted ? l10n.goalAchieved : l10n.addSavingsHint,
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -93,11 +97,13 @@ class _GoalCardState extends State<GoalCard> {
                         curve: Curves.elasticOut,
                         builder: (context, value, child) => Transform.scale(
                           scale: value,
-                          child: Text(widget.goal.emoji ?? '🎯', style: const TextStyle(fontSize: 28)),
+                          child: Text(widget.goal.emoji ?? '🎯',
+                              style: const TextStyle(fontSize: 28)),
                         ),
                       )
                     else
-                      Text(widget.goal.emoji ?? '🎯', style: const TextStyle(fontSize: 28)),
+                      Text(widget.goal.emoji ?? '🎯',
+                          style: const TextStyle(fontSize: 28)),
                     const Gap(12),
                     Expanded(
                       child: Column(
@@ -111,10 +117,12 @@ class _GoalCardState extends State<GoalCard> {
                           ),
                           Text(
                             widget.goal.isCompleted
-                                ? '🎉 Completed!'
-                                : '${widget.goal.daysRemaining} days left',
+                                ? '🎉 ${l10n.completed}!'
+                                : l10n.daysLeft(widget.goal.daysRemaining),
                             style: AppTextStyles.caption.copyWith(
-                              color: widget.goal.isCompleted ? AppColors.income : null,
+                              color: widget.goal.isCompleted
+                                  ? AppColors.income
+                                  : null,
                             ),
                           ),
                         ],
@@ -126,7 +134,8 @@ class _GoalCardState extends State<GoalCard> {
                           Iconsax.add_circle,
                           color: AppColors.primary,
                         ),
-                        onPressed: () => _showAddSavings(context, widget.goal, formatter),
+                        onPressed: () =>
+                            _showAddSavings(context, widget.goal, formatter),
                       ),
                     IconButton(
                       icon: const Icon(
@@ -165,9 +174,12 @@ class _GoalCardState extends State<GoalCard> {
                       return LinearProgressIndicator(
                         value: value,
                         minHeight: 8,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.1),
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          widget.goal.isCompleted ? AppColors.income : AppColors.primary,
+                          widget.goal.isCompleted
+                              ? AppColors.income
+                              : AppColors.primary,
                         ),
                       );
                     },
@@ -175,12 +187,13 @@ class _GoalCardState extends State<GoalCard> {
                 ),
                 const Gap(6),
                 Text(
-                  '${(progress * 100).toStringAsFixed(1)}% achieved',
+                  l10n.achieved((progress * 100).toStringAsFixed(1)),
                   style: AppTextStyles.caption,
                 ),
                 if (!widget.goal.isCompleted)
                   Text(
-                    'Remaining: ${formatter.format(widget.goal.remainingAmount)}',
+                    l10n.remaining(
+                        formatter.format(widget.goal.remainingAmount)),
                     style: AppTextStyles.caption,
                   ),
               ],
@@ -208,21 +221,19 @@ class _GoalCardState extends State<GoalCard> {
   }
 
   void _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete goal?'),
-        content: Text(
-          'This will permanently remove "${widget.goal.title}".'
-          ' Any amount saved to this goal will be returned to your balance.',
-        ),
+        title: Text(l10n.deleteGoal),
+        content: Text(l10n.deleteGoalConfirm(widget.goal.title)),
         actions: [
           Row(
             children: [
               Expanded(
                 child: TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
               ),
               const Gap(8),
@@ -235,7 +246,7 @@ class _GoalCardState extends State<GoalCard> {
                     Navigator.pop(ctx);
                     widget.onDeleteConfirmed();
                   },
-                  child: const Text('Delete'),
+                  child: Text(l10n.delete),
                 ),
               ),
             ],
@@ -250,12 +261,13 @@ class _GoalCardState extends State<GoalCard> {
     GoalModel goal,
     CurrencyFormatter formatter,
   ) {
-    final txState = context.read<TransactionCubit>().state;
+    final l10n = AppLocalizations.of(context)!;
+    final txState = context.read<TransactionFilterCubit>().state;
     final goalState = context.read<GoalCubit>().state;
     final lockedAmount = goalState is GoalLoaded
         ? goalState.goals.fold(0.0, (sum, g) => sum + g.savedAmount)
         : 0.0;
-    final totalBalance = txState is TransactionLoaded ? txState.balance : 0.0;
+    final totalBalance = txState.balance;
     final availableBalance = (totalBalance - lockedAmount).clamp(
       0.0,
       double.infinity,
@@ -275,7 +287,8 @@ class _GoalCardState extends State<GoalCard> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
             decoration: BoxDecoration(
               color: Theme.of(sheetContext).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -292,19 +305,21 @@ class _GoalCardState extends State<GoalCard> {
                   ),
                 ),
                 const Gap(16),
-                Text('Add to Savings', style: AppTextStyles.h3),
+                Text(l10n.addToSavings, style: AppTextStyles.h3),
                 const Gap(4),
                 Text(
-                  'Available: ${formatter.format(availableBalance)}',
+                  '${l10n.available}: ${formatter.format(availableBalance)}',
                   style: AppTextStyles.caption,
                 ),
                 const Gap(16),
                 CustomTextField(
-                  label: 'Amount',
+                  label: l10n.amount,
                   controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}')),
                   ],
                   hint: '0.00',
                 ),
@@ -312,24 +327,26 @@ class _GoalCardState extends State<GoalCard> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(sheetContext),
-                        child: const Text('Cancel'),
+                      child: CustomButton(
+                        onTap: () => Navigator.pop(sheetContext),
+                        color: Colors.grey,
+                        label: l10n.cancel,
                       ),
                     ),
                     const Gap(12),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final amount = double.tryParse(controller.text) ?? 0.0;
+                      child: CustomButton(
+                        label: l10n.add,
+                        onTap: () {
+                          final amount =
+                              double.tryParse(controller.text) ?? 0.0;
                           context.read<GoalCubit>().addToSavings(
-                            goal.id,
-                            amount,
-                            availableBalance: availableBalance,
-                          );
+                                goal.id,
+                                amount,
+                                availableBalance: availableBalance,
+                              );
                           Navigator.pop(sheetContext);
                         },
-                        child: const Text('Add'),
                       ),
                     ),
                   ],

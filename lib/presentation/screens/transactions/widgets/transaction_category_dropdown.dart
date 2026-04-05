@@ -1,25 +1,21 @@
+import 'package:finance_companion/presentation/shared/widgets/category_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:finance_companion/logic/category/category_cubit.dart';
+import '../../../../logic/transaction/transaction_form_cubit.dart';
+import '../../../../data/models/transaction_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../data/models/transaction_model.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
-import '../../../shared/widgets/category_picker_sheet.dart';
 
 class TransactionCategoryDropdown extends StatelessWidget {
   const TransactionCategoryDropdown({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TransactionCubit, TransactionState>(
+    return BlocBuilder<TransactionFormCubit, TransactionFormState>(
       builder: (context, state) {
-        if (state is! TransactionLoaded) return const SizedBox.shrink();
-        final cubit = context.read<TransactionCubit>();
-
-        final isIncome = state.formType == TransactionType.income;
-        final icon = CategoryPickerSheet.getIcon(state.formCategory);
+        final icon = CategoryPickerSheet.getIcon(state.category);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,20 +23,25 @@ class TransactionCategoryDropdown extends StatelessWidget {
             Text(
               'Category',
               style: AppTextStyles.label.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 8),
             InkWell(
               onTap: () {
+                final categoryCubit = context.read<CategoryCubit>();
                 showModalBottomSheet(
                   context: context,
-                  isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => CategoryPickerSheet(
-                    selectedCategory: state.formCategory,
-                    isIncome: isIncome,
-                    onCategorySelected: (cat) => cubit.updateFormCategory(cat),
+                  isScrollControlled: true,
+                  builder: (_) => BlocProvider.value(
+                    value: categoryCubit,
+                    child: CategoryPickerSheet(
+                      selectedCategory: state.category,
+                      isIncome: state.type == TransactionType.income,
+                      onCategorySelected: (cat) =>
+                          context.read<TransactionFormCubit>().updateCategory(cat),
+                    ),
                   ),
                 );
               },
@@ -53,25 +54,14 @@ class TransactionCategoryDropdown extends StatelessWidget {
                           ? Colors.grey[100]
                           : Theme.of(context).colorScheme.surface),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                  ),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      icon,
-                      size: 22,
-                      color: AppColors.primary,
-                    ),
+                    Icon(icon, size: 22, color: AppColors.primary),
                     const Gap(12),
                     Expanded(
-                      child: Text(
-                        state.formCategory,
-                        style: AppTextStyles.body.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
+                      child: Text(state.category, style: AppTextStyles.body),
                     ),
                     Icon(
                       Icons.keyboard_arrow_down,

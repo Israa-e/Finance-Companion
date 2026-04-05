@@ -8,6 +8,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../logic/insights/insights_state.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class MonthComparisonCard extends StatelessWidget {
   final InsightsLoaded state;
@@ -15,9 +16,10 @@ class MonthComparisonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isUp = state.isSpendingUp;
     final changeColor = isUp ? AppColors.expense : AppColors.income;
-    final changeLabel = isUp ? 'More than last month' : 'Less than last month';
+    // final changeLabel = isUp ? l10n.moreThanLastMonth('') : l10n.lessThanLastMonth('');
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -29,7 +31,7 @@ class MonthComparisonCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Monthly Comparison',
+            l10n.monthlyComparison,
             style: AppTextStyles.h3.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
             ),
@@ -39,7 +41,7 @@ class MonthComparisonCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _MonthBlock(
-                  label: 'This Month',
+                  label: l10n.thisMonthLabel,
                   amount: state.thisMonthExpense,
                   isHighlighted: true,
                 ),
@@ -54,7 +56,7 @@ class MonthComparisonCard extends StatelessWidget {
               ),
               Expanded(
                 child: _MonthBlock(
-                  label: 'Last Month',
+                  label: l10n.lastMonthLabel,
                   amount: state.lastMonthExpense,
                   isHighlighted: false,
                 ),
@@ -87,8 +89,9 @@ class MonthComparisonCard extends StatelessWidget {
                     final formatter = authState is AuthAuthenticated
                         ? authState.formatter
                         : const CurrencyFormatter();
+                    final formattedAmount = formatter.format(state.monthlyChange.abs());
                     return Text(
-                      '${formatter.format(state.monthlyChange.abs())}  $changeLabel',
+                      isUp ? l10n.moreThanLastMonth(formattedAmount) : l10n.lessThanLastMonth(formattedAmount),
                       style: AppTextStyles.bodySmall.copyWith(
                         color: changeColor,
                         fontWeight: FontWeight.w600,
@@ -118,49 +121,35 @@ class _MonthBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isHighlighted
-            ? AppColors.primary.withValues(alpha: 0.08)
-            : Theme.of(context)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: Theme.of(context)
                 .colorScheme
                 .onSurface
-                .withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTextStyles.caption.copyWith(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.5),
-            ),
+                .withValues(alpha: 0.5),
           ),
-          const Gap(4),
-          Builder(
-            builder: (context) {
-              final authState = context.watch<AuthCubit>().state;
-              final formatter = authState is AuthAuthenticated
-                  ? authState.formatter
-                  : const CurrencyFormatter();
-              return Text(
-                formatter.format(amount),
-                style: AppTextStyles.amountSmall.copyWith(
-                  color: isHighlighted
-                      ? AppColors.primary
-                      : Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        ),
+        const Gap(4),
+        Builder(
+          builder: (context) {
+            final authState = context.watch<AuthCubit>().state;
+            final formatter = authState is AuthAuthenticated
+                ? authState.formatter
+                : const CurrencyFormatter();
+            return Text(
+              formatter.format(amount),
+              style: AppTextStyles.body.copyWith(
+                fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

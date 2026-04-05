@@ -27,10 +27,12 @@ class ConnectivityState {
 }
 
 class ConnectivityCubit extends Cubit<ConnectivityState> {
-  final Connectivity _connectivity = Connectivity();
+  final Connectivity _connectivity;
   StreamSubscription? _subscription;
 
-  ConnectivityCubit() : super(const ConnectivityState(status: ConnectivityStatus.online)) {
+  ConnectivityCubit({Connectivity? connectivity}) 
+    : _connectivity = connectivity ?? Connectivity(),
+      super(const ConnectivityState(status: ConnectivityStatus.online)) {
     _init();
   }
 

@@ -10,6 +10,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
+import 'package:intl/intl.dart';
+
 class WeeklyChart extends StatelessWidget {
   final VoidCallback? onSeeAll;
 
@@ -17,6 +21,7 @@ class WeeklyChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocBuilder<InsightsCubit, InsightsState>(
       builder: (context, state) {
         if (state is! InsightsLoaded) return const SizedBox.shrink();
@@ -29,7 +34,15 @@ class WeeklyChart extends StatelessWidget {
         final now = DateTime.now();
         final shortLabels = List.generate(7, (i) {
           final day = now.subtract(Duration(days: 6 - i));
-          const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+          final names = [
+            l10n.mondayShort,
+            l10n.tuesdayShort,
+            l10n.wednesdayShort,
+            l10n.thursdayShort,
+            l10n.fridayShort,
+            l10n.saturdayShort,
+            l10n.sundayShort
+          ];
           return names[day.weekday - 1];
         });
 
@@ -52,12 +65,12 @@ class WeeklyChart extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Text('Weekly Spending', style: AppTextStyles.h3),
+                  Text(l10n.weeklySpending, style: AppTextStyles.h3),
                   if (onSeeAll != null)
                     TextButton(
                       onPressed: onSeeAll,
                       child: Text(
-                        'See all',
+                        l10n.seeAll,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -68,7 +81,7 @@ class WeeklyChart extends StatelessWidget {
               ),
               const Gap(4),
               Text(
-                _dateRange(now),
+                _dateRange(context, now),
                 style: AppTextStyles.caption.copyWith(
                   color: Theme.of(context)
                       .colorScheme
@@ -97,8 +110,7 @@ class WeeklyChart extends StatelessWidget {
                     borderData: FlBorderData(show: false),
                     barTouchData: BarTouchData(
                       touchTooltipData: BarTouchTooltipData(
-                        tooltipBgColor:
-                            Theme.of(context).colorScheme.surface,
+                        tooltipBgColor: Theme.of(context).colorScheme.surface,
                         tooltipRoundedRadius: 10,
                         getTooltipItem: (group, _, rod, __) {
                           final authState = context.read<AuthCubit>().state;
@@ -164,15 +176,12 @@ class WeeklyChart extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: isToday
                                   ? [
-                                      AppColors.primary.withValues(
-                                          alpha: 0.7),
+                                      AppColors.primary.withValues(alpha: 0.7),
                                       AppColors.primary,
                                     ]
                                   : [
-                                      AppColors.primary.withValues(
-                                          alpha: 0.3),
-                                      AppColors.primary.withValues(
-                                          alpha: 0.6),
+                                      AppColors.primary.withValues(alpha: 0.3),
+                                      AppColors.primary.withValues(alpha: 0.6),
                                     ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
@@ -182,8 +191,7 @@ class WeeklyChart extends StatelessWidget {
                             backDrawRodData: BackgroundBarChartRodData(
                               show: true,
                               toY: maxVal == 0 ? 10 : maxVal * 1.25,
-                              color: AppColors.primary.withValues(
-                                  alpha: 0.05),
+                              color: AppColors.primary.withValues(alpha: 0.05),
                             ),
                           ),
                         ],
@@ -199,12 +207,10 @@ class WeeklyChart extends StatelessWidget {
     );
   }
 
-  String _dateRange(DateTime now) {
+  String _dateRange(BuildContext context, DateTime now) {
     final start = now.subtract(const Duration(days: 6));
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[start.month - 1]} ${start.day} – ${months[now.month - 1]} ${now.day}';
+    final locale = Localizations.localeOf(context).toString();
+    final fmt = DateFormat.MMMd(locale);
+    return '${fmt.format(start)} – ${fmt.format(now)}';
   }
 }

@@ -11,6 +11,8 @@ import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import 'build_avatar_picker.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
 
@@ -46,16 +48,17 @@ class _RegisterFormState extends State<RegisterForm> {
     if (!_formKey.currentState!.validate()) return;
 
     context.read<AuthCubit>().register(
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      initialBalance: double.parse(_balanceController.text),
-      imagePath: _imagePath,
-    );
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          initialBalance: double.parse(_balanceController.text),
+          imagePath: _imagePath,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         return Form(
@@ -73,8 +76,8 @@ class _RegisterFormState extends State<RegisterForm> {
               Center(
                 child: Text(
                   _imagePath == null
-                      ? 'Tap to add a profile photo (optional)'
-                      : 'Tap to change photo',
+                      ? l10n.tapToAddPhoto
+                      : l10n.tapToChangePhoto,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -83,34 +86,34 @@ class _RegisterFormState extends State<RegisterForm> {
               const Gap(28),
               // ── Fields ────────────────────────────────────────
               CustomTextField(
-                label: 'Full Name',
+                label: l10n.fullName,
                 hint: 'John Doe',
                 controller: _nameController,
                 prefixIcon: const Icon(Iconsax.user, size: 18),
                 validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Name is required'
+                    ? l10n.fullNameRequired
                     : null,
               ),
               const Gap(16),
               CustomTextField(
-                label: 'Email',
+                label: l10n.email,
                 hint: 'your@email.com',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: const Icon(Iconsax.sms, size: 18),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return 'Email is required';
+                    return l10n.emailRequired;
                   }
                   if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                    return 'Enter a valid email address';
+                    return l10n.invalidEmail;
                   }
                   return null;
                 },
               ),
               const Gap(16),
               CustomTextField(
-                label: 'Password',
+                label: l10n.password,
                 hint: '••••••••',
                 controller: _passwordController,
                 obscureText: _obscurePassword,
@@ -127,15 +130,15 @@ class _RegisterFormState extends State<RegisterForm> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return 'Password is required';
+                    return l10n.passwordRequired;
                   }
-                  if (v.length < 6) return 'Minimum 6 characters';
+                  if (v.length < 6) return l10n.passwordMinLength;
                   return null;
                 },
               ),
               const Gap(16),
               CustomTextField(
-                label: 'Starting Balance',
+                label: l10n.startingBalance,
                 hint: '0.00',
                 controller: _balanceController,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -149,11 +152,11 @@ class _RegisterFormState extends State<RegisterForm> {
                 prefixIcon: const Icon(Iconsax.dollar_circle, size: 18),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return 'Starting balance is required';
+                    return l10n.initialBalanceRequired;
                   }
                   final parsed = double.tryParse(v);
-                  if (parsed == null) return 'Enter a valid number';
-                  if (parsed < 0) return 'Balance cannot be negative';
+                  if (parsed == null) return l10n.invalidNumber;
+                  if (parsed < 0) return l10n.negativeBalance;
                   return null;
                 },
               ),
@@ -161,7 +164,7 @@ class _RegisterFormState extends State<RegisterForm> {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: Text(
-                  'Your current account balance — used as your starting point.',
+                  l10n.startingBalanceHint,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -169,7 +172,7 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               const Gap(32),
               CustomButton(
-                label: 'Create Account',
+                label: l10n.createAccount,
                 isLoading: state is AuthLoading,
                 onTap: _submit,
                 icon: Iconsax.user_add,

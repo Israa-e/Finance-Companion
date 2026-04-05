@@ -8,6 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
 
@@ -32,13 +34,14 @@ class _LoginFormState extends State<LoginForm> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
     context.read<AuthCubit>().login(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         return Form(
@@ -47,7 +50,7 @@ class _LoginFormState extends State<LoginForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CustomTextField(
-                label: 'Email',
+                label: l10n.email,
                 hint: 'your@email.com',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -57,17 +60,17 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return 'Email is required';
+                    return l10n.emailRequired;
                   }
                   if (!v.contains('@')) {
-                    return 'Invalid email';
+                    return l10n.invalidEmail;
                   }
                   return null;
                 },
               ),
               const Gap(16),
               CustomTextField(
-                label: 'Password',
+                label: l10n.password,
                 hint: '••••••••',
                 controller: _passwordController,
                 prefixIcon: const Icon(
@@ -86,17 +89,17 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return 'Password is required';
+                    return l10n.passwordRequired;
                   }
                   if (v.length < 6) {
-                    return 'Min 6 characters';
+                    return l10n.passwordMinLength;
                   }
                   return null;
                 },
               ),
               const Gap(28),
               CustomButton(
-                label: 'Login',
+                label: l10n.login,
                 isLoading: state is AuthLoading,
                 onTap: _submit,
               ),

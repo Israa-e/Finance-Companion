@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import '../../../shared/widgets/custom_button.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class UserSettingsSheet extends StatefulWidget {
   const UserSettingsSheet({super.key});
@@ -33,8 +34,10 @@ class _UserSettingsSheetState extends State<UserSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.fromLTRB(
+          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -46,7 +49,7 @@ class _UserSettingsSheetState extends State<UserSettingsSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Budget Alerts', style: AppTextStyles.h2),
+              Text(l10n.budgetAlerts, style: AppTextStyles.h2),
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close),
@@ -55,15 +58,20 @@ class _UserSettingsSheetState extends State<UserSettingsSheet> {
           ),
           const Gap(16),
           Text(
-            'Define when you want to receive notifications relative to your monthly budget.',
+            l10n.budgetAlertsSubtitle,
             style: AppTextStyles.body.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.6),
             ),
           ),
           const Gap(24),
-          
+
           // Warning Threshold
-          const _Label(title: 'Warning Threshold', subtitle: 'Receive a yellow alert'),
+          _Label(
+              title: l10n.warningThreshold,
+              subtitle: l10n.warningThresholdSubtitle),
           Row(
             children: [
               Expanded(
@@ -76,22 +84,27 @@ class _UserSettingsSheetState extends State<UserSettingsSheet> {
                   onChanged: (val) {
                     setState(() {
                       _warning = val;
-                      if (_warning >= _critical) _critical = (_warning + 0.05).clamp(0.0, 1.5);
+                      if (_warning >= _critical) {
+                        _critical = (_warning + 0.05).clamp(0.5, 1.5);
+                      }
                     });
                   },
                 ),
               ),
               Text(
                 '${(_warning * 100).toInt()}%',
-                style: AppTextStyles.label.copyWith(fontWeight: FontWeight.bold),
+                style:
+                    AppTextStyles.label.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          
+
           const Gap(16),
-          
+
           // Critical Threshold
-          const _Label(title: 'Critical Threshold', subtitle: 'Receive a red alert'),
+          _Label(
+              title: l10n.criticalThreshold,
+              subtitle: l10n.criticalThresholdSubtitle),
           Row(
             children: [
               Expanded(
@@ -104,43 +117,39 @@ class _UserSettingsSheetState extends State<UserSettingsSheet> {
                   onChanged: (val) {
                     setState(() {
                       _critical = val;
-                      if (_critical <= _warning) _warning = (_critical - 0.05).clamp(0.0, 1.5);
+                      if (_critical <= _warning) {
+                        _warning = (_critical - 0.05).clamp(0.1, 0.95);
+                      }
                     });
                   },
                 ),
               ),
               Text(
                 '${(_critical * 100).toInt()}%',
-                style: AppTextStyles.label.copyWith(fontWeight: FontWeight.bold),
+                style:
+                    AppTextStyles.label.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          
+
           const Gap(32),
-          
-          BlocBuilder<AuthCubit, AuthState>(
-            builder: (context, state) {
-              final isUpdating = state is AuthAuthenticated && state.isUpdating;
-              return CustomButton(
-                label: 'Save Changes',
-                isLoading: isUpdating,
-                onTap: () async {
-                  final auth = context.read<AuthCubit>();
-                  final navigator = Navigator.of(context);
-                  final current = auth.state as AuthAuthenticated;
-                  
-                  await auth.saveProfile(
-                    name: current.user.name,
-                    initialBalance: current.user.initialBalance,
-                    monthlyBudget: current.user.monthlyBudget,
-                    currency: current.user.currency,
-                    warningThreshold: _warning,
-                    criticalThreshold: _critical,
-                  );
-                  
-                  if (mounted) navigator.pop();
-                },
-              );
+
+          CustomButton(
+            label: l10n.save,
+            onTap: () async {
+              final authCubit = context.read<AuthCubit>();
+              final currentState = authCubit.state;
+              if (currentState is AuthAuthenticated) {
+                await authCubit.saveProfile(
+                  name: currentState.user.name,
+                  initialBalance: currentState.user.initialBalance,
+                  monthlyBudget: currentState.user.monthlyBudget,
+                  currency: currentState.user.currency,
+                  warningThreshold: _warning,
+                  criticalThreshold: _critical,
+                );
+                if (context.mounted) Navigator.pop(context);
+              }
             },
           ),
         ],
@@ -152,6 +161,7 @@ class _UserSettingsSheetState extends State<UserSettingsSheet> {
 class _Label extends StatelessWidget {
   final String title;
   final String subtitle;
+
   const _Label({required this.title, required this.subtitle});
 
   @override
@@ -159,12 +169,13 @@ class _Label extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold)),
+        Text(title,
+            style: AppTextStyles.label.copyWith(fontWeight: FontWeight.bold)),
         Text(
           subtitle,
           style: AppTextStyles.caption.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-            fontSize: 11,
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],

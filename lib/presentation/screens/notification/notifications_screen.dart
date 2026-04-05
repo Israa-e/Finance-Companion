@@ -1,3 +1,4 @@
+import 'package:finance_companion/l10n/app_localizations.dart';
 import 'package:finance_companion/core/theme/app_colors.dart';
 import 'package:finance_companion/core/theme/app_text_styles.dart';
 import 'package:finance_companion/data/models/notification_model.dart';
@@ -12,14 +13,15 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications', style: AppTextStyles.h3),
+        title: Text(l10n.notifications, style: AppTextStyles.h3),
         actions: [
           TextButton(
             onPressed: () => context.read<NotificationCubit>().markAllRead(),
             child: Text(
-              'Mark all read',
+              l10n.markAllRead,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
               ),
@@ -31,17 +33,17 @@ class NotificationsScreen extends StatelessWidget {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Clear all notifications?'),
+                  title: Text(l10n.clearAllNotifications),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.cancel),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
                       child: Text(
-                        'Clear',
-                        style: TextStyle(color: AppColors.expense),
+                        l10n.clear,
+                        style: const TextStyle(color: AppColors.expense),
                       ),
                     ),
                   ],
@@ -78,10 +80,10 @@ class NotificationsScreen extends StatelessWidget {
                     ),
                   ),
                   const Gap(16),
-                  Text('No notifications yet', style: AppTextStyles.h3),
+                  Text(l10n.noNotificationsTitle, style: AppTextStyles.h3),
                   const Gap(8),
                   Text(
-                    'Spending alerts and goal updates\nwill appear here',
+                    l10n.noNotificationsSubtitle,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),

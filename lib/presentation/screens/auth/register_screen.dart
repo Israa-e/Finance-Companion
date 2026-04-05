@@ -7,6 +7,8 @@ import '../../../core/theme/app_text_styles.dart';
 
 import 'widgets/register_form.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -40,7 +42,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Account', style: AppTextStyles.h3),
+        title: Text(AppLocalizations.of(context)!.createAccount,
+            style: AppTextStyles.h3),
         leading: const BackButton(),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -90,4 +93,3 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 }
-

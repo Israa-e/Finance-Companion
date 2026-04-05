@@ -8,6 +8,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../logic/insights/insights_state.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class TopCategoryCard extends StatelessWidget {
   final InsightsLoaded state;
@@ -15,6 +16,7 @@ class TopCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -53,7 +55,7 @@ class TopCategoryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Top Spending',
+                  l10n.topSpending,
                   style: AppTextStyles.caption.copyWith(
                     color: Colors.white.withValues(alpha: 0.75),
                     letterSpacing: 0.5,
@@ -61,7 +63,7 @@ class TopCategoryCard extends StatelessWidget {
                 ),
                 const Gap(4),
                 Text(
-                  state.topCategory.isEmpty ? 'No data' : state.topCategory,
+                  state.topCategory.isEmpty ? l10n.noData : state.topCategory,
                   style: AppTextStyles.h3.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -98,7 +100,7 @@ class TopCategoryCard extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

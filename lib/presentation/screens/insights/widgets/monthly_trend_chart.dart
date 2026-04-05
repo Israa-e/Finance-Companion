@@ -9,12 +9,15 @@ import '../../../../logic/insights/insights_state.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class MonthlyTrendChart extends StatelessWidget {
   final InsightsLoaded state;
   const MonthlyTrendChart({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final entries = state.monthlyTrend.entries.toList();
     final maxVal = entries.isEmpty
         ? 1.0
@@ -42,13 +45,13 @@ class MonthlyTrendChart extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Monthly Trend',
+                      l10n.monthlyTrend,
                       style: AppTextStyles.h3.copyWith(
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Text(
-                      'Expenses over the last 6 months',
+                      l10n.monthlyTrendSubtitle,
                       style: AppTextStyles.caption.copyWith(
                         color: Theme.of(context)
                             .colorScheme
@@ -72,7 +75,7 @@ class MonthlyTrendChart extends StatelessWidget {
                   ),
                   const Gap(5),
                   Text(
-                    'Expenses',
+                    l10n.expense,
                     style: AppTextStyles.caption.copyWith(
                       color: Theme.of(context)
                           .colorScheme

@@ -10,6 +10,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../logic/notification/notification_cubit.dart';
 import '../../notification/notifications_screen.dart';
 import '../../../shared/widgets/sync_indicator.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class HomeHeader extends StatelessWidget {
   final void Function(int tabIndex) onTabSwitch;
@@ -33,14 +34,14 @@ class HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_greeting()} 👋',
+                  '${_greeting(context)} 👋',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const Gap(2),
                 Text(
-                  name.isNotEmpty ? name : 'My Finances',
+                  name.isNotEmpty ? name : AppLocalizations.of(context)!.myFinances,
                   style: AppTextStyles.h2,
                 ),
               ],
@@ -146,10 +147,11 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
-  String _greeting() {
+  String _greeting(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return l10n.goodMorning;
+    if (hour < 17) return l10n.goodAfternoon;
+    return l10n.goodEvening;
   }
 }

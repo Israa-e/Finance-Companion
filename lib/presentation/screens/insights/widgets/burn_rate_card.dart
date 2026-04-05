@@ -1,4 +1,9 @@
+import 'package:finance_companion/core/utils/currency_formatter.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
+import 'package:finance_companion/logic/auth/auth_cubit.dart';
+import 'package:finance_companion/logic/auth/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -13,28 +18,42 @@ class BurnRateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final authState = context.watch<AuthCubit>().state;
+    final formatter = authState is AuthAuthenticated
+        ? authState.formatter
+        : const CurrencyFormatter();
+
     if (state.activePeriod != InsightsPeriod.thisMonth) {
       return const SizedBox.shrink(); // Best viewed on current month
     }
 
     final dailyBurn = state.dailyBurnRate;
     final breachDate = state.predictedBreachDate;
-    final isHealthy = breachDate == null || 
-        breachDate.isAfter(DateTime(DateTime.now().year, DateTime.now().month + 1, 0));
+    final isHealthy = breachDate == null ||
+        breachDate.isAfter(
+            DateTime(DateTime.now().year, DateTime.now().month + 1, 0));
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isHealthy
-              ? [AppColors.income.withValues(alpha: 0.1), AppColors.income.withValues(alpha: 0.05)]
-              : [AppColors.expense.withValues(alpha: 0.1), AppColors.expense.withValues(alpha: 0.05)],
+              ? [
+                  AppColors.income.withValues(alpha: 0.1),
+                  AppColors.income.withValues(alpha: 0.05)
+                ]
+              : [
+                  AppColors.expense.withValues(alpha: 0.1),
+                  AppColors.expense.withValues(alpha: 0.05)
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: (isHealthy ? AppColors.income : AppColors.expense).withValues(alpha: 0.1),
+          color: (isHealthy ? AppColors.income : AppColors.expense)
+              .withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -45,7 +64,8 @@ class BurnRateCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (isHealthy ? AppColors.income : AppColors.expense).withValues(alpha: 0.1),
+                  color: (isHealthy ? AppColors.income : AppColors.expense)
+                      .withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -55,14 +75,12 @@ class BurnRateCard extends StatelessWidget {
                 ),
               ),
               const Gap(12),
-              Text('Predictive Insights', style: AppTextStyles.label),
+              Text(l10n.predictiveInsights, style: AppTextStyles.label),
             ],
           ),
           const Gap(20),
           Text(
-            isHealthy 
-                ? 'Your spending is sustainable.' 
-                : 'Budget breach projected!',
+            isHealthy ? l10n.spendingSustainable : l10n.budgetBreachProjected,
             style: AppTextStyles.h3.copyWith(
               color: isHealthy ? AppColors.income : AppColors.expense,
             ),
@@ -72,9 +90,9 @@ class BurnRateCard extends StatelessWidget {
             text: TextSpan(
               style: AppTextStyles.body,
               children: [
-                const TextSpan(text: 'Current burn rate: '),
+                TextSpan(text: l10n.currentBurnRate),
                 TextSpan(
-                  text: '\$${dailyBurn.toStringAsFixed(2)}/day',
+                  text: l10n.burnRatePerDay(formatter.format(dailyBurn)),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -91,17 +109,19 @@ class BurnRateCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Iconsax.calendar_1, size: 16, color: AppColors.textHint),
+                  const Icon(Iconsax.calendar_1,
+                      size: 16, color: AppColors.textHint),
                   const Gap(8),
                   Text(
-                    'Estimate: ${DateFormat('MMM dd, yyyy').format(breachDate)}',
-                    style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+                    '${l10n.estimate}: ${DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(breachDate)}',
+                    style: AppTextStyles.caption
+                        .copyWith(fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
             ),
           ],
-          
+
           // Senior+ Smart Insight
           const Gap(16),
           _SmartInsight(
@@ -130,7 +150,7 @@ class _SmartInsight extends StatelessWidget {
   Widget build(BuildContext context) {
     final diff = weekendAvg - weekdayAvg;
     final percent = weekdayAvg > 0 ? (diff / weekdayAvg * 100).abs() : 0.0;
-    
+
     if (percent < 10) return const SizedBox.shrink(); // Minimal difference
 
     final isWkndHigher = diff > 0;
@@ -150,10 +170,11 @@ class _SmartInsight extends StatelessWidget {
           const Gap(8),
           Expanded(
             child: Text(
-              isWkndHigher 
-                ? 'Your weekend spending is ${percent.toStringAsFixed(0)}% higher than weekdays.'
-                : 'Great! Your weekend spending is ${percent.toStringAsFixed(0)}% lower than weekdays.',
-              style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w500),
+              isWkndHigher
+                  ? 'Your weekend spending is ${percent.toStringAsFixed(0)}% higher than weekdays.'
+                  : 'Great! Your weekend spending is ${percent.toStringAsFixed(0)}% lower than weekdays.',
+              style:
+                  AppTextStyles.caption.copyWith(fontWeight: FontWeight.w500),
             ),
           ),
         ],

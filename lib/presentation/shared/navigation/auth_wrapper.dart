@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../logic/auth/auth_cubit.dart';
-import '../../../logic/auth/auth_state.dart';
-import '../../../data/repositories/transaction_repository.dart';
-import '../../../data/repositories/goal_repository.dart';
-import '../../screens/auth/login_screen.dart';
-import '../../screens/onboarding/onboarding_screen.dart';
+import 'package:finance_companion/logic/auth/auth_cubit.dart';
+import 'package:finance_companion/logic/auth/auth_state.dart';
+import 'package:finance_companion/logic/onboarding/onboarding_cubit.dart';
+import 'package:finance_companion/presentation/screens/auth/login_screen.dart';
+import 'package:finance_companion/presentation/screens/onboarding/onboarding_screen.dart';
 import 'app_navigation.dart';
 
-import '../../../logic/onboarding/onboarding_cubit.dart';
-
 class AuthWrapper extends StatefulWidget {
-  final TransactionRepository transactionRepo;
-  final GoalRepository goalRepo;
-
-  const AuthWrapper({
-    super.key,
-    required this.transactionRepo,
-    required this.goalRepo,
-  });
+  const AuthWrapper({super.key});
 
   @override
   State<AuthWrapper> createState() => _AuthWrapperState();
@@ -66,24 +56,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // Still loading prefs or checking initial auth
     if (_checkingOnboarding || _isCheckingAuth) {
-      // Keep this minimal because we already show the main SplashScreen
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Show onboarding first
     if (_showOnboarding) {
       return OnboardingScreen(onDone: _onOnboardingDone);
     }
 
-    // Normal auth flow
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         if (state is AuthAuthenticated) {
           return AppNavigation(
-            transactionRepo: widget.transactionRepo,
-            goalRepo: widget.goalRepo,
             user: state.user,
           );
         }

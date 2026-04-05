@@ -6,12 +6,15 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../logic/insights/insights_state.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class FrequentCategoryCard extends StatelessWidget {
   final InsightsLoaded state;
   const FrequentCategoryCard({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -41,7 +44,7 @@ class FrequentCategoryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Most Frequent',
+                  l10n.mostFrequent,
                   style: AppTextStyles.caption.copyWith(
                     color: Theme.of(context)
                         .colorScheme
@@ -82,7 +85,7 @@ class FrequentCategoryCard extends StatelessWidget {
                 ),
                 const Gap(5),
                 Text(
-                  '${state.mostFrequentCount} transactions',
+                  l10n.transactionsCount(state.mostFrequentCount),
                   style: AppTextStyles.label.copyWith(
                     color: AppColors.savings,
                     fontWeight: FontWeight.w700,

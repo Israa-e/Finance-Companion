@@ -1,7 +1,7 @@
+import 'package:finance_companion/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
@@ -12,6 +12,7 @@ class TransactionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Row(
@@ -20,15 +21,12 @@ class TransactionHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Transactions', style: AppTextStyles.h2),
-                BlocBuilder<TransactionCubit, TransactionState>(
+                Text(l10n.transactions, style: AppTextStyles.h2),
+                BlocBuilder<TransactionFilterCubit, TransactionFilterState>(
                   builder: (_, state) {
-                    if (state is! TransactionLoaded) {
-                      return const SizedBox.shrink();
-                    }
                     final count = state.transactions.length;
                     return Text(
-                      '$count entries',
+                      l10n.entriesCount(count),
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textSecondary,
                       ),

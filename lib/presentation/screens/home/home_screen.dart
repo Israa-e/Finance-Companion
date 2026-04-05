@@ -4,8 +4,7 @@ import 'package:finance_companion/data/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import '../../../logic/transaction/transaction_cubit.dart';
-import '../../../logic/transaction/transaction_state.dart';
+import '../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../logic/goal/goal_cubit.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -43,13 +42,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
-            context.read<TransactionCubit>().loadTransactions();
+            context.read<TransactionFilterCubit>().load();
             context.read<GoalCubit>().loadGoals();
             context.read<StreakCubit>().loadStreak();
           },
-          child: BlocBuilder<TransactionCubit, TransactionState>(
-            builder: (context, txState) {
-              final isLoading = txState is TransactionLoading;
+          child: BlocBuilder<TransactionFilterCubit, TransactionFilterState>(
+            builder: (context, state) {
+              final isLoading = state.isLoading;
 
               return SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

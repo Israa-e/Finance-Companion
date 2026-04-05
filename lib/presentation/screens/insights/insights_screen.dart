@@ -16,11 +16,14 @@ import 'widgets/top_category_card.dart';
 import 'widgets/burn_rate_card.dart';
 import 'widgets/spending_pattern_card.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -48,7 +51,7 @@ class InsightsScreen extends StatelessWidget {
                   return SizedBox(
                     height: 400,
                     child: EmptyStateWidget(
-                      title: 'Could not load insights',
+                      title: l10n.couldNotLoadInsights,
                       subtitle: state.message,
                       icon: Iconsax.warning_2,
                     ),
@@ -73,7 +76,7 @@ class InsightsScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Insights',
+                          l10n.insights,
                           style: AppTextStyles.h2.copyWith(
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
@@ -87,12 +90,11 @@ class InsightsScreen extends StatelessWidget {
                     const Gap(20),
 
                     if (isEmpty)
-                      const SizedBox(
+                      SizedBox(
                         height: 300,
                         child: EmptyStateWidget(
-                          title: 'No data for this period',
-                          subtitle:
-                              'Add some transactions to start seeing insights',
+                          title: l10n.noTransactionsTitle,
+                          subtitle: l10n.noTransactionsSubtitle,
                           icon: Iconsax.chart,
                         ),
                       )
@@ -168,7 +170,7 @@ class _PeriodSelector extends StatelessWidget {
                 ),
               ),
               child: Text(
-                period.label,
+                period.label(context),
                 style: AppTextStyles.caption.copyWith(
                   color: isActive
                       ? Colors.white

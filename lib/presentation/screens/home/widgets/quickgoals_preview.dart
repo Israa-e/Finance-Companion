@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../data/models/goal_model.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class QuickGoalsPreview extends StatelessWidget {
   final VoidCallback? onSeeAll;
@@ -40,11 +41,11 @@ class QuickGoalsPreview extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Savings Goals', style: AppTextStyles.h3),
+                Text(AppLocalizations.of(context)!.savingsGoals, style: AppTextStyles.h3),
                 TextButton(
                   onPressed: onSeeAll,
                   child: Text(
-                    'See all',
+                    AppLocalizations.of(context)!.seeAll,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -60,8 +61,10 @@ class QuickGoalsPreview extends StatelessWidget {
                     ? authState.formatter
                     : const CurrencyFormatter();
                 return Text(
-                  '${formatter.formatCompact(totalSaved)} saved'
-                  ' of ${formatter.formatCompact(totalTarget)} total',
+                  AppLocalizations.of(context)!.savedOfTotal(
+                    formatter.formatCompact(totalSaved),
+                    formatter.formatCompact(totalTarget),
+                  ),
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),

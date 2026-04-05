@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../register_screen.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class LoginFooter extends StatelessWidget {
   const LoginFooter({super.key});
 
@@ -13,7 +15,8 @@ class LoginFooter extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Don't have an account? ", style: AppTextStyles.bodySmall),
+        Text(AppLocalizations.of(context)!.dontHaveAccount,
+            style: AppTextStyles.bodySmall),
         GestureDetector(
           onTap: () => Navigator.push(
             context,
@@ -28,7 +31,7 @@ class LoginFooter extends StatelessWidget {
             ),
           ),
           child: Text(
-            'Register',
+            AppLocalizations.of(context)!.register,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w600,

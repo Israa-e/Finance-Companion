@@ -3,6 +3,8 @@ import 'package:gap/gap.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class LoginHeader extends StatelessWidget {
   const LoginHeader({super.key});
 
@@ -36,9 +38,15 @@ class LoginHeader extends StatelessWidget {
           ),
         ),
         const Gap(20),
-        Text('Welcome Back 👋', style: AppTextStyles.h1),
-        const Gap(6),
-        Text('Login to manage your finances', style: AppTextStyles.bodySmall),
+        Text(
+          AppLocalizations.of(context)!.welcomeBack,
+          style: AppTextStyles.h1,
+        ),
+        const Gap(8),
+        Text(
+          AppLocalizations.of(context)!.loginSubtitle,
+          style: AppTextStyles.bodySmall,
+        ),
       ],
     );
   }

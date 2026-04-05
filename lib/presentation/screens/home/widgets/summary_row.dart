@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:gap/gap.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class SummaryRow extends StatelessWidget {
   final bool isGlassy;
@@ -16,16 +16,16 @@ class SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TransactionCubit, TransactionState>(
+    return BlocBuilder<TransactionFilterCubit, TransactionFilterState>(
       builder: (context, state) {
-        final income = state is TransactionLoaded ? state.totalIncome : 0.0;
-        final expense = state is TransactionLoaded ? state.totalExpense : 0.0;
+        final income = state.totalIncome;
+        final expense = state.totalExpense;
 
         return Row(
           children: [
             Expanded(
               child: _SummaryCard(
-                label: 'Income',
+                label: AppLocalizations.of(context)!.income,
                 amount: income,
                 icon: Iconsax.arrow_down,
                 color: AppColors.income,
@@ -35,7 +35,7 @@ class SummaryRow extends StatelessWidget {
             const Gap(12),
             Expanded(
               child: _SummaryCard(
-                label: 'Expenses',
+                label: AppLocalizations.of(context)!.expense,
                 amount: expense,
                 icon: Iconsax.arrow_up,
                 color: AppColors.expense,

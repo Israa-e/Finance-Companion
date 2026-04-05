@@ -14,13 +14,13 @@ class SplashScreen extends StatefulWidget {
   /// Called when the animation finishes — navigate to the next screen here.
   final VoidCallback onFinished;
 
-  /// If true, disables the infinite floating animation, allowing
-  /// widget tests (pumpAndSettle) to complete.
   final bool isTestMode;
+  final AuthRepository authRepo;
 
   const SplashScreen({
     super.key,
     required this.onFinished,
+    required this.authRepo,
     this.isTestMode = false,
   });
 
@@ -30,6 +30,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
+  late final SplashCubit _cubit;
+  bool _isSequenceStarted = false;
+
   late final AnimationController _bgController;
   late final AnimationController _logoController;
   late final AnimationController _textController;
@@ -47,13 +50,14 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    _cubit = SplashCubit(widget.authRepo);
 
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
+    // Start sequence after first frame to ensure listener is active
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _cubit.startSequence();
+    });
+
+    // Status bar icon brightness will be handled in build based on theme
 
     // Background blob pulse
     _bgController = AnimationController(
@@ -114,7 +118,21 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
+  void _updateStatusBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarColor: Colors.transparent,
+      ),
+    );
+  }
+
   void _runUiSequence() {
+    if (_isSequenceStarted) return;
+    _isSequenceStarted = true;
+
     _bgController.forward();
 
     Future.delayed(const Duration(milliseconds: 200), () {
@@ -133,6 +151,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _cubit.close();
     _bgController.dispose();
     _logoController.dispose();
     _textController.dispose();
@@ -143,10 +162,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    _updateStatusBar(context);
     final size = MediaQuery.of(context).size;
 
-    return BlocProvider(
-      create: (context) => SplashCubit(AuthRepository())..startSequence(),
+    return BlocProvider.value(
+      value: _cubit,
       child: BlocConsumer<SplashCubit, SplashState>(
         listener: (context, state) {
           if (state.status == SplashStatus.animating) {
@@ -199,7 +219,7 @@ class _SplashScreenState extends State<SplashScreen>
                         right: 0,
                         child: FadeTransition(
                           opacity: _textFade,
-                          child: const SplashLoadingDots(),
+                          child: SplashLoadingDots(isTestMode: widget.isTestMode),
                         ),
                       ),
                     ],
@@ -213,4 +233,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-

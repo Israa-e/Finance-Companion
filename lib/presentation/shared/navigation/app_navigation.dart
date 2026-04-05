@@ -5,10 +5,13 @@ import 'package:finance_companion/presentation/screens/profile/profile_screen.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:finance_companion/injection_container.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/transaction_repository.dart';
 import '../../../data/repositories/goal_repository.dart';
-import '../../../logic/transaction/transaction_cubit.dart';
+import '../../../logic/transaction/transaction_action_cubit.dart';
+import '../../../logic/transaction/transaction_filter_cubit.dart';
+import '../../../logic/transaction/transaction_form_cubit.dart';
 import '../../../logic/goal/goal_cubit.dart';
 import '../../../logic/insights/insights_cubit.dart';
 import '../../screens/home/home_screen.dart';
@@ -18,16 +21,19 @@ import '../../screens/insights/insights_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/services/alert_service.dart';
 import 'package:finance_companion/logic/navigation/tab_navigation_cubit.dart';
+import 'package:finance_companion/logic/category/category_cubit.dart';
+import 'package:finance_companion/logic/recurring/recurring_cubit.dart';
+import 'package:finance_companion/data/repositories/category_repository.dart';
+import 'package:finance_companion/data/repositories/recurring_repository.dart';
+import 'package:finance_companion/data/services/recurring_processor_service.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 
 class AppNavigation extends StatefulWidget {
-  final TransactionRepository transactionRepo;
-  final GoalRepository goalRepo;
   final UserModel user;
 
   const AppNavigation({
     super.key,
-    required this.transactionRepo,
-    required this.goalRepo,
     required this.user,
   });
 
@@ -42,11 +48,15 @@ class _AppNavigationState extends State<AppNavigation> {
   static const int tabInsights = 3;
   static const int tabProfile = 4;
 
-  late final TransactionCubit _txCubit;
+  late final TransactionActionCubit _txActionCubit;
+  late final TransactionFilterCubit _txFilterCubit;
+  late final TransactionFormCubit _txFormCubit;
   late final GoalCubit _goalCubit;
   late final InsightsCubit _insightsCubit;
   late final StreakCubit _streakCubit;
   late final NotificationCubit _notifCubit;
+  late final CategoryCubit _categoryCubit;
+  late final RecurringCubit _recurringCubit;
   late final AlertService _alertService;
 
   @override
@@ -54,32 +64,26 @@ class _AppNavigationState extends State<AppNavigation> {
     super.initState();
 
     _insightsCubit = InsightsCubit(
-      widget.transactionRepo,
+      sl<TransactionRepository>(),
       userMonthlyBudget: widget.user.monthlyBudget,
     )..loadInsights();
-    _streakCubit = StreakCubit(widget.transactionRepo)..loadStreak();
+    _streakCubit = StreakCubit(sl<TransactionRepository>())..loadStreak();
 
-    final notifRepo = NotificationRepository();
-    _alertService = AlertService(notifRepo);
-    _notifCubit = NotificationCubit(notifRepo)..load();
+    _alertService = sl<AlertService>();
+    _notifCubit = NotificationCubit(sl<NotificationRepository>())..load();
 
-    _txCubit = TransactionCubit(widget.transactionRepo, _alertService)
-      ..setUser(
-        widget.user.id!,
-        widget.user.initialBalance,
-        monthlyBudget: widget.user.monthlyBudget,
-        warningThreshold: widget.user.warningThreshold,
-        criticalThreshold: widget.user.criticalThreshold,
-      )
-      ..loadTransactions();
+    _categoryCubit = CategoryCubit(sl<CategoryRepository>())..setUser(widget.user.id!);
+    _recurringCubit = RecurringCubit(sl<RecurringRepository>())..setUser(widget.user.id!);
 
-    _txCubit.onMutated = () {
-      _insightsCubit.loadInsights();
-      _streakCubit.loadStreak();
-      _notifCubit.load();
-    };
+    _txFilterCubit = sl<TransactionFilterCubit>()..setUser(widget.user.id!, widget.user.initialBalance)..load();
+    _txActionCubit = sl<TransactionActionCubit>()..setAlertParams(
+      monthlyBudget: widget.user.monthlyBudget,
+      warningThreshold: widget.user.warningThreshold,
+      criticalThreshold: widget.user.criticalThreshold,
+    );
+    _txFormCubit = sl<TransactionFormCubit>();
 
-    _goalCubit = GoalCubit(widget.goalRepo, widget.transactionRepo, _alertService)
+    _goalCubit = GoalCubit(sl<GoalRepository>(), sl<TransactionRepository>(), _alertService)
       ..setUser(widget.user.id!)
       ..loadGoals();
 
@@ -88,17 +92,22 @@ class _AppNavigationState extends State<AppNavigation> {
 
   Future<void> _runStartupChecks() async {
     try {
-      final transactions = await widget.transactionRepo.getAll();
+      final processor = sl<RecurringProcessorService>();
+      final processed = await processor.processDue(widget.user.id!);
+      if (processed > 0) {
+        _txFilterCubit.load();
+      }
+
+      final transactions = await sl<TransactionRepository>().getAll();
       await _alertService.checkBudgetAlerts(
         transactions: transactions,
         monthlyBudget: widget.user.monthlyBudget,
         warningThreshold: widget.user.warningThreshold,
         criticalThreshold: widget.user.criticalThreshold,
       );
-      final goals = await widget.goalRepo.getAll(widget.user.id!);
+      final goals = await sl<GoalRepository>().getAll(widget.user.id!);
       await _alertService.checkGoalAlerts(goals);
 
-      // Restore: check streak on startup
       final streakState = _streakCubit.state;
       if (streakState is StreakLoaded) {
         await _alertService.checkStreakAlerts(streakState.streak.currentStreak);
@@ -110,7 +119,9 @@ class _AppNavigationState extends State<AppNavigation> {
 
   @override
   void dispose() {
-    _txCubit.close();
+    _txActionCubit.close();
+    _txFilterCubit.close();
+    _txFormCubit.close();
     _goalCubit.close();
     _insightsCubit.close();
     _streakCubit.close();
@@ -124,24 +135,42 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: _txCubit),
+        BlocProvider.value(value: _txActionCubit),
+        BlocProvider.value(value: _txFilterCubit),
+        BlocProvider.value(value: _txFormCubit),
         BlocProvider.value(value: _goalCubit),
         BlocProvider.value(value: _insightsCubit),
         BlocProvider.value(value: _streakCubit),
         BlocProvider.value(value: _notifCubit),
+        BlocProvider.value(value: _categoryCubit),
+        BlocProvider.value(value: _recurringCubit),
       ],
       child: BlocBuilder<TabNavigationCubit, int>(
         builder: (context, currentIndex) {
           return Scaffold(
-            body: IndexedStack(
-              index: currentIndex,
-              children: [
-                HomeScreen(onTabSwitch: _onTap),
-                const TransactionsScreen(),
-                const GoalsScreen(),
-                const InsightsScreen(),
-                const ProfileScreen(),
+            body: MultiBlocListener(
+              listeners: [
+                BlocListener<TransactionActionCubit, TransactionActionState>(
+                  listener: (context, state) {
+                    if (state is TransactionActionSuccess) {
+                      _txFilterCubit.load();
+                      _insightsCubit.loadInsights();
+                      _streakCubit.loadStreak();
+                      _notifCubit.load();
+                    }
+                  },
+                ),
               ],
+              child: IndexedStack(
+                index: currentIndex,
+                children: [
+                  HomeScreen(onTabSwitch: _onTap),
+                  const TransactionsScreen(),
+                  const GoalsScreen(),
+                  const InsightsScreen(),
+                  const ProfileScreen(),
+                ],
+              ),
             ),
             bottomNavigationBar: _buildNavBar(currentIndex),
           );
@@ -151,6 +180,8 @@ class _AppNavigationState extends State<AppNavigation> {
   }
 
   Widget _buildNavBar(int currentIndex) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -169,35 +200,35 @@ class _AppNavigationState extends State<AppNavigation> {
             children: [
               _NavItem(
                 icon: Iconsax.home,
-                label: 'Home',
+                label: l10n.home,
                 index: tabHome,
                 current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.receipt,
-                label: 'Transactions',
+                label: l10n.transactions,
                 index: tabTransactions,
                 current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.chart,
-                label: 'Goals',
+                label: l10n.goals,
                 index: tabGoals,
                 current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.graph,
-                label: 'Insights',
+                label: l10n.insights,
                 index: tabInsights,
                 current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.user,
-                label: 'Profile',
+                label: l10n.profile,
                 index: tabProfile,
                 current: currentIndex,
                 onTap: _onTap,
@@ -209,8 +240,6 @@ class _AppNavigationState extends State<AppNavigation> {
     );
   }
 }
-
-// ── Standard nav item ─────────────────────────────────────────────────────────
 
 class _NavItem extends StatelessWidget {
   final IconData icon;

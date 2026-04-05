@@ -10,6 +10,8 @@ import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
 import 'category_drilldown_sheet.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class CategoryPieChart extends StatefulWidget {
   final InsightsLoaded state;
 
@@ -24,6 +26,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final entries = widget.state.expensesByCategory.entries.toList();
     final total = entries.fold(0.0, (s, e) => s + e.value);
     final colorCount = AppColors.categoryColors.length;
@@ -40,7 +43,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Spending by Category', style: AppTextStyles.h3),
+              Text(l10n.spendingByCategory, style: AppTextStyles.h3),
               const Icon(Icons.touch_app, size: 16, color: Colors.grey),
             ],
           ),

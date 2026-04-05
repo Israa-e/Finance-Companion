@@ -2,7 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class SplashLoadingDots extends StatefulWidget {
-  const SplashLoadingDots({super.key});
+  final bool isTestMode;
+  const SplashLoadingDots({super.key, this.isTestMode = false});
 
   @override
   State<SplashLoadingDots> createState() => _SplashLoadingDotsState();
@@ -18,7 +19,10 @@ class _SplashLoadingDotsState extends State<SplashLoadingDots>
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat();
+    );
+    if (!widget.isTestMode) {
+      _ctrl.repeat();
+    }
   }
 
   @override
@@ -44,7 +48,7 @@ class _SplashLoadingDotsState extends State<SplashLoadingDots>
               height: 6,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: opacity),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: opacity),
               ),
             );
           }),

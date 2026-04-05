@@ -4,9 +4,15 @@ import 'package:gap/gap.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/transaction_model.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
+import '../../../../logic/transaction/transaction_action_cubit.dart';
 import '../../transactions/widgets/transaction_list_item.dart';
 import '../../transactions/edit_transaction_screen.dart';
+
+import 'package:finance_companion/l10n/app_localizations.dart';
+import '../../../../logic/transaction/transaction_form_cubit.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
+import '../../../../logic/goal/goal_cubit.dart';
+import '../../../../logic/category/category_cubit.dart';
 
 class CategoryDrilldownSheet extends StatelessWidget {
   final String category;
@@ -20,6 +26,7 @@ class CategoryDrilldownSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final filtered = transactions.where((t) => t.category == category).toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 
@@ -62,7 +69,7 @@ class CategoryDrilldownSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '${filtered.length} entries',
+                        l10n.entriesCount(filtered.length),
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -77,7 +84,7 @@ class CategoryDrilldownSheet extends StatelessWidget {
                 child: filtered.isEmpty
                     ? Center(
                         child: Text(
-                          'No transactions in this category.',
+                          l10n.noTransactionsInCategory,
                           style: AppTextStyles.bodySmall,
                         ),
                       )
@@ -90,23 +97,37 @@ class CategoryDrilldownSheet extends StatelessWidget {
                           return TransactionListItem(
                             transaction: tx,
                             onEdit: () {
+                              final actionCubit =
+                                  context.read<TransactionActionCubit>();
+                              final formCubit =
+                                  context.read<TransactionFormCubit>();
+                              final filterCubit =
+                                  context.read<TransactionFilterCubit>();
+                              final goalCubit = context.read<GoalCubit>();
+                              final categoryCubit =
+                                  context.read<CategoryCubit>();
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      EditTransactionScreen(transaction: tx),
+                                  builder: (_) => MultiBlocProvider(
+                                    providers: [
+                                      BlocProvider.value(value: actionCubit),
+                                      BlocProvider.value(value: formCubit),
+                                      BlocProvider.value(value: filterCubit),
+                                      BlocProvider.value(value: goalCubit),
+                                      BlocProvider.value(value: categoryCubit),
+                                    ],
+                                    child:
+                                        EditTransactionScreen(transaction: tx),
+                                  ),
                                 ),
                               );
                             },
                             onDelete: () {
                               context
-                                  .read<TransactionCubit>()
+                                  .read<TransactionActionCubit>()
                                   .deleteTransaction(tx.id);
-                              // We don't pop here as the list should refresh automatically
-                              // if BlocBuilder is used, but since this is a stateless sheet
-                              // using a passed list, we might need a pop or a refresh.
-                              // However, TransactionCubit.delete will trigger onMutated
-                              // which refreshes the underlying data.
                             },
                           );
                         },

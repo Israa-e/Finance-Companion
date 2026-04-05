@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
-import '../../../../logic/transaction/transaction_state.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
+
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class TransactionFilterSheet extends StatefulWidget {
   const TransactionFilterSheet({super.key});
@@ -24,16 +25,15 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
   @override
   void initState() {
     super.initState();
-    final state = context.read<TransactionCubit>().state;
-    if (state is TransactionLoaded) {
-      _selectedCategories = List.from(state.selectedCategories);
-      _startDate = state.customDateRange?.start;
-      _endDate = state.customDateRange?.end;
-    }
+    final state = context.read<TransactionFilterCubit>().state;
+    _selectedCategories = List.from(state.selectedCategories);
+    _startDate = state.customDateRange?.start;
+    _endDate = state.customDateRange?.end;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final allCategories = [
       ...AppConstants.expenseCategories,
       ...AppConstants.incomeCategories,
@@ -63,15 +63,16 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Filters', style: AppTextStyles.h3),
+              Text(l10n.filters, style: AppTextStyles.h3),
               TextButton(
                 onPressed: () {
-                  context.read<TransactionCubit>().resetFilters();
+                  context.read<TransactionFilterCubit>().resetFilters();
                   Navigator.pop(context);
                 },
                 child: Text(
-                  'Reset All',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.expense),
+                  l10n.resetAll,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.expense),
                 ),
               ),
             ],
@@ -79,7 +80,8 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
           const Gap(20),
 
           // Categories
-          Text('Categories', style: AppTextStyles.label.copyWith(fontSize: 13)),
+          Text(l10n.categories,
+              style: AppTextStyles.label.copyWith(fontSize: 13)),
           const Gap(12),
           SizedBox(
             height: 40,
@@ -106,14 +108,18 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
                   selectedColor: AppColors.primary.withValues(alpha: 0.2),
                   checkmarkColor: AppColors.primary,
                   labelStyle: AppTextStyles.bodySmall.copyWith(
-                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   side: BorderSide(
-                    color: isSelected ? AppColors.primary : Theme.of(context).dividerColor,
+                    color: isSelected
+                        ? AppColors.primary
+                        : Theme.of(context).dividerColor,
                   ),
                 );
               },
@@ -122,15 +128,16 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
           const Gap(24),
 
           // Date Range
-          Text('Date Range', style: AppTextStyles.label.copyWith(fontSize: 13)),
+          Text(l10n.dateRange,
+              style: AppTextStyles.label.copyWith(fontSize: 13)),
           const Gap(12),
           Row(
             children: [
               Expanded(
                 child: _DateButton(
-                  label: _startDate != null 
-                      ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}' 
-                      : 'Start Date',
+                  label: _startDate != null
+                      ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
+                      : l10n.startDate,
                   icon: Iconsax.calendar_1,
                   onTap: () => _pickDate(context, true),
                 ),
@@ -138,9 +145,9 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
               const Gap(12),
               Expanded(
                 child: _DateButton(
-                  label: _endDate != null 
-                      ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}' 
-                      : 'End Date',
+                  label: _endDate != null
+                      ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                      : l10n.endDate,
                   icon: Iconsax.calendar_2,
                   onTap: () => _pickDate(context, false),
                 ),
@@ -155,7 +162,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
             height: 54,
             child: ElevatedButton(
               onPressed: () {
-                final cubit = context.read<TransactionCubit>();
+                final cubit = context.read<TransactionFilterCubit>();
                 cubit.updateSelectedCategories(_selectedCategories);
                 cubit.updateCustomDateRange(_startDate, _endDate);
                 Navigator.pop(context);
@@ -168,7 +175,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet> {
                 elevation: 0,
               ),
               child: Text(
-                'Apply Filters',
+                l10n.applyFilters,
                 style: AppTextStyles.body.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,

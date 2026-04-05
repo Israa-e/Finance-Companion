@@ -1,6 +1,6 @@
-// ignore_for_file: library_private_types_in_public_api
-
+import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
+import '../../l10n/app_localizations.dart';
 import '../../data/models/transaction_model.dart';
 
 enum TransactionFilter {
@@ -16,18 +16,19 @@ enum TransactionFilter {
 enum DateRangeFilter { today, thisWeek, thisMonth, lastMonth, all }
 
 extension DateRangeFilterExt on DateRangeFilter {
-  String get label {
+  String label(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (this) {
       case DateRangeFilter.today:
-        return 'Today';
+        return l10n.today;
       case DateRangeFilter.thisWeek:
-        return 'This week';
+        return l10n.thisWeek;
       case DateRangeFilter.thisMonth:
-        return 'This month';
+        return l10n.thisMonth;
       case DateRangeFilter.lastMonth:
-        return 'Last month';
+        return l10n.lastMonth;
       case DateRangeFilter.all:
-        return 'All time';
+        return l10n.all;
     }
   }
 
@@ -54,29 +55,33 @@ extension DateRangeFilterExt on DateRangeFilter {
   }
 }
 
-class CustomDateRange {
+class CustomDateRange extends Equatable {
   final DateTime start;
   final DateTime end;
   const CustomDateRange(this.start, this.end);
+
+  @override
+  List<Object?> get props => [start, end];
 }
 
 extension FilterExt on TransactionFilter {
-  String get label {
+  String label(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (this) {
       case TransactionFilter.all:
-        return 'All';
+        return l10n.all;
       case TransactionFilter.income:
-        return 'Income';
+        return l10n.income;
       case TransactionFilter.expense:
-        return 'Expense';
+        return l10n.expense;
       case TransactionFilter.today:
-        return 'Today';
+        return l10n.today;
       case TransactionFilter.thisWeek:
-        return 'This Week';
+        return l10n.thisWeek;
       case TransactionFilter.thisMonth:
-        return 'This Month';
+        return l10n.thisMonth;
       case TransactionFilter.lastMonth:
-        return 'Last Month';
+        return l10n.lastMonth;
     }
   }
 
@@ -100,202 +105,4 @@ extension FilterExt on TransactionFilter {
         return null;
     }
   }
-}
-
-abstract class TransactionState extends Equatable {
-  const TransactionState();
-  @override
-  List<Object?> get props => [];
-}
-
-class TransactionInitial extends TransactionState {}
-
-class TransactionLoading extends TransactionState {}
-
-class TransactionLoaded extends TransactionState {
-  final List<TransactionModel> transactions;
-  final double balance;
-  final double totalIncome;
-  final double totalExpense;
-  final double initialBalance;
-
-  // Search & Advanced Filter
-  final String searchQuery;
-  final TransactionFilter activeFilter;
-  final List<String> selectedCategories;
-  final CustomDateRange? customDateRange;
-
-  // Form states
-  final TransactionType formType;
-  final String formCategory;
-  final double formAmount;
-  final DateTime formDate;
-  final String formTitle;
-  final String formNote;
-  final bool isSubmitting;
-  final bool submitSuccess;
-  final String? formErrorMessage;
-
-  const TransactionLoaded({
-    required this.transactions,
-    required this.balance,
-    required this.totalIncome,
-    required this.totalExpense,
-    this.initialBalance = 0.0,
-    this.searchQuery = '',
-    this.activeFilter = TransactionFilter.all,
-    this.selectedCategories = const [],
-    this.customDateRange,
-    this.formType = TransactionType.expense,
-    this.formCategory = 'Food & Drinks',
-    this.formAmount = 0.0,
-    required this.formDate,
-    this.formTitle = '',
-    this.formNote = '',
-    this.isSubmitting = false,
-    this.submitSuccess = false,
-    this.formErrorMessage,
-  });
-
-  TransactionLoaded copyWith({
-    List<TransactionModel>? transactions,
-    double? balance,
-    double? totalIncome,
-    double? totalExpense,
-    double? initialBalance,
-    String? searchQuery,
-    TransactionFilter? activeFilter,
-    List<String>? selectedCategories,
-    CustomDateRange? customDateRange,
-    TransactionType? formType,
-    String? formCategory,
-    double? formAmount,
-    DateTime? formDate,
-    String? formTitle,
-    String? formNote,
-    bool? isSubmitting,
-    bool? submitSuccess,
-    String? formErrorMessage,
-  }) {
-    return TransactionLoaded(
-      transactions: transactions ?? this.transactions,
-      balance: balance ?? this.balance,
-      totalIncome: totalIncome ?? this.totalIncome,
-      totalExpense: totalExpense ?? this.totalExpense,
-      initialBalance: initialBalance ?? this.initialBalance,
-      searchQuery: searchQuery ?? this.searchQuery,
-      activeFilter: activeFilter ?? this.activeFilter,
-      selectedCategories: selectedCategories ?? this.selectedCategories,
-      customDateRange: customDateRange ?? this.customDateRange,
-      formType: formType ?? this.formType,
-      formCategory: formCategory ?? this.formCategory,
-      formAmount: formAmount ?? this.formAmount,
-      formDate: formDate ?? this.formDate,
-      formTitle: formTitle ?? this.formTitle,
-      formNote: formNote ?? this.formNote,
-      isSubmitting: isSubmitting ?? this.isSubmitting,
-      // FIX: submitSuccess must be explicitly passed — never inherit true
-      submitSuccess: submitSuccess ?? false,
-      formErrorMessage: formErrorMessage,
-    );
-  }
-
-  /// Filters transactions by type AND date range AND search query AND custom filters.
-  List<TransactionModel> get filteredTransactions {
-    return transactions.where((tx) {
-      // ── Search ──────────────────────────────────────────────────────────
-      final q = searchQuery.toLowerCase();
-      final matchesSearch = q.isEmpty ||
-          tx.title.toLowerCase().contains(q) ||
-          tx.category.toLowerCase().contains(q) ||
-          (tx.note?.toLowerCase().contains(q) ?? false);
-
-      // ── Type filter ──────────────────────────────────────────────────────
-      final typeFilter = activeFilter.type;
-      final matchesType = typeFilter == null || tx.type == typeFilter;
-
-      // ── Category filter ──────────────────────────────────────────────────
-      final matchesCategory = selectedCategories.isEmpty ||
-          selectedCategories.contains(tx.category);
-
-      // ── Date range filter (Standard or Custom) ──────────────────────────
-      bool matchesDate = true;
-      if (customDateRange != null) {
-        matchesDate = !tx.date.isBefore(customDateRange!.start) &&
-            !tx.date.isAfter(customDateRange!.end);
-      } else {
-        final rangeFilter = activeFilter.dateRange;
-        if (rangeFilter != null) {
-          final range = rangeFilter.resolve();
-          if (range != null) {
-            matchesDate =
-                !tx.date.isBefore(range.start) && !tx.date.isAfter(range.end);
-          }
-        }
-      }
-
-      return matchesSearch && matchesType && matchesCategory && matchesDate;
-    }).toList();
-  }
-
-  Map<String, List<TransactionModel>> get groupedTransactions {
-    final filtered = filteredTransactions;
-    final groups = <String, List<TransactionModel>>{};
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-
-    for (final tx in filtered) {
-      final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
-      String key;
-
-      if (txDate.isAtSameMomentAs(today)) {
-        key = 'Today';
-      } else if (txDate.isAtSameMomentAs(yesterday)) {
-        key = 'Yesterday';
-      } else {
-        key = '${_monthName(txDate.month)} ${txDate.day}, ${txDate.year}';
-      }
-
-      groups.putIfAbsent(key, () => []).add(tx);
-    }
-
-    return groups;
-  }
-
-  String _monthName(int month) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return months[month - 1];
-  }
-
-  @override
-  List<Object?> get props => [
-        transactions,
-        balance,
-        totalIncome,
-        totalExpense,
-        initialBalance,
-        searchQuery,
-        activeFilter,
-        formType,
-        formCategory,
-        formAmount,
-        formDate,
-        formTitle,
-        formNote,
-        isSubmitting,
-        submitSuccess,
-        formErrorMessage,
-      ];
-}
-
-class TransactionError extends TransactionState {
-  final String message;
-  const TransactionError(this.message);
-  @override
-  List<Object?> get props => [message];
 }

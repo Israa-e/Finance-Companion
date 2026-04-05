@@ -11,11 +11,14 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/empty_state_widget.dart';
 import '../../shared/widgets/custom_button.dart';
 
+import 'package:finance_companion/l10n/app_localizations.dart';
+
 class GoalsScreen extends StatelessWidget {
   const GoalsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -27,7 +30,7 @@ class GoalsScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Goals', style: AppTextStyles.h2),
+                  Text(l10n.goals, style: AppTextStyles.h2),
                   GestureDetector(
                     onTap: () => _showAddGoal(context),
                     child: Container(
@@ -62,11 +65,11 @@ class GoalsScreen extends StatelessWidget {
                     }
                     if (state is! GoalLoaded || state.goals.isEmpty) {
                       return EmptyStateWidget(
-                        title: 'No goals yet',
-                        subtitle: 'Set a savings goal to track your progress',
+                        title: l10n.noGoalsTitle,
+                        subtitle: l10n.noGoalsSubtitle,
                         icon: Iconsax.chart,
                         action: CustomButton(
-                          label: 'Add Goal',
+                          label: l10n.addGoal,
                           onTap: () => _showAddGoal(context),
                         ),
                       );

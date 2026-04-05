@@ -6,12 +6,14 @@ import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../logic/auth/auth_cubit.dart';
 import '../../../../logic/auth/auth_state.dart';
-import '../../../../logic/transaction/transaction_cubit.dart';
+import '../../../../logic/transaction/transaction_filter_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+
+import 'package:finance_companion/l10n/app_localizations.dart';
 
 class EditProfileSheet extends StatefulWidget {
   final String initialName;
@@ -61,10 +63,11 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   }
 
   void _submit(BuildContext context, AuthAuthenticated state) {
+    final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name cannot be empty')),
+        SnackBar(content: Text(l10n.nameCannotBeEmpty)),
       );
       return;
     }
@@ -74,8 +77,6 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     final newBudget =
         double.tryParse(_budgetController.text) ?? widget.initialMonthlyBudget;
 
-    // FIX: removed the dead `updatedUser` variable that was built but never
-    // used. We call updateProfileWithBalance directly with the correct values.
     context.read<AuthCubit>().saveProfile(
           name: name,
           imagePath: state.editImagePath ?? state.user.imagePath,
@@ -86,6 +87,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   }
 
   void _showCurrencyPicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -111,7 +113,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
               ),
             ),
             const Gap(16),
-            Text('Select Currency', style: AppTextStyles.h3),
+            Text(l10n.selectCurrency, style: AppTextStyles.h3),
             const Gap(16),
             Flexible(
               child: ListView(
@@ -188,11 +190,8 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated && state.updateSuccess) {
-          // Refresh transaction balance to reflect the new starting balance
-          context
-              .read<TransactionCubit>()
-              .setInitialBalance(state.user.initialBalance);
-          context.read<TransactionCubit>().loadTransactions();
+          // Refresh transaction fitlers to reflect changes (balance, currency)
+          context.read<TransactionFilterCubit>().load();
           Navigator.pop(context);
         }
         if (state is AuthAuthenticated && state.errorMessage != null) {
