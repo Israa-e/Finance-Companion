@@ -213,5 +213,19 @@
   "saveCurrentView": "حفظ العرض الحالي",
   "viewNameHint": "اسم العرض (مثلاً: عمل فقط)",
   "entriesCount": "{count} قيود",
-  "@entriesCount": { "placeholders": { "count": { "type": "int" } } }
+  "@entriesCount": { "placeholders": { "count": { "type": "int" } } },
+  "newGoal": "هدف جديد",
+  "goalTitle": "عنوان الهدف",
+  "goalTitleHint": "مثل: لابتوب جديد",
+  "targetAmount": "المبلغ المستهدف",
+  "selectDate": "اختر التاريخ",
+  "createGoal": "إنشاء الهدف",
+  "pleaseEnterTitle": "يرجى إدخال عنوان",
+  "pleaseEnterAmount": "يرجى إدخال المبلغ المستهدف",
+  "amountGreaterThanZero": "يجب أن يكون المبلغ أكبر من الصفر",
+  "saveChanges": "حفظ التغييرات",
+  "confirm": "تأكيد",
+  "daily": "يومياً",
+  "weekly": "أسبوعياً",
+  "monthly": "شهرياً"
 }

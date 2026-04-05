@@ -21,22 +21,39 @@ class CategoryPickerSheet extends StatelessWidget {
 
   static IconData getIcon(dynamic category) {
     if (category is CategoryModel) {
+      // System categories (userId is null) use Iconsax fonts
+      if (category.userId == null) {
+        return IconData(category.iconCode,
+            fontFamily: 'Iconsax', fontPackage: 'iconsax');
+      }
       return IconData(category.iconCode, fontFamily: 'MaterialIcons');
     }
     // Fallback for string-based calls if any remains during transition
     switch (category.toString()) {
-      case 'Food': return Iconsax.coffee;
-      case 'Shopping': return Iconsax.shopping_bag;
-      case 'Transport': return Iconsax.car;
-      case 'Rent': return Iconsax.house;
-      case 'Entertainment': return Iconsax.game;
-      case 'Health': return Iconsax.health;
-      case 'Bills': return Iconsax.bill;
-      case 'Salary': return Iconsax.wallet_3;
-      case 'Freelance': return Iconsax.briefcase;
-      case 'Investment': return Iconsax.chart_2;
-      case 'Gift': return Iconsax.gift;
-      default: return Iconsax.more_square;
+      case 'Food':
+        return Iconsax.coffee;
+      case 'Shopping':
+        return Iconsax.shopping_bag;
+      case 'Transport':
+        return Iconsax.car;
+      case 'Rent':
+        return Iconsax.house;
+      case 'Entertainment':
+        return Iconsax.game;
+      case 'Health':
+        return Iconsax.health;
+      case 'Bills':
+        return Iconsax.bill;
+      case 'Salary':
+        return Iconsax.wallet_3;
+      case 'Freelance':
+        return Iconsax.briefcase;
+      case 'Investment':
+        return Iconsax.chart_2;
+      case 'Gift':
+        return Iconsax.gift;
+      default:
+        return Iconsax.more_square;
     }
   }
 
@@ -47,7 +64,8 @@ class CategoryPickerSheet extends StatelessWidget {
       builder: (context, state) {
         List<CategoryModel> categories = [];
         if (state is CategoryLoaded) {
-          categories = isIncome ? state.incomeCategories : state.expenseCategories;
+          categories =
+              isIncome ? state.incomeCategories : state.expenseCategories;
         }
 
         return Container(
@@ -83,13 +101,15 @@ class CategoryPickerSheet extends StatelessWidget {
               else if (categories.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(40.0),
-                  child: Text(l10n.noCategoriesFound, style: AppTextStyles.body),
+                  child:
+                      Text(l10n.noCategoriesFound, style: AppTextStyles.body),
                 )
               else
                 Flexible(
                   child: GridView.builder(
                     shrinkWrap: true,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
@@ -99,7 +119,13 @@ class CategoryPickerSheet extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final category = categories[index];
                       final isSelected = category.name == selectedCategory;
-                      final icon = IconData(category.iconCode, fontFamily: 'MaterialIcons');
+
+                      // System categories (userId is null) use Iconsax fonts
+                      final IconData icon = category.userId == null
+                          ? IconData(category.iconCode,
+                              fontFamily: 'Iconsax', fontPackage: 'iconsax')
+                          : IconData(category.iconCode,
+                              fontFamily: 'MaterialIcons');
 
                       return GestureDetector(
                         onTap: () {
@@ -124,7 +150,9 @@ class CategoryPickerSheet extends StatelessWidget {
                             children: [
                               Icon(
                                 icon,
-                                color: isSelected ? Colors.white : Color(category.colorValue),
+                                color: isSelected
+                                    ? Colors.white
+                                    : Color(category.colorValue),
                                 size: 28,
                               ),
                               const Gap(8),
@@ -135,7 +163,9 @@ class CategoryPickerSheet extends StatelessWidget {
                                   color: isSelected
                                       ? Colors.white
                                       : Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
                                   fontSize: 11,
                                 ),
                               ),

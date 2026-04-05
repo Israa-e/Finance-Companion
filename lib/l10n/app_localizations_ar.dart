@@ -641,4 +641,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String entriesCount(int count) {
     return '$count قيود';
   }
+
+  @override
+  String get newGoal => 'هدف جديد';
+
+  @override
+  String get goalTitle => 'عنوان الهدف';
+
+  @override
+  String get goalTitleHint => 'مثل: لابتوب جديد';
+
+  @override
+  String get targetAmount => 'المبلغ المستهدف';
+
+  @override
+  String get selectDate => 'اختر التاريخ';
+
+  @override
+  String get createGoal => 'إنشاء الهدف';
+
+  @override
+  String get pleaseEnterTitle => 'يرجى إدخال عنوان';
+
+  @override
+  String get pleaseEnterAmount => 'يرجى إدخال المبلغ المستهدف';
+
+  @override
+  String get amountGreaterThanZero => 'يجب أن يكون المبلغ أكبر من الصفر';
+
+  @override
+  String get saveChanges => 'حفظ التغييرات';
+
+  @override
+  String get confirm => 'تأكيد';
+
+  @override
+  String get daily => 'يومياً';
+
+  @override
+  String get weekly => 'أسبوعياً';
+
+  @override
+  String get monthly => 'شهرياً';
 }

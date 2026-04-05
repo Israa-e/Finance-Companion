@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
@@ -32,6 +33,7 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
@@ -54,7 +56,7 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
           ),
           const Gap(24),
           Text(
-            'Select Date',
+            l10n.selectDate,
             style: AppTextStyles.h3,
           ),
           const Gap(24),
@@ -87,7 +89,7 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(
-                    'Cancel',
+                    l10n.cancel,
                     style: AppTextStyles.body.copyWith(color: Colors.grey),
                   ),
                 ),
@@ -108,7 +110,8 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(l10n.confirm,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

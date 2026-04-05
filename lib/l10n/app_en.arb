@@ -213,5 +213,19 @@
   "saveCurrentView": "Save Current View",
   "viewNameHint": "View Name (e.g., Business Only)",
   "entriesCount": "{count} entries",
-  "@entriesCount": { "placeholders": { "count": { "type": "int" } } }
+  "@entriesCount": { "placeholders": { "count": { "type": "int" } } },
+  "newGoal": "New Goal",
+  "goalTitle": "Goal title",
+  "goalTitleHint": "e.g. New laptop",
+  "targetAmount": "Target amount",
+  "selectDate": "Select Date",
+  "createGoal": "Create Goal",
+  "pleaseEnterTitle": "Please enter a title",
+  "pleaseEnterAmount": "Please enter a target amount",
+  "amountGreaterThanZero": "Amount must be greater than zero",
+  "saveChanges": "Save Changes",
+  "confirm": "Confirm",
+  "daily": "Daily",
+  "weekly": "Weekly",
+  "monthly": "Monthly"
 }

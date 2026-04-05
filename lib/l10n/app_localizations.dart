@@ -1281,6 +1281,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} entries'**
   String entriesCount(int count);
+
+  /// No description provided for @newGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'New Goal'**
+  String get newGoal;
+
+  /// No description provided for @goalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal title'**
+  String get goalTitle;
+
+  /// No description provided for @goalTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. New laptop'**
+  String get goalTitleHint;
+
+  /// No description provided for @targetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Target amount'**
+  String get targetAmount;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectDate;
+
+  /// No description provided for @createGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Goal'**
+  String get createGoal;
+
+  /// No description provided for @pleaseEnterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a title'**
+  String get pleaseEnterTitle;
+
+  /// No description provided for @pleaseEnterAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a target amount'**
+  String get pleaseEnterAmount;
+
+  /// No description provided for @amountGreaterThanZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be greater than zero'**
+  String get amountGreaterThanZero;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
 }
 
 class _AppLocalizationsDelegate

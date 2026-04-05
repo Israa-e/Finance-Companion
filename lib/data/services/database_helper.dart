@@ -20,7 +20,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       return await openDatabase(
         fileName,
-        version: 10,
+        version: 11,
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
       );
@@ -30,7 +30,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 10, // v10: Saved Transaction Views
+      version: 11, // v11: Fix Iconsax icon codepoints
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -127,25 +127,33 @@ class DatabaseHelper {
       await _createNotificationsTable(db);
     }
     if (oldVersion < 3) {
-      await db.execute('ALTER TABLE users ADD COLUMN monthlyBudget REAL NOT NULL DEFAULT 0');
-      await db.execute('ALTER TABLE transactions ADD COLUMN lastUpdated TEXT NOT NULL DEFAULT ""');
+      await db.execute(
+          'ALTER TABLE users ADD COLUMN monthlyBudget REAL NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE transactions ADD COLUMN lastUpdated TEXT NOT NULL DEFAULT ""');
     }
     if (oldVersion < 4) {
-      await db.execute('ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT "USD"');
+      await db.execute(
+          'ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT "USD"');
     }
     if (oldVersion < 5) {
-      await db.execute('ALTER TABLE users ADD COLUMN warningThreshold REAL NOT NULL DEFAULT 0.8');
-      await db.execute('ALTER TABLE users ADD COLUMN criticalThreshold REAL NOT NULL DEFAULT 1.0');
+      await db.execute(
+          'ALTER TABLE users ADD COLUMN warningThreshold REAL NOT NULL DEFAULT 0.8');
+      await db.execute(
+          'ALTER TABLE users ADD COLUMN criticalThreshold REAL NOT NULL DEFAULT 1.0');
     }
     if (oldVersion < 6) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 1');
+      await db.execute(
+          'ALTER TABLE transactions ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 1');
     }
     if (oldVersion < 7) {
       await db.execute('ALTER TABLE users ADD COLUMN categoryBudgets TEXT');
-      await db.execute('ALTER TABLE users ADD COLUMN biometricEnabled INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE users ADD COLUMN biometricEnabled INTEGER NOT NULL DEFAULT 0');
     }
     if (oldVersion < 8) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE transactions ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0');
     }
     if (oldVersion < 9) {
       await db.execute('''
@@ -181,22 +189,28 @@ class DatabaseHelper {
     if (oldVersion < 10) {
       await _createSavedViewsTable(db);
     }
+    if (oldVersion < 11) {
+      // Fix wrong Iconsax codepoints in system categories
+      await db.delete('categories', where: 'userId IS NULL');
+      await _seedDefaultCategories(db);
+    }
   }
 
   Future<void> _seedDefaultCategories(Database db) async {
     final now = DateTime.now().toIso8601String();
+    // Codepoints verified from iconsax-0.0.8 package source
     final defaults = [
-      ['Salary', 0xe0b2, 0xFF4CAF50, 'income'],
-      ['Investment', 0xe6bb, 0xFF2196F3, 'income'],
-      ['Gift', 0xe29d, 0xFFFF9800, 'income'],
-      ['Freelance', 0xe14f, 0xFF9C27B0, 'income'],
-      ['Food', 0xe532, 0xFFFF5252, 'expense'],
-      ['Rent', 0xe318, 0xFF795548, 'expense'],
-      ['Shopping', 0xe55f, 0xFFE91E63, 'expense'],
-      ['Transport', 0xe1d5, 0xFF607D8B, 'expense'],
-      ['Entertainment', 0xe405, 0xFF673AB7, 'expense'],
-      ['Bills', 0xee2c, 0xFFFFC107, 'expense'],
-      ['Health', 0xe306, 0xFF00BCD4, 'expense'],
+      ['Salary', 0xec7b, 0xFF4CAF50, 'income'], // wallet_money
+      ['Investment', 0xe9b8, 0xFF2196F3, 'income'], // chart_2
+      ['Gift', 0xea83, 0xFFFF9800, 'income'], // gift
+      ['Freelance', 0xeb6e, 0xFF9C27B0, 'income'], // personalcard
+      ['Food', 0xe9db, 0xFFFF5252, 'expense'], // coffee
+      ['Rent', 0xeab8, 0xFF795548, 'expense'], // house
+      ['Shopping', 0xebee, 0xFFE91E63, 'expense'], // shopping_bag
+      ['Transport', 0xe9a5, 0xFF607D8B, 'expense'], // car
+      ['Entertainment', 0xea7d, 0xFF673AB7, 'expense'], // game
+      ['Bills', 0xeb93, 0xFFFFC107, 'expense'], // receipt_2
+      ['Health', 0xeaa1, 0xFF00BCD4, 'expense'], // health
     ];
 
     for (var cat in defaults) {

@@ -154,8 +154,10 @@ class _CategoryTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(
-            IconData(category.iconCode,
-                fontFamily: 'Iconsax', fontPackage: 'iconsax'),
+            category.userId == null
+                ? IconData(category.iconCode,
+                    fontFamily: 'Iconsax', fontPackage: 'iconsax')
+                : IconData(category.iconCode, fontFamily: 'MaterialIcons'),
             color: color,
             size: 22,
           ),
@@ -246,10 +248,11 @@ class _AddCategorySheetState extends State<_AddCategorySheet> {
               spreadRadius: 5),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -399,7 +402,7 @@ class _AddCategorySheetState extends State<_AddCategorySheet> {
             ),
           ),
         ],
-      ),
+      ),),
     );
   }
 }

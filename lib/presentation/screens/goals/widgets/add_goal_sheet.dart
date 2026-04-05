@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:finance_companion/l10n/app_localizations.dart';
 import '../../../../logic/goal/goal_cubit.dart';
 import '../../../../logic/goal/goal_state.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -59,6 +60,7 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
       builder: (context, state) {
         if (state is! GoalLoaded) return const SizedBox.shrink();
         final cubit = context.read<GoalCubit>();
+        final l10n = AppLocalizations.of(context)!;
 
         return Padding(
           padding: EdgeInsets.only(
@@ -92,22 +94,22 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
                         ),
                       ),
                       const Gap(16),
-                      Text('New Goal', style: AppTextStyles.h3),
+                      Text(l10n.newGoal, style: AppTextStyles.h3),
                       const Gap(16),
                       _buildEmojiPicker(context, cubit, state.formEmoji),
                       const Gap(16),
                       CustomTextField(
-                        label: 'Goal title',
+                        label: l10n.goalTitle,
                         controller: _titleController,
-                        hint: 'e.g. New laptop',
+                        hint: l10n.goalTitleHint,
                         onChanged: (v) => cubit.updateFormTitle(v),
                         validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Please enter a title'
+                            ? l10n.pleaseEnterTitle
                             : null,
                       ),
                       const Gap(12),
                       CustomTextField(
-                        label: 'Target amount',
+                        label: l10n.targetAmount,
                         controller: _amountController,
                         hint: '0.00',
                         keyboardType: const TextInputType.numberWithOptions(
@@ -124,12 +126,12 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
                         ],
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Please enter a target amount';
+                            return l10n.pleaseEnterAmount;
                           }
                           final parsed = double.tryParse(v);
-                          if (parsed == null) return 'Enter a valid number';
+                          if (parsed == null) return l10n.invalidAmount;
                           if (parsed <= 0) {
-                            return 'Amount must be greater than zero';
+                            return l10n.amountGreaterThanZero;
                           }
                           return null;
                         },
@@ -143,8 +145,8 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
                         ),
                         title: Text(
                           state.formEndDate != null
-                              ? 'End Date: ${state.formEndDate!.day}/${state.formEndDate!.month}/${state.formEndDate!.year}'
-                              : 'End Date: Select Date',
+                              ? '${l10n.endDate}: ${state.formEndDate!.day}/${state.formEndDate!.month}/${state.formEndDate!.year}'
+                              : '${l10n.endDate}: ${l10n.selectDate}',
                           style: AppTextStyles.body,
                         ),
                         onTap: () => _pickDate(context, cubit,
@@ -152,7 +154,7 @@ class _AddGoalSheetState extends State<AddGoalSheet> {
                       ),
                       const Gap(16),
                       CustomButton(
-                        label: 'Create Goal',
+                        label: l10n.createGoal,
                         isLoading: state.isSubmitting,
                         onTap: () {
                           if (_formKey.currentState!.validate()) {

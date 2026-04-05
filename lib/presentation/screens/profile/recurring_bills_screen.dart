@@ -222,60 +222,65 @@ class _AddRecurringBillSheetState extends State<_AddRecurringBillSheet> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppLocalizations.of(context)!.newRecurringBill,
-              style: AppTextStyles.h3),
-          const Gap(24),
-          TextField(
-            controller: _titleController,
-            decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.title,
-                hintText: AppLocalizations.of(context)!.netflixHint),
-          ),
-          const Gap(16),
-          TextField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.amount,
-                prefixText: '\$ '),
-          ),
-          const Gap(20),
-          _buildCategoryPicker(context),
-          const Gap(20),
-          _buildFrequencyPicker(),
-          const Gap(32),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                final amount = double.tryParse(_amountController.text);
-                if (_titleController.text.isNotEmpty && amount != null) {
-                  context.read<RecurringCubit>().addTemplate(
-                        title: _titleController.text,
-                        amount: amount,
-                        type: _type,
-                        category: _category,
-                        frequency: _frequency,
-                        nextDate: _startDate,
-                      );
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-              ),
-              child: Text(AppLocalizations.of(context)!.addRecurringBill,
-                  style: const TextStyle(color: Colors.white)),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(AppLocalizations.of(context)!.newRecurringBill,
+                style: AppTextStyles.h3),
+            const Gap(24),
+            TextField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.title,
+                  hintText: AppLocalizations.of(context)!.netflixHint),
             ),
-          ),
-        ],
+            const Gap(16),
+            TextField(
+              controller: _amountController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.amount,
+                prefixText:
+                    '${(context.read<AuthCubit>().state as AuthAuthenticated).user.currency} ',
+              ),
+            ),
+            const Gap(20),
+            _buildCategoryPicker(context),
+            const Gap(20),
+            _buildFrequencyPicker(),
+            const Gap(32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final amount = double.tryParse(_amountController.text);
+                  if (_titleController.text.isNotEmpty && amount != null) {
+                    context.read<RecurringCubit>().addTemplate(
+                          title: _titleController.text,
+                          amount: amount,
+                          type: _type,
+                          category: _category,
+                          frequency: _frequency,
+                          nextDate: _startDate,
+                        );
+                    Navigator.pop(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(AppLocalizations.of(context)!.addRecurringBill,
+                    style: const TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -314,9 +319,23 @@ class _AddRecurringBillSheetState extends State<_AddRecurringBillSheet> {
   }
 
   Widget _buildFrequencyPicker() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: RecurringFrequency.values.map((f) {
         final isSelected = _frequency == f;
+        String label = '';
+        switch (f) {
+          case RecurringFrequency.daily:
+            label = l10n.daily;
+            break;
+          case RecurringFrequency.weekly:
+            label = l10n.weekly;
+            break;
+          case RecurringFrequency.monthly:
+            label = l10n.monthly;
+            break;
+        }
+
         return Expanded(
           child: GestureDetector(
             onTap: () => setState(() => _frequency = f),
@@ -333,7 +352,7 @@ class _AddRecurringBillSheetState extends State<_AddRecurringBillSheet> {
               ),
               child: Center(
                 child: Text(
-                  f.name.toUpperCase(),
+                  label.toUpperCase(),
                   style: AppTextStyles.body.copyWith(
                     color: isSelected
                         ? Colors.white

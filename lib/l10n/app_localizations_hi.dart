@@ -645,4 +645,46 @@ class AppLocalizationsHi extends AppLocalizations {
   String entriesCount(int count) {
     return '$count प्रविष्टियां';
   }
+
+  @override
+  String get newGoal => 'नया लक्ष्य';
+
+  @override
+  String get goalTitle => 'लक्ष्य का शीर्षक';
+
+  @override
+  String get goalTitleHint => 'जैसे: नया लैपटॉप';
+
+  @override
+  String get targetAmount => 'लक्ष्य राशि';
+
+  @override
+  String get selectDate => 'तारीख चुनें';
+
+  @override
+  String get createGoal => 'लक्ष्य बनाएं';
+
+  @override
+  String get pleaseEnterTitle => 'कृपया एक शीर्षक दर्ज करें';
+
+  @override
+  String get pleaseEnterAmount => 'कृपया लक्ष्य राशि दर्ज करें';
+
+  @override
+  String get amountGreaterThanZero => 'राशि शून्य से अधिक होनी चाहिए';
+
+  @override
+  String get saveChanges => 'परिवर्तन सहेजें';
+
+  @override
+  String get confirm => 'पुष्टि करें';
+
+  @override
+  String get daily => 'दैनिक';
+
+  @override
+  String get weekly => 'साप्ताहिक';
+
+  @override
+  String get monthly => 'मासिक';
 }

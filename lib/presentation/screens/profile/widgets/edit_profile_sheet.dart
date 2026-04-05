@@ -203,6 +203,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       builder: (context, state) {
         if (state is! AuthAuthenticated) return const SizedBox.shrink();
         final cubit = context.read<AuthCubit>();
+        final l10n = AppLocalizations.of(context)!;
         final currentImage = state.editImagePath ?? state.user.imagePath;
 
         return Container(
@@ -230,7 +231,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   ),
                 ),
                 const Gap(16),
-                Text('Edit Profile', style: AppTextStyles.h3),
+                Text(l10n.editProfile, style: AppTextStyles.h3),
                 const Gap(20),
 
                 // Avatar picker
@@ -268,16 +269,16 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
 
                 // Name field
                 CustomTextField(
-                  label: 'Name',
+                  label: l10n.fullName,
                   controller: _nameController,
-                  hint: 'Enter your name',
+                  hint: l10n.tapToChangePhoto,
                   onChanged: (v) => cubit.updateEditName(v),
                 ),
                 const Gap(16),
 
                 // Starting balance
                 CustomTextField(
-                  label: 'Starting Balance',
+                  label: l10n.startingBalance,
                   controller: _balanceController,
                   hint: '0.00',
                   keyboardType:
@@ -293,7 +294,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
 
                 // Monthly budget
                 CustomTextField(
-                  label: 'Monthly Budget',
+                  label: l10n.monthlyBudget,
                   controller: _budgetController,
                   hint: '0.00',
                   keyboardType:
@@ -314,7 +315,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                     Padding(
                       padding: const EdgeInsets.only(left: 4, bottom: 8),
                       child: Text(
-                        'Currency',
+                        l10n.language, // Reusing 'language' or should I use 'currency'?
                         style:
                             Theme.of(context).textTheme.labelMedium?.copyWith(
                                   fontSize: 13,
@@ -334,7 +335,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                 const Gap(24),
 
                 CustomButton(
-                  label: 'Save Changes',
+                  label: l10n.saveChanges,
                   isLoading: state.isUpdating,
                   onTap: () => _submit(context, state),
                 ),

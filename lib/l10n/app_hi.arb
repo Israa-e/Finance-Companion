@@ -214,5 +214,19 @@
   "saveCurrentView": "वर्तमान दृश्य सहेजें",
   "viewNameHint": "दृश्य का नाम (जैसे, केवल व्यवसाय)",
   "entriesCount": "{count} प्रविष्टियां",
-  "@entriesCount": { "placeholders": { "count": { "type": "int" } } }
+  "@entriesCount": { "placeholders": { "count": { "type": "int" } } },
+  "newGoal": "नया लक्ष्य",
+  "goalTitle": "लक्ष्य का शीर्षक",
+  "goalTitleHint": "जैसे: नया लैपटॉप",
+  "targetAmount": "लक्ष्य राशि",
+  "selectDate": "तारीख चुनें",
+  "createGoal": "लक्ष्य बनाएं",
+  "pleaseEnterTitle": "कृपया एक शीर्षक दर्ज करें",
+  "pleaseEnterAmount": "कृपया लक्ष्य राशि दर्ज करें",
+  "amountGreaterThanZero": "राशि शून्य से अधिक होनी चाहिए",
+  "saveChanges": "परिवर्तन सहेजें",
+  "confirm": "पुष्टि करें",
+  "daily": "दैनिक",
+  "weekly": "साप्ताहिक",
+  "monthly": "मासिक"
 }

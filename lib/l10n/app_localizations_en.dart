@@ -642,4 +642,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String entriesCount(int count) {
     return '$count entries';
   }
+
+  @override
+  String get newGoal => 'New Goal';
+
+  @override
+  String get goalTitle => 'Goal title';
+
+  @override
+  String get goalTitleHint => 'e.g. New laptop';
+
+  @override
+  String get targetAmount => 'Target amount';
+
+  @override
+  String get selectDate => 'Select Date';
+
+  @override
+  String get createGoal => 'Create Goal';
+
+  @override
+  String get pleaseEnterTitle => 'Please enter a title';
+
+  @override
+  String get pleaseEnterAmount => 'Please enter a target amount';
+
+  @override
+  String get amountGreaterThanZero => 'Amount must be greater than zero';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get monthly => 'Monthly';
 }

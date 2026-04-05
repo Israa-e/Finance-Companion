@@ -14,6 +14,12 @@ import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/date_picker_sheet.dart';
 import 'widgets/transaction_type_toggle.dart';
 import 'widgets/transaction_category_dropdown.dart';
+import '../../../logic/transaction/transaction_filter_cubit.dart';
+import '../../../logic/goal/goal_cubit.dart';
+import '../../../logic/goal/goal_state.dart';
+import '../../../core/utils/currency_formatter.dart';
+import '../../../logic/auth/auth_cubit.dart';
+import '../../../logic/auth/auth_state.dart';
 
 class EditTransactionScreen extends StatefulWidget {
   final TransactionModel transaction;
@@ -108,21 +114,39 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                       ],
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Enter amount';
+                        if (v == null || v.isEmpty) return l10n.enterAmount;
                         final val = double.tryParse(v);
-                        if (val == null || val <= 0) return 'Invalid amount';
+                        if (val == null || val <= 0) return l10n.invalidAmount;
+
+                        final filterState = context.read<TransactionFilterCubit>().state;
+                        final goalState = context.read<GoalCubit>().state;
+                        
+                        double currentBalance = filterState.balance;
+                        if (widget.transaction.type == TransactionType.expense) {
+                          currentBalance += widget.transaction.amount;
+                        }
+
+                        final locked = goalState is GoalLoaded ? goalState.totalLocked : 0.0;
+                        final available = (currentBalance - locked).clamp(0.0, double.infinity);
+
+                        if (state.type == TransactionType.expense && val > available) {
+                          final authState = context.read<AuthCubit>().state;
+                          final formatter = authState is AuthAuthenticated ? authState.formatter : const CurrencyFormatter();
+                          return l10n.onlyAvailable(formatter.format(available));
+                        }
                         return null;
                       },
                     ),
-                    const Gap(20),
+                    _buildAvailableInfo(context, state),
+                    const Gap(14),
                     const TransactionCategoryDropdown(),
                     const Gap(20),
                     CustomTextField(
                       label: l10n.title,
                       controller: _titleController,
-                      hint: 'e.g. Grocery Shopping',
+                      hint: l10n.groceryShoppingHint,
                       onChanged: (v) => formCubit.updateTitle(v),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Enter title' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? l10n.enterTitle : null,
                     ),
                     const Gap(20),
                     _buildDatePicker(context, formCubit, state.date),
@@ -130,7 +154,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                     CustomTextField(
                       label: l10n.note,
                       controller: _noteController,
-                      hint: 'Add some details...',
+                      hint: l10n.addDetailsHint,
                       onChanged: (v) => formCubit.updateNote(v),
                       maxLines: 3,
                     ),
@@ -239,6 +263,50 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 Text('${date.day}/${date.month}/${date.year}', style: AppTextStyles.body),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvailableInfo(BuildContext context, TransactionFormState formState) {
+    if (formState.type != TransactionType.expense) return const SizedBox.shrink();
+
+    final filterState = context.watch<TransactionFilterCubit>().state;
+    final goalState = context.watch<GoalCubit>().state;
+    
+    double currentBalance = filterState.balance;
+    if (widget.transaction.type == TransactionType.expense) {
+      currentBalance += widget.transaction.amount;
+    }
+    
+    final locked = goalState is GoalLoaded ? goalState.totalLocked : 0.0;
+    final available = (currentBalance - locked).clamp(0.0, double.infinity);
+
+    final authState = context.watch<AuthCubit>().state;
+    final l10n = AppLocalizations.of(context)!;
+    final formatter = authState is AuthAuthenticated ? authState.formatter : const CurrencyFormatter();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Icon(Iconsax.info_circle, 
+                size: 14, 
+                color: available > 0 ? AppColors.primary : AppColors.expense
+              ),
+              const Gap(6),
+              Text(
+                '${l10n.availableToSpend}: ${formatter.format(available)}',
+                style: AppTextStyles.caption.copyWith(
+                  color: available > 0 ? AppColors.primary : AppColors.expense,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ],

@@ -12,7 +12,8 @@ class InsightsCubit extends Cubit<InsightsState> {
       : _userBudget = userMonthlyBudget,
         super(InsightsInitial());
 
-  Future<void> loadInsights({InsightsPeriod period = InsightsPeriod.allTime}) async {
+  Future<void> loadInsights(
+      {InsightsPeriod period = InsightsPeriod.allTime}) async {
     emit(InsightsLoading());
     try {
       final now = DateTime.now();
@@ -21,16 +22,37 @@ class InsightsCubit extends Cubit<InsightsState> {
       final allTransactions = await _repo.getAll();
       final filtered = _filterByPeriod(allTransactions, period, now);
 
-      // P1 FIX: parallelize the 6 monthly expense lookups with Future.wait()
       final lastMonthDate = DateTime(now.year, now.month - 1, 1);
+
+      // Dynamically determine trend months based on period
+      int trendMonths = 6;
+      switch (period) {
+        case InsightsPeriod.thisMonth:
+          trendMonths = 1;
+          break;
+        case InsightsPeriod.lastThreeMonths:
+          trendMonths = 3;
+          break;
+        case InsightsPeriod.lastSixMonths:
+          trendMonths = 6;
+          break;
+        case InsightsPeriod.thisYear:
+          trendMonths = now.month;
+          break;
+        case InsightsPeriod.allTime:
+          trendMonths = 12;
+          break;
+      }
+
       final monthlyFutures = <Future<double>>[];
       final monthLabels = <String>[];
-      for (int i = 5; i >= 0; i--) {
+      for (int i = trendMonths - 1; i >= 0; i--) {
         final month = DateTime(now.year, now.month - i, 1);
         monthLabels.add(DateFormat('MMM').format(month));
         monthlyFutures.add(_computeMonthlyExpense(allTransactions, month));
       }
-      // thisMonth + lastMonth + 6 monthly trend values — all in parallel
+
+      // thisMonth + lastMonth + trend values — all in parallel
       final results = await Future.wait([
         _computeMonthlyExpense(allTransactions, now),
         _computeMonthlyExpense(allTransactions, lastMonthDate),
@@ -46,7 +68,8 @@ class InsightsCubit extends Cubit<InsightsState> {
 
       // Expenses by category (from filtered set)
       final Map<String, double> byCategory = {};
-      for (final t in filtered.where((t) => t.type == TransactionType.expense)) {
+      for (final t
+          in filtered.where((t) => t.type == TransactionType.expense)) {
         byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount;
       }
 
@@ -75,7 +98,8 @@ class InsightsCubit extends Cubit<InsightsState> {
 
       // Most frequent category
       final countMap = <String, int>{};
-      for (final t in filtered.where((t) => t.type == TransactionType.expense)) {
+      for (final t
+          in filtered.where((t) => t.type == TransactionType.expense)) {
         countMap[t.category] = (countMap[t.category] ?? 0) + 1;
       }
       String mostFrequentCategory = '';
