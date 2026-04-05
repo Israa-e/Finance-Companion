@@ -24,10 +24,11 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   // ── Features ──────────────────────────────────────────────────────────────
-  
+
   // Repositories
   sl.registerLazySingleton<AuthRepository>(() => AuthRepository());
-  sl.registerLazySingleton<TransactionRepository>(() => TransactionRepository());
+  sl.registerLazySingleton<TransactionRepository>(
+      () => TransactionRepository());
   sl.registerLazySingleton<GoalRepository>(() => GoalRepository());
   sl.registerFactory(() => TransactionFilterCubit(sl(), sl()));
   sl.registerFactory(() => TransactionActionCubit(sl(), sl()));
@@ -38,8 +39,10 @@ Future<void> init() async {
   sl.registerFactory(() => ThemeCubit(sl()));
   sl.registerLazySingleton<CategoryRepository>(() => CategoryRepository());
   sl.registerLazySingleton<RecurringRepository>(() => RecurringRepository());
-  sl.registerLazySingleton<TransactionViewRepository>(() => TransactionViewRepository());
-  sl.registerLazySingleton<NotificationRepository>(() => NotificationRepository());
+  sl.registerLazySingleton<TransactionViewRepository>(
+      () => TransactionViewRepository());
+  sl.registerLazySingleton<NotificationRepository>(
+      () => NotificationRepository());
 
   // Services
   sl.registerLazySingleton<RecurringProcessorService>(
@@ -48,10 +51,10 @@ Future<void> init() async {
   sl.registerLazySingleton<AlertService>(() => AlertService(sl()));
 
   // ── External ──────────────────────────────────────────────────────────────
-  
+
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
-  
+
   sl.registerLazySingleton(() => Connectivity());
   sl.registerLazySingleton(() => DatabaseHelper.instance);
 }

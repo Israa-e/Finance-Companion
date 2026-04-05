@@ -18,13 +18,11 @@ class InsightsCubit extends Cubit<InsightsState> {
     try {
       final now = DateTime.now();
 
-      // P1 FIX: single getAll() call instead of multiple sequential repo calls
       final allTransactions = await _repo.getAll();
       final filtered = _filterByPeriod(allTransactions, period, now);
 
       final lastMonthDate = DateTime(now.year, now.month - 1, 1);
 
-      // Dynamically determine trend months based on period
       int trendMonths = 6;
       switch (period) {
         case InsightsPeriod.thisMonth:
@@ -52,7 +50,6 @@ class InsightsCubit extends Cubit<InsightsState> {
         monthlyFutures.add(_computeMonthlyExpense(allTransactions, month));
       }
 
-      // thisMonth + lastMonth + trend values — all in parallel
       final results = await Future.wait([
         _computeMonthlyExpense(allTransactions, now),
         _computeMonthlyExpense(allTransactions, lastMonthDate),
@@ -66,7 +63,6 @@ class InsightsCubit extends Cubit<InsightsState> {
         monthlyTrend[monthLabels[i]] = results[2 + i];
       }
 
-      // Expenses by category (from filtered set)
       final Map<String, double> byCategory = {};
       for (final t
           in filtered.where((t) => t.type == TransactionType.expense)) {

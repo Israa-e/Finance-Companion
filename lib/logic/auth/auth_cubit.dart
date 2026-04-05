@@ -78,6 +78,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(current.copyWith(editImagePath: path));
     }
   }
+
   Future<void> saveProfile({
     required String name,
     String? imagePath,
@@ -114,7 +115,9 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(current.copyWith(isUpdating: false, errorMessage: e.toString()));
     }
-  }  Future<String?> pickImage() async {
+  }
+
+  Future<String?> pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: ImageSource.gallery,

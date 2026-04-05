@@ -30,7 +30,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 11, // v11: Fix Iconsax icon codepoints
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
