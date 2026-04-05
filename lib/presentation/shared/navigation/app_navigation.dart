@@ -17,6 +17,7 @@ import '../../screens/goals/goals_screen.dart';
 import '../../screens/insights/insights_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/services/alert_service.dart';
+import 'package:finance_companion/logic/navigation/tab_navigation_cubit.dart';
 
 class AppNavigation extends StatefulWidget {
   final TransactionRepository transactionRepo;
@@ -35,8 +36,6 @@ class AppNavigation extends StatefulWidget {
 }
 
 class _AppNavigationState extends State<AppNavigation> {
-  int _currentIndex = 0;
-
   static const int tabHome = 0;
   static const int tabTransactions = 1;
   static const int tabGoals = 2;
@@ -119,7 +118,7 @@ class _AppNavigationState extends State<AppNavigation> {
     super.dispose();
   }
 
-  void _onTap(int index) => setState(() => _currentIndex = index);
+  void _onTap(int index) => context.read<TabNavigationCubit>().setTab(index);
 
   @override
   Widget build(BuildContext context) {
@@ -131,23 +130,27 @@ class _AppNavigationState extends State<AppNavigation> {
         BlocProvider.value(value: _streakCubit),
         BlocProvider.value(value: _notifCubit),
       ],
-      child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: [
-            HomeScreen(onTabSwitch: _onTap),
-            const TransactionsScreen(),
-            const GoalsScreen(),
-            const InsightsScreen(),
-            const ProfileScreen(),
-          ],
-        ),
-        bottomNavigationBar: _buildNavBar(),
+      child: BlocBuilder<TabNavigationCubit, int>(
+        builder: (context, currentIndex) {
+          return Scaffold(
+            body: IndexedStack(
+              index: currentIndex,
+              children: [
+                HomeScreen(onTabSwitch: _onTap),
+                const TransactionsScreen(),
+                const GoalsScreen(),
+                const InsightsScreen(),
+                const ProfileScreen(),
+              ],
+            ),
+            bottomNavigationBar: _buildNavBar(currentIndex),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildNavBar() {
+  Widget _buildNavBar(int currentIndex) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -168,35 +171,35 @@ class _AppNavigationState extends State<AppNavigation> {
                 icon: Iconsax.home,
                 label: 'Home',
                 index: tabHome,
-                current: _currentIndex,
+                current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.receipt,
                 label: 'Transactions',
                 index: tabTransactions,
-                current: _currentIndex,
+                current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.chart,
                 label: 'Goals',
                 index: tabGoals,
-                current: _currentIndex,
+                current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.graph,
                 label: 'Insights',
                 index: tabInsights,
-                current: _currentIndex,
+                current: currentIndex,
                 onTap: _onTap,
               ),
               _NavItem(
                 icon: Iconsax.user,
                 label: 'Profile',
                 index: tabProfile,
-                current: _currentIndex,
+                current: currentIndex,
                 onTap: _onTap,
               ),
             ].map((item) => Expanded(child: item)).toList(),

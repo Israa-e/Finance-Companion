@@ -32,20 +32,13 @@ class AuthRepository {
     final db = await _dbHelper.database;
     final normalizedEmail = email.toLowerCase().trim();
 
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: normalizedEmail,
-      password: password,
-    );
-    final firebaseUser = credential.user;
-    if (firebaseUser == null) throw Exception('Registration failed');
-
+    // Check local existing user first
     final existing = await db.query(
       'users',
       where: 'email = ?',
       whereArgs: [normalizedEmail],
     );
     if (existing.isNotEmpty) {
-      await firebaseUser.delete();
       throw Exception('An account with this email already exists');
     }
 
@@ -59,18 +52,26 @@ class AuthRepository {
       createdAt: DateTime.now(),
     );
 
+    // Try Firebase if available, but don't block registration if it fails (Offline-First)
     try {
-      await _userCollection.doc(firebaseUser.uid).set({
-        'name': user.name,
-        'email': user.email,
-        'initialBalance': user.initialBalance,
-        'monthlyBudget': user.monthlyBudget,
-        'imagePath': user.imagePath,
-        'createdAt': user.createdAt.toIso8601String(),
-      });
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: normalizedEmail,
+        password: password,
+      );
+      final firebaseUser = credential.user;
+      if (firebaseUser != null) {
+        await _userCollection.doc(firebaseUser.uid).set({
+          'name': user.name,
+          'email': user.email,
+          'initialBalance': user.initialBalance,
+          'monthlyBudget': user.monthlyBudget,
+          'imagePath': user.imagePath,
+          'createdAt': user.createdAt.toIso8601String(),
+        });
+      }
     } catch (e) {
-      await firebaseUser.delete();
-      throw Exception('Registration failed — please try again');
+      debugPrint('[AuthRepository] Firebase registration skipped/failed: $e');
+      // We continue since we want the app to be functional even without Firebase config
     }
 
     final id = await db.insert('users', user.toMap());
@@ -85,83 +86,73 @@ class AuthRepository {
   }) async {
     final normalizedEmail = email.toLowerCase().trim();
 
+    // Try Firebase if available
     try {
       await _auth.signInWithEmailAndPassword(
         email: normalizedEmail,
         password: password,
       );
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case 'user-not-found':
-          throw Exception('No account found with this email');
-        case 'wrong-password':
-        case 'invalid-credential':
-          throw Exception('Incorrect password');
-        case 'too-many-requests':
-          throw Exception('Too many attempts — please try again later');
-        default:
-          throw Exception(e.message ?? 'Login failed');
-      }
+    } catch (e) {
+      debugPrint('[AuthRepository] Firebase login skipped/failed: $e');
+      // If Firebase fails (no config or offline), we'll try local auth below
     }
 
-    final user = await _ensureLocalUser(normalizedEmail);
+    final user = await _ensureLocalUser(normalizedEmail, password);
     await _saveSession(user.id!);
     return user;
   }
 
-  // FIX: _ensureLocalUser no longer silently swallows exceptions.
-  // Each failure path is explicit: if local lookup fails we try Firestore,
-  // if Firestore also fails we throw a descriptive error that surfaces in
-  // the AuthCubit as an AuthError state — not silently dropped.
-  Future<UserModel> _ensureLocalUser(String normalizedEmail) async {
+  // Updated to handle local password verification if Firebase is unavailable
+  Future<UserModel> _ensureLocalUser(String normalizedEmail, [String? password]) async {
     final db = await _dbHelper.database;
 
-    // Fast path: local record exists
     final local = await db.query(
       'users',
       where: 'email = ?',
       whereArgs: [normalizedEmail],
     );
-    if (local.isNotEmpty) return UserModel.fromMap(local.first);
 
-    // Slow path: sync from Firestore
-    final firebaseUser = _auth.currentUser;
-    if (firebaseUser == null) {
-      throw Exception('Authentication session lost — please log in again');
+    if (local.isNotEmpty) {
+      final user = UserModel.fromMap(local.first);
+      // If password provided, verify it (since we might be offline)
+      if (password != null && user.passwordHash != _hashPassword(password)) {
+        throw Exception('Incorrect password');
+      }
+      return user;
     }
 
-    final QuerySnapshot<Map<String, dynamic>> querySnapshot;
+    // If not local, try fetching from Firestore (only if Firebase user exists)
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      throw Exception('No account found with this email');
+    }
+
     try {
-      querySnapshot = await _userCollection
+      final querySnapshot = await _userCollection
           .where('email', isEqualTo: normalizedEmail)
           .limit(1)
           .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final data = querySnapshot.docs.first.data();
+        final user = UserModel(
+          name: data['name'] as String,
+          email: normalizedEmail,
+          passwordHash: _hashPassword(password ?? ''), 
+          initialBalance: (data['initialBalance'] as num).toDouble(),
+          monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble() ?? 0.0,
+          imagePath: data['imagePath'] as String?,
+          createdAt: DateTime.parse(data['createdAt'] as String),
+        );
+
+        final id = await db.insert('users', user.toMap());
+        return user.copyWith(id: id);
+      }
     } catch (e) {
-      throw Exception(
-        'Could not reach the server to fetch your profile. '
-        'Please check your connection and try again.',
-      );
+      debugPrint('[AuthRepository] Firestore fetch failed: $e');
     }
 
-    if (querySnapshot.docs.isEmpty) {
-      throw Exception(
-        'Account profile not found on server — please re-register',
-      );
-    }
-
-    final data = querySnapshot.docs.first.data();
-    final user = UserModel(
-      name: data['name'] as String,
-      email: normalizedEmail,
-      passwordHash: _hashPassword(''), // password is not stored remotely
-      initialBalance: (data['initialBalance'] as num).toDouble(),
-      monthlyBudget: (data['monthlyBudget'] as num?)?.toDouble() ?? 0.0,
-      imagePath: data['imagePath'] as String?,
-      createdAt: DateTime.parse(data['createdAt'] as String),
-    );
-
-    final id = await db.insert('users', user.toMap());
-    return user.copyWith(id: id);
+    throw Exception('No account found with this email');
   }
 
   Future<void> _saveSession(int userId) async {

@@ -148,6 +148,51 @@ class ProfileScreen extends StatelessWidget {
           },
         ),
 
+        // Biometric toggle
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: SwitchListTile(
+            value: user.biometricEnabled,
+            activeColor: AppColors.primary,
+            title: Text(
+              'Biometric Lock',
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            secondary: Icon(
+              Iconsax.finger_scan,
+              color: AppColors.primary,
+            ),
+            onChanged: (value) async {
+              final authCubit = context.read<AuthCubit>();
+              await authCubit.saveProfile(
+                name: user.name,
+                initialBalance: user.initialBalance,
+                monthlyBudget: user.monthlyBudget,
+                biometricEnabled: value,
+              );
+            },
+          ),
+        ),
+
+        MenuItem(
+          icon: Iconsax.refresh,
+          label: 'Sync Now',
+          onTap: () async {
+            final txCubit = context.read<TransactionCubit>();
+            txCubit.loadTransactions(); // This triggers sync in repo
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Synchronizing data...')),
+            );
+          },
+        ),
+
         MenuItem(
           icon: Iconsax.edit,
           label: 'Edit Profile',

@@ -16,13 +16,35 @@ class InsightsCubit extends Cubit<InsightsState> {
     emit(InsightsLoading());
     try {
       final now = DateTime.now();
-      final lastMonthDate = DateTime(now.year, now.month - 1, 1);
 
-      // FIX: apply period filter to category and weekly data
+      // P1 FIX: single getAll() call instead of multiple sequential repo calls
       final allTransactions = await _repo.getAll();
       final filtered = _filterByPeriod(allTransactions, period, now);
 
-      // Expenses by category (filtered)
+      // P1 FIX: parallelize the 6 monthly expense lookups with Future.wait()
+      final lastMonthDate = DateTime(now.year, now.month - 1, 1);
+      final monthlyFutures = <Future<double>>[];
+      final monthLabels = <String>[];
+      for (int i = 5; i >= 0; i--) {
+        final month = DateTime(now.year, now.month - i, 1);
+        monthLabels.add(DateFormat('MMM').format(month));
+        monthlyFutures.add(_computeMonthlyExpense(allTransactions, month));
+      }
+      // thisMonth + lastMonth + 6 monthly trend values — all in parallel
+      final results = await Future.wait([
+        _computeMonthlyExpense(allTransactions, now),
+        _computeMonthlyExpense(allTransactions, lastMonthDate),
+        ...monthlyFutures,
+      ]);
+
+      final thisMonth = results[0];
+      final lastMonth = results[1];
+      final monthlyTrend = <String, double>{};
+      for (int i = 0; i < monthLabels.length; i++) {
+        monthlyTrend[monthLabels[i]] = results[2 + i];
+      }
+
+      // Expenses by category (from filtered set)
       final Map<String, double> byCategory = {};
       for (final t in filtered.where((t) => t.type == TransactionType.expense)) {
         byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount;
@@ -37,17 +59,9 @@ class InsightsCubit extends Cubit<InsightsState> {
         final key = '${day.day}/${day.month}';
         weekly[key] = filtered
             .where((t) => t.type == TransactionType.expense)
-            .where(
-              (t) =>
-                  t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
-                  t.date.isBefore(end),
-            )
+            .where((t) => !t.date.isBefore(start) && t.date.isBefore(end))
             .fold(0.0, (sum, t) => sum + t.amount);
       }
-
-      // Month-over-month uses all-time data (not filtered) for context
-      final thisMonth = await _repo.getMonthlyExpense(now);
-      final lastMonth = await _repo.getMonthlyExpense(lastMonthDate);
 
       // Top category
       String topCategory = '';
@@ -58,14 +72,6 @@ class InsightsCubit extends Cubit<InsightsState> {
           topCategory = cat;
         }
       });
-
-      // Monthly trend — last 6 months (all-time data for accuracy)
-      final monthlyTrend = <String, double>{};
-      for (int i = 5; i >= 0; i--) {
-        final month = DateTime(now.year, now.month - i, 1);
-        final label = DateFormat('MMM').format(month);
-        monthlyTrend[label] = await _repo.getMonthlyExpense(month);
-      }
 
       // Most frequent category
       final countMap = <String, int>{};
@@ -83,10 +89,7 @@ class InsightsCubit extends Cubit<InsightsState> {
 
       // Predictive Analytics (Burn Rate)
       final dayOfMonth = now.day;
-      final dailyBurnRate = thisMonth / dayOfMonth;
-      
-      // Default hypothetical budget for calculation if not explicitly set
-      // (Value can be retrieved from UserSettings later)
+      final dailyBurnRate = dayOfMonth > 0 ? thisMonth / dayOfMonth : 0.0;
       final monthlyBudget = _userBudget;
       DateTime? predictedBreachDate;
       if (dailyBurnRate > 0 && thisMonth < monthlyBudget) {
@@ -95,18 +98,23 @@ class InsightsCubit extends Cubit<InsightsState> {
         predictedBreachDate = now.add(Duration(days: daysLeft));
       }
 
-      // Weighted Averages (Senior+ Feature)
-      final weekdayExpenses = filtered.where((t) => 
-        t.type == TransactionType.expense && t.date.weekday >= 1 && t.date.weekday <= 5);
-      final weekendExpenses = filtered.where((t) => 
-        t.type == TransactionType.expense && (t.date.weekday == 6 || t.date.weekday == 7));
-        
-      final weekdayAvg = weekdayExpenses.isEmpty 
-          ? 0.0 
-          : weekdayExpenses.fold(0.0, (sum, t) => sum + t.amount) / weekdayExpenses.length;
-      final weekendAvg = weekendExpenses.isEmpty 
-          ? 0.0 
-          : weekendExpenses.fold(0.0, (sum, t) => sum + t.amount) / weekendExpenses.length;
+      // Weekday vs weekend spending variance
+      final weekdayExpenses = filtered.where((t) =>
+          t.type == TransactionType.expense &&
+          t.date.weekday >= 1 &&
+          t.date.weekday <= 5);
+      final weekendExpenses = filtered.where((t) =>
+          t.type == TransactionType.expense &&
+          (t.date.weekday == 6 || t.date.weekday == 7));
+
+      final weekdayAvg = weekdayExpenses.isEmpty
+          ? 0.0
+          : weekdayExpenses.fold(0.0, (sum, t) => sum + t.amount) /
+              weekdayExpenses.length;
+      final weekendAvg = weekendExpenses.isEmpty
+          ? 0.0
+          : weekendExpenses.fold(0.0, (sum, t) => sum + t.amount) /
+              weekendExpenses.length;
 
       emit(InsightsLoaded(
         expensesByCategory: byCategory,
@@ -130,7 +138,21 @@ class InsightsCubit extends Cubit<InsightsState> {
     }
   }
 
-  /// Filters transactions by the selected period.
+  /// Compute monthly expense synchronously from an already-fetched list.
+  Future<double> _computeMonthlyExpense(
+    List<TransactionModel> all,
+    DateTime month,
+  ) async {
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 1);
+    return all
+        .where((t) => t.type == TransactionType.expense)
+        .where((t) => !t.date.isBefore(start) && t.date.isBefore(end))
+        .fold<double>(0.0, (sum, t) => sum + t.amount);
+  }
+
+  /// P2 FIX: use !isBefore(start) instead of isAfter(start) to include
+  /// transactions on the exact first moment of the period.
   List<TransactionModel> _filterByPeriod(
     List<TransactionModel> all,
     InsightsPeriod period,
@@ -139,20 +161,22 @@ class InsightsCubit extends Cubit<InsightsState> {
     switch (period) {
       case InsightsPeriod.thisMonth:
         final start = DateTime(now.year, now.month, 1);
-        return all.where((t) => t.date.isAfter(start)).toList();
+        return all.where((t) => !t.date.isBefore(start)).toList();
       case InsightsPeriod.lastThreeMonths:
         final start = DateTime(now.year, now.month - 2, 1);
-        return all.where((t) => t.date.isAfter(start)).toList();
+        return all.where((t) => !t.date.isBefore(start)).toList();
       case InsightsPeriod.lastSixMonths:
         final start = DateTime(now.year, now.month - 5, 1);
-        return all.where((t) => t.date.isAfter(start)).toList();
+        return all.where((t) => !t.date.isBefore(start)).toList();
+      case InsightsPeriod.thisYear:
+        final start = DateTime(now.year, 1, 1);
+        return all.where((t) => !t.date.isBefore(start)).toList();
       case InsightsPeriod.allTime:
         return all;
     }
   }
 
   void changePeriod(InsightsPeriod period) {
-    
     loadInsights(period: period);
   }
 }

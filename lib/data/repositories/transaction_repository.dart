@@ -12,12 +12,18 @@ class TransactionRepository {
   Future<Database> get _db async => await _dbHelper.database;
 
   CollectionReference<Map<String, dynamic>>? get _transactionsRef {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return null;
-    return _firestore.collection('users').doc(uid).collection('transactions');
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return null;
+      return _firestore.collection('users').doc(uid).collection('transactions');
+    } catch (_) {
+      return null;
+    }
   }
 
-  // FIX: same per-record upsert pattern — avoids destructive delete-all
+  // ── Cache helpers ─────────────────────────────────────────────────────────
+
+  /// Per-record upsert — avoids destructive delete-all.
   Future<void> _cacheRemoteTransactions(
     List<TransactionModel> transactions,
   ) async {
@@ -37,6 +43,7 @@ class TransactionRepository {
     }
     final remoteIds = transactions.map((t) => t.id).toSet();
 
+    // Remove local records that no longer exist remotely and aren't pending deletes
     final toDelete = existingIds.difference(remoteIds);
     for (final id in toDelete) {
       await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
@@ -54,27 +61,82 @@ class TransactionRepository {
     }
   }
 
-  Future<void> add(TransactionModel t) async {
+  // ── Sync ─────────────────────────────────────────────────────────────────
+
+  /// Push unsynced changes (adds/updates) and soft-delete records to Firestore.
+  Future<void> syncLocalChanges() async {
     final db = await _db;
-    await db.insert(
+    final ref = _transactionsRef;
+    if (ref == null) return;
+
+    final localChanges = await db.query(
       'transactions',
-      t.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      where: 'isSynced = ?',
+      whereArgs: [0],
     );
 
-    final ref = _transactionsRef;
-    if (ref != null) {
-      await ref.doc(t.id).set(t.toMap());
+    for (final map in localChanges) {
+      final t = TransactionModel.fromMap(map);
+      try {
+        if (t.isDeleted) {
+          // Propagate soft-delete to Firestore, then hard-delete locally
+          await ref.doc(t.id).delete();
+          await db.delete('transactions', where: 'id = ?', whereArgs: [t.id]);
+        } else {
+          await ref.doc(t.id).set(t.toMap());
+          await db.update(
+            'transactions',
+            {'isSynced': 1},
+            where: 'id = ?',
+            whereArgs: [t.id],
+          );
+        }
+      } catch (_) {
+        // Still offline — will retry on next sync
+      }
     }
   }
 
+  // ── CRUD ─────────────────────────────────────────────────────────────────
+
+  Future<void> add(TransactionModel t) async {
+    final db = await _db;
+    final ref = _transactionsRef;
+
+    bool synced = false;
+    if (ref != null) {
+      try {
+        await ref.doc(t.id).set(t.toMap());
+        synced = true;
+      } catch (_) {
+        synced = false;
+      }
+    }
+
+    await db.insert(
+      'transactions',
+      t.copyWith(isSynced: synced).toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Returns all non-deleted transactions, newest first.
   Future<List<TransactionModel>> getAll() async {
     final ref = _transactionsRef;
     if (ref == null) {
+      // Offline / unauthenticated — serve from local cache, excluding soft-deletes
       final db = await _db;
-      final maps = await db.query('transactions', orderBy: 'date DESC');
+      final maps = await db.query(
+        'transactions',
+        where: 'isDeleted = ?',
+        whereArgs: [0],
+        orderBy: 'date DESC',
+      );
       return maps.map((m) => TransactionModel.fromMap(m)).toList();
     }
+
+    // Attempt to push pending changes (including pending deletes) before fetching
+    await syncLocalChanges();
 
     try {
       final snapshot = await ref.orderBy('date', descending: true).get();
@@ -85,40 +147,71 @@ class TransactionRepository {
         return TransactionModel.fromMap(data);
       }).toList();
 
-      await _cacheRemoteTransactions(transactions); // FIX: safe upsert
+      await _cacheRemoteTransactions(transactions);
       return transactions;
     } catch (_) {
-      // Firestore unavailable — serve from local cache
+      // Firestore unavailable — serve from local cache, excluding soft-deletes
       final db = await _db;
-      final maps = await db.query('transactions', orderBy: 'date DESC');
+      final maps = await db.query(
+        'transactions',
+        where: 'isDeleted = ?',
+        whereArgs: [0],
+        orderBy: 'date DESC',
+      );
       return maps.map((m) => TransactionModel.fromMap(m)).toList();
     }
   }
 
   Future<void> update(TransactionModel t) async {
     final db = await _db;
+    final ref = _transactionsRef;
+
+    bool synced = false;
+    if (ref != null) {
+      try {
+        await ref.doc(t.id).set(t.toMap());
+        synced = true;
+      } catch (_) {
+        synced = false;
+      }
+    }
+
     await db.update(
       'transactions',
-      t.toMap(),
+      t.copyWith(isSynced: synced).toMap(),
       where: 'id = ?',
       whereArgs: [t.id],
     );
-
-    final ref = _transactionsRef;
-    if (ref != null) {
-      await ref.doc(t.id).set(t.toMap());
-    }
   }
 
+  /// Soft-delete: marks the record locally as isDeleted=true, isSynced=false.
+  /// On next [syncLocalChanges] call, the Firestore document is deleted and
+  /// the local record is hard-deleted. This ensures offline deletes are never lost.
   Future<void> delete(String id) async {
     final db = await _db;
-    await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
-
     final ref = _transactionsRef;
+
     if (ref != null) {
-      await ref.doc(id).delete();
+      // Online: delete immediately from Firestore and locally
+      try {
+        await ref.doc(id).delete();
+        await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+        return;
+      } catch (_) {
+        // Offline — fall through to soft-delete
+      }
     }
+
+    // Offline or unauthenticated: soft-delete so the delete syncs on reconnect
+    await db.update(
+      'transactions',
+      {'isDeleted': 1, 'isSynced': 0, 'lastUpdated': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
+
+  // ── Aggregates (FIX: reuse already-fetched list — no extra DB calls) ──────
 
   Future<double> getTotalIncome() async {
     final transactions = await getAll();
@@ -148,7 +241,7 @@ class TransactionRepository {
     return transactions
         .where(
           (t) =>
-              t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
+              !t.date.isBefore(start) &&
               t.date.isBefore(end),
         )
         .toList();
@@ -179,9 +272,7 @@ class TransactionRepository {
           .where((t) => t.type == TransactionType.expense)
           .where(
             (t) =>
-                t.date.isAfter(
-                  start.subtract(const Duration(milliseconds: 1)),
-                ) &&
+                !t.date.isBefore(start) &&
                 t.date.isBefore(end),
           )
           .fold<double>(0.0, (total, t) => total + t.amount);
@@ -210,7 +301,7 @@ class TransactionRepository {
         .where((t) => t.type == TransactionType.expense)
         .where(
           (t) =>
-              t.date.isAfter(start.subtract(const Duration(milliseconds: 1))) &&
+              !t.date.isBefore(start) &&
               t.date.isBefore(end),
         )
         .fold<double>(0.0, (total, t) => total + t.amount);

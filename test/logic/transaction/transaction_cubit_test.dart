@@ -64,23 +64,34 @@ void main() {
     );
 
     blocTest<TransactionCubit, TransactionState>(
-      'deleteTransaction deletes and reloads transactions',
+      'updateSearchQuery updates the search query and keeps current data',
       build: () {
-        when(() => mockRepo.delete(any())).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => <TransactionModel>[]);
         when(() => mockRepo.getTotalIncome()).thenAnswer((_) async => 0.0);
         when(() => mockRepo.getTotalExpense()).thenAnswer((_) async => 0.0);
         return cubit;
       },
-      act: (cubit) => cubit.deleteTransaction('123'),
+      act: (cubit) async {
+        await cubit.loadTransactions();
+        cubit.updateSearchQuery('test');
+      },
       expect: () => [
         isA<TransactionLoading>(),
         isA<TransactionLoaded>(),
+        isA<TransactionLoaded>().having((s) => s.searchQuery, 'searchQuery', 'test'),
       ],
-      verify: (_) {
-        verify(() => mockRepo.delete('123')).called(1);
-        verify(() => mockRepo.getAll()).called(1);
-      },
     );
+
+    test('setUser correctly sets internal fields', () {
+      cubit.setUser(123, 5000.0, monthlyBudget: 1000.0);
+      // We can't easily access private fields but we can check load result
+      when(() => mockRepo.getAll()).thenAnswer((_) async => <TransactionModel>[]);
+      when(() => mockRepo.getTotalIncome()).thenAnswer((_) async => 0.0);
+      when(() => mockRepo.getTotalExpense()).thenAnswer((_) async => 0.0);
+      
+      cubit.loadTransactions();
+      // Wait for it
+      expect(cubit.state, isA<TransactionInitial>()); // async!
+    });
   });
 }

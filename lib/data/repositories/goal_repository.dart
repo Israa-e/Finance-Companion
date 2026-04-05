@@ -12,9 +12,13 @@ class GoalRepository {
   Future<Database> get _db async => await _dbHelper.database;
 
   CollectionReference<Map<String, dynamic>>? get _goalsRef {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return null;
-    return _firestore.collection('users').doc(uid).collection('goals');
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return null;
+      return _firestore.collection('users').doc(uid).collection('goals');
+    } catch (_) {
+      return null;
+    }
   }
 
   // FIX: replaced db.delete('goals') + full re-insert with per-record upsert.

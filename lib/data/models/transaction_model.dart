@@ -12,6 +12,10 @@ class TransactionModel extends Equatable {
   final String title;
   final String? note;
   final DateTime lastUpdated;
+  final bool isSynced;
+  /// Soft-delete flag: true means this record is pending deletion on Firestore.
+  /// Local reads always filter out isDeleted=true records.
+  final bool isDeleted;
 
   const TransactionModel({
     required this.id,
@@ -23,6 +27,8 @@ class TransactionModel extends Equatable {
     required this.title,
     this.note,
     required this.lastUpdated,
+    this.isSynced = true,
+    this.isDeleted = false,
   });
 
   bool get isIncome => type == TransactionType.income;
@@ -38,6 +44,8 @@ class TransactionModel extends Equatable {
         'title': title,
         'note': note,
         'lastUpdated': lastUpdated.toIso8601String(),
+        'isSynced': isSynced ? 1 : 0,
+        'isDeleted': isDeleted ? 1 : 0,
       };
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) =>
@@ -53,6 +61,8 @@ class TransactionModel extends Equatable {
         lastUpdated: map['lastUpdated'] != null && map['lastUpdated'] != ""
             ? DateTime.parse(map['lastUpdated'])
             : DateTime.now(),
+        isSynced: (map['isSynced'] as int?) == 1,
+        isDeleted: (map['isDeleted'] as int?) == 1,
       );
 
   TransactionModel copyWith({
@@ -65,6 +75,8 @@ class TransactionModel extends Equatable {
     String? title,
     String? note,
     DateTime? lastUpdated,
+    bool? isSynced,
+    bool? isDeleted,
   }) =>
       TransactionModel(
         id: id ?? this.id,
@@ -76,9 +88,11 @@ class TransactionModel extends Equatable {
         title: title ?? this.title,
         note: note ?? this.note,
         lastUpdated: lastUpdated ?? this.lastUpdated,
+        isSynced: isSynced ?? this.isSynced,
+        isDeleted: isDeleted ?? this.isDeleted,
       );
 
   @override
   List<Object?> get props =>
-      [id, userId, amount, type, category, date, title, note, lastUpdated];
+      [id, userId, amount, type, category, date, title, note, lastUpdated, isSynced, isDeleted];
 }

@@ -46,9 +46,14 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> loadTransactions() async {
     emit(TransactionLoading());
     try {
+      // P1 FIX: single getAll() call — income + expense computed from the same list
       final transactions = await _repo.getAll();
-      final income = await _repo.getTotalIncome();
-      final expense = await _repo.getTotalExpense();
+      final income = transactions
+          .where((t) => t.type == TransactionType.income)
+          .fold<double>(0.0, (sum, t) => sum + t.amount);
+      final expense = transactions
+          .where((t) => t.type == TransactionType.expense)
+          .fold<double>(0.0, (sum, t) => sum + t.amount);
       final balance = _initialBalance + income - expense;
 
       emit(TransactionLoaded(

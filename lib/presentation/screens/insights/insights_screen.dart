@@ -14,6 +14,7 @@ import 'widgets/month_comparison_card.dart';
 import 'widgets/monthly_trend_chart.dart';
 import 'widgets/top_category_card.dart';
 import 'widgets/burn_rate_card.dart';
+import 'widgets/spending_pattern_card.dart';
 
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({super.key});
@@ -108,6 +109,9 @@ class InsightsScreen extends StatelessWidget {
                         FrequentCategoryCard(state: state),
                         const Gap(16),
                       ],
+                      // P2 FIX: surface weekday/weekend variance card
+                      SpendingPatternCard(state: state),
+                      const Gap(16),
                       if (state.monthlyTrend.isNotEmpty) ...[
                         MonthlyTrendChart(state: state),
                         const Gap(16),
@@ -145,8 +149,7 @@ class _PeriodSelector extends StatelessWidget {
           final period = InsightsPeriod.values[i];
           final isActive = period == activePeriod;
           return GestureDetector(
-            onTap: () =>
-                context.read<InsightsCubit>().changePeriod(period),
+            onTap: () => context.read<InsightsCubit>().changePeriod(period),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -170,8 +173,7 @@ class _PeriodSelector extends StatelessWidget {
                   color: isActive
                       ? Colors.white
                       : Theme.of(context).colorScheme.onSurface,
-                  fontWeight:
-                      isActive ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),

@@ -11,6 +11,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/transaction_model.dart';
 
+import '../../../data/services/csv_export_service.dart';
 import 'edit_transaction_screen.dart';
 import 'add_transaction_screen.dart';
 import 'widgets/transaction_list_item.dart';
@@ -206,6 +207,25 @@ class _Header extends StatelessWidget {
               Row(
                 children: [
                   const SyncIndicator(),
+                  const Gap(12),
+                  // Export Button
+                  GestureDetector(
+                    onTap: () {
+                      final state = context.read<TransactionCubit>().state;
+                      if (state is TransactionLoaded) {
+                        CSVExportService.exportTransactions(state.filteredTransactions);
+                      }
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(Iconsax.export, color: AppColors.primary, size: 24),
+                    ),
+                  ),
                   const Gap(12),
                   GestureDetector(
                     onTap: () {

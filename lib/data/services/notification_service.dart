@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  late final FirebaseMessaging _fcm;
 
   NotificationService._();
 
   Future<void> initialize() async {
-    // Requires an app_icon inside android/app/src/main/res/drawable/
-    // We will use the default ic_launcher or try '@mipmap/ic_launcher'
+    // Assign FCM instance now that Firebase.initializeApp() has completed
+    _fcm = FirebaseMessaging.instance;
+
+    // 1. Local Notifications Init
     const AndroidInitializationSettings androidInit = 
         AndroidInitializationSettings('@mipmap/ic_launcher');
     
@@ -31,6 +35,25 @@ class NotificationService {
         }
       },
     );
+
+    // 2. FCM Init
+    _fcm.requestPermission();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        showNotification(
+          id: message.hashCode,
+          title: message.notification!.title ?? '',
+          body: message.notification!.body ?? '',
+          payload: message.data['payload'],
+        );
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (message.data.containsKey('payload')) {
+        _selectNotificationStream.add(message.data['payload']);
+      }
+    });
   }
 
   // Stream for notification taps

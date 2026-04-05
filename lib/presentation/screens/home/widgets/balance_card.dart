@@ -1,3 +1,4 @@
+import 'package:finance_companion/presentation/screens/home/widgets/summary_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -11,6 +12,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
+/// P3 FIX: Replaced 3-nested BlocBuilder (GoalCubit > TransactionCubit > AuthCubit)
+/// with BlocSelector calls. Each selector subscribes only to the specific field it
+/// needs, so a change in GoalCubit doesn't trigger rebuilds of the balance text, etc.
 class BalanceCard extends StatefulWidget {
   const BalanceCard({super.key});
 
@@ -39,67 +43,30 @@ class _BalanceCardState extends State<BalanceCard>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<GoalCubit, GoalState>(
-      builder: (context, goalState) {
-        final lockedAmount =
-            goalState is GoalLoaded ? goalState.totalLocked : 0.0;
+    // BlocSelector: only rebuild when lockedAmount changes
+    final lockedAmount = context.select<GoalCubit, double>((c) =>
+        c.state is GoalLoaded ? (c.state as GoalLoaded).totalLocked : 0.0);
 
-        return BlocBuilder<TransactionCubit, TransactionState>(
-          builder: (context, txState) {
-            return BlocBuilder<AuthCubit, AuthState>(
-              builder: (context, authState) {
-                final balance =
-                    txState is TransactionLoaded ? txState.balance : 0.0;
-                final isLoading = txState is TransactionLoading;
-                final income =
-                    txState is TransactionLoaded ? txState.totalIncome : 0.0;
-                final expense =
-                    txState is TransactionLoaded ? txState.totalExpense : 0.0;
-                final availableBalance =
-                    (balance - lockedAmount).clamp(0.0, double.infinity);
+    // BlocSelector: only rebuild when the scalar fields we need change
+    final balance = context.select<TransactionCubit, double>((c) =>
+        c.state is TransactionLoaded
+            ? (c.state as TransactionLoaded).balance
+            : 0.0);
+    final isLoading = context
+        .select<TransactionCubit, bool>((c) => c.state is TransactionLoading);
 
-                return _AnimatedBalanceCard(
-                  shimmerController: _shimmerController,
-                  balance: balance,
-                  lockedAmount: lockedAmount,
-                  availableBalance: availableBalance,
-                  income: income,
-                  expense: expense,
-                  isLoading: isLoading,
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-}
+    // BlocSelector: only rebuild when formatter changes (currency switch)
+    final formatter = context.select<AuthCubit, CurrencyFormatter>((c) =>
+        c.state is AuthAuthenticated
+            ? (c.state as AuthAuthenticated).formatter
+            : const CurrencyFormatter());
 
-class _AnimatedBalanceCard extends StatelessWidget {
-  final AnimationController shimmerController;
-  final double balance;
-  final double lockedAmount;
-  final double availableBalance;
-  final double income;
-  final double expense;
-  final bool isLoading;
+    final availableBalance =
+        (balance - lockedAmount).clamp(0.0, double.infinity);
 
-  const _AnimatedBalanceCard({
-    required this.shimmerController,
-    required this.balance,
-    required this.lockedAmount,
-    required this.availableBalance,
-    required this.income,
-    required this.expense,
-    required this.isLoading,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: shimmerController,
-      builder: (context, child) {
+      animation: _shimmerController,
+      builder: (_, __) {
         return Container(
           width: double.infinity,
           clipBehavior: Clip.hardEdge,
@@ -125,7 +92,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // ── Decorative circles ──────────────────────────────────
+              // ── Decorative circles ────────────────────────────────
               Positioned(
                 top: -30,
                 right: -30,
@@ -162,13 +129,13 @@ class _AnimatedBalanceCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // ── Shimmer ─────────────────────────────────────────────
+              // ── Shimmer ──────────────────────────────────────────
               Positioned.fill(
                 child: CustomPaint(
-                  painter: _ShimmerPainter(shimmerController.value),
+                  painter: _ShimmerPainter(_shimmerController.value),
                 ),
               ),
-              // ── Content ─────────────────────────────────────────────
+              // ── Content ──────────────────────────────────────────
               Semantics(
                 label: 'Financial overview card',
                 container: true,
@@ -204,11 +171,6 @@ class _AnimatedBalanceCard extends StatelessWidget {
                               duration: const Duration(milliseconds: 800),
                               curve: Curves.easeOutCubic,
                               builder: (_, val, __) {
-                                final authState =
-                                    context.watch<AuthCubit>().state;
-                                final formatter = authState is AuthAuthenticated
-                                    ? authState.formatter
-                                    : const CurrencyFormatter();
                                 return Text(
                                   formatter.format(val),
                                   style: const TextStyle(
@@ -222,7 +184,6 @@ class _AnimatedBalanceCard extends StatelessWidget {
                               },
                             ),
                       const Gap(24),
-                      // ── Divider ──────────────────────────────────────
                       Container(
                         height: 1,
                         decoration: BoxDecoration(
@@ -242,11 +203,7 @@ class _AnimatedBalanceCard extends StatelessWidget {
                             child: _StatPill(
                               icon: Icons.lock_rounded,
                               label: 'Locked',
-                              value: (context.watch<AuthCubit>().state
-                                          as AuthAuthenticated?)
-                                      ?.formatter
-                                      .formatCompact(lockedAmount) ??
-                                  '\$0.0',
+                              value: formatter.formatCompact(lockedAmount),
                               color: const Color(0xFFFFB3B3),
                             ),
                           ),
@@ -255,16 +212,14 @@ class _AnimatedBalanceCard extends StatelessWidget {
                             child: _StatPill(
                               icon: Icons.wallet_rounded,
                               label: 'Available',
-                              value: (context.watch<AuthCubit>().state
-                                          as AuthAuthenticated?)
-                                      ?.formatter
-                                      .formatCompact(availableBalance) ??
-                                  '\$0.0',
+                              value: formatter.formatCompact(availableBalance),
                               color: const Color(0xFF81F5AE),
                             ),
                           ),
                         ],
                       ),
+                      const Gap(16),
+                      const SummaryRow(isGlassy: true),
                     ],
                   ),
                 ),

@@ -1,0 +1,23 @@
+{
+  "@@locale": "ar",
+  "appTitle": "رفيق المال",
+  "home": "الرئيسية",
+  "transactions": "المعاملات",
+  "goals": "الأهداف",
+  "insights": "الرؤى",
+  "profile": "الملف الشخصي",
+  "currentBalance": "الرصيد الحالي",
+  "totalIncome": "إجمالي الدخل",
+  "totalExpenses": "إجمالي المصروفات",
+  "recentTransactions": "المعاملات الأخيرة",
+  "seeAll": "عرض الكل",
+  "addTransaction": "إضافة معاملة",
+  "editTransaction": "تعديل المعاملة",
+  "deleteTransaction": "حذف المعاملة",
+  "search": "بحث",
+  "filter": "تصفية",
+  "noTransactions": "لا توجد معاملات",
+  "settings": "الإعدادات",
+  "darkMode": "الوضع الداكن",
+  "logout": "تسجيل الخروج"
+}

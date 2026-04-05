@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "appTitle": "Finance Companion",
+  "home": "Home",
+  "transactions": "Transactions",
+  "goals": "Goals",
+  "insights": "Insights",
+  "profile": "Profile",
+  "currentBalance": "Current Balance",
+  "totalIncome": "Total Income",
+  "totalExpenses": "Total Expenses",
+  "recentTransactions": "Recent Transactions",
+  "seeAll": "See All",
+  "addTransaction": "Add Transaction",
+  "editTransaction": "Edit Transaction",
+  "deleteTransaction": "Delete Transaction",
+  "search": "Search",
+  "filter": "Filter",
+  "noTransactions": "No transactions found",
+  "settings": "Settings",
+  "darkMode": "Dark Mode",
+  "logout": "Logout"
+}

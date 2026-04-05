@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../logic/splash/splash_cubit.dart';
-import '../../../logic/splash/splash_state.dart';
+import 'package:finance_companion/data/repositories/auth_repository.dart';
 import 'widgets/splash_bg_blobs.dart';
 import 'widgets/splash_branding.dart';
 import 'widgets/splash_loading_dots.dart';
 import 'widgets/splash_particles_layer.dart';
+
+import 'package:finance_companion/logic/splash/splash_state.dart';
 
 class SplashScreen extends StatefulWidget {
   /// Called when the animation finishes — navigate to the next screen here.
@@ -132,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return BlocProvider(
-      create: (context) => SplashCubit()..startSequence(),
+      create: (context) => SplashCubit(AuthRepository())..startSequence(),
       child: BlocConsumer<SplashCubit, SplashState>(
         listener: (context, state) {
           if (state.status == SplashStatus.animating) {

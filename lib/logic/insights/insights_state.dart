@@ -6,6 +6,7 @@ enum InsightsPeriod {
   thisMonth,
   lastThreeMonths,
   lastSixMonths,
+  thisYear,
   allTime,
 }
 
@@ -18,6 +19,8 @@ extension InsightsPeriodExt on InsightsPeriod {
         return 'Last 3 Months';
       case InsightsPeriod.lastSixMonths:
         return 'Last 6 Months';
+      case InsightsPeriod.thisYear:
+        return 'This Year';
       case InsightsPeriod.allTime:
         return 'All Time';
     }

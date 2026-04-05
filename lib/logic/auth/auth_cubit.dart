@@ -86,6 +86,8 @@ class AuthCubit extends Cubit<AuthState> {
     String currency = 'USD',
     double? warningThreshold,
     double? criticalThreshold,
+    Map<String, double>? categoryBudgets,
+    bool? biometricEnabled,
   }) async {
     final current = state;
     if (current is! AuthAuthenticated) return;
@@ -100,6 +102,8 @@ class AuthCubit extends Cubit<AuthState> {
         currency: currency,
         warningThreshold: warningThreshold ?? current.user.warningThreshold,
         criticalThreshold: criticalThreshold ?? current.user.criticalThreshold,
+        categoryBudgets: categoryBudgets ?? current.user.categoryBudgets,
+        biometricEnabled: biometricEnabled ?? current.user.biometricEnabled,
       );
       await _repo.updateProfile(updatedUser);
       emit(current.copyWith(

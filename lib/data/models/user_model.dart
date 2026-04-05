@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 class UserModel extends Equatable {
@@ -15,6 +16,12 @@ class UserModel extends Equatable {
   final double warningThreshold;  // e.g. 0.8 for 80%
   final double criticalThreshold; // e.g. 1.0 for 100%
 
+  // New: Category-specific budgets (Category Name -> Budget Amount)
+  final Map<String, double> categoryBudgets;
+
+  // New: Security preference
+  final bool biometricEnabled;
+
   const UserModel({
     this.id,
     required this.name,
@@ -27,6 +34,8 @@ class UserModel extends Equatable {
     required this.createdAt,
     this.warningThreshold = 0.8,
     this.criticalThreshold = 1.0,
+    this.categoryBudgets = const {},
+    this.biometricEnabled = false,
   });
 
   Map<String, dynamic> toMap() => {
@@ -41,6 +50,8 @@ class UserModel extends Equatable {
         'createdAt': createdAt.toIso8601String(),
         'warningThreshold': warningThreshold,
         'criticalThreshold': criticalThreshold,
+        'categoryBudgets': jsonEncode(categoryBudgets),
+        'biometricEnabled': biometricEnabled ? 1 : 0,
       };
 
   factory UserModel.fromMap(Map<String, dynamic> map) => UserModel(
@@ -55,6 +66,11 @@ class UserModel extends Equatable {
         createdAt: DateTime.parse(map['createdAt']),
         warningThreshold: (map['warningThreshold'] as num?)?.toDouble() ?? 0.8,
         criticalThreshold: (map['criticalThreshold'] as num?)?.toDouble() ?? 1.0,
+        categoryBudgets: map['categoryBudgets'] != null
+            ? Map<String, double>.from(jsonDecode(map['categoryBudgets'] as String)
+                .map((k, v) => MapEntry(k, (v as num).toDouble())))
+            : const {},
+        biometricEnabled: (map['biometricEnabled'] as int?) == 1,
       );
 
   UserModel copyWith({
@@ -69,6 +85,8 @@ class UserModel extends Equatable {
     DateTime? createdAt,
     double? warningThreshold,
     double? criticalThreshold,
+    Map<String, double>? categoryBudgets,
+    bool? biometricEnabled,
   }) =>
       UserModel(
         id: id ?? this.id,
@@ -82,6 +100,8 @@ class UserModel extends Equatable {
         createdAt: createdAt ?? this.createdAt,
         warningThreshold: warningThreshold ?? this.warningThreshold,
         criticalThreshold: criticalThreshold ?? this.criticalThreshold,
+        categoryBudgets: categoryBudgets ?? this.categoryBudgets,
+        biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       );
 
   @override
@@ -97,5 +117,7 @@ class UserModel extends Equatable {
         createdAt,
         warningThreshold,
         criticalThreshold,
+        categoryBudgets,
+        biometricEnabled,
       ];
 }

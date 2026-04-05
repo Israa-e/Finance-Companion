@@ -18,7 +18,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 5, // Bumped to 5 to add budget alert thresholds
+      version: 8, // v8: isDeleted column for soft-delete offline sync
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -36,6 +36,8 @@ class DatabaseHelper {
         currency TEXT NOT NULL DEFAULT "USD",
         warningThreshold REAL NOT NULL DEFAULT 0.8,
         criticalThreshold REAL NOT NULL DEFAULT 1.0,
+        categoryBudgets TEXT,
+        biometricEnabled INTEGER NOT NULL DEFAULT 0,
         imagePath TEXT,
         createdAt TEXT NOT NULL
       )
@@ -52,6 +54,8 @@ class DatabaseHelper {
         title TEXT NOT NULL,
         note TEXT,
         lastUpdated TEXT NOT NULL,
+        isSynced INTEGER NOT NULL DEFAULT 1,
+        isDeleted INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (userId) REFERENCES users(id)
       )
     ''');
@@ -88,6 +92,16 @@ class DatabaseHelper {
     if (oldVersion < 5) {
       await db.execute('ALTER TABLE users ADD COLUMN warningThreshold REAL NOT NULL DEFAULT 0.8');
       await db.execute('ALTER TABLE users ADD COLUMN criticalThreshold REAL NOT NULL DEFAULT 1.0');
+    }
+    if (oldVersion < 6) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 1');
+    }
+    if (oldVersion < 7) {
+      await db.execute('ALTER TABLE users ADD COLUMN categoryBudgets TEXT');
+      await db.execute('ALTER TABLE users ADD COLUMN biometricEnabled INTEGER NOT NULL DEFAULT 0');
+    }
+    if (oldVersion < 8) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0');
     }
   }
 

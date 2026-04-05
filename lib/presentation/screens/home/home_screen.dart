@@ -10,7 +10,6 @@ import '../../../logic/goal/goal_cubit.dart';
 import '../../../core/theme/app_colors.dart';
 
 import 'widgets/balance_card.dart';
-import 'widgets/summary_row.dart';
 import 'widgets/recent_transactions.dart';
 import 'widgets/weekly_chart.dart';
 import 'widgets/quickgoals_preview.dart';
@@ -68,26 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         : const BalanceCard(),
                     const Gap(16),
 
-                    // Summary row — shimmer while loading
-                    isLoading
-                        ? Row(children: [
-                            Expanded(
-                              child: ShimmerBox(
-                                  width: double.infinity,
-                                  height: 80,
-                                  borderRadius: 16),
-                            ),
-                            const Gap(12),
-                            Expanded(
-                              child: ShimmerBox(
-                                  width: double.infinity,
-                                  height: 80,
-                                  borderRadius: 16),
-                            ),
-                          ])
-                        : const SummaryRow(),
-                    const Gap(16),
-
                     // No-Spend Streak — new creative feature
                     const StreakCard(),
                     const Gap(16),
@@ -110,4 +89,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
