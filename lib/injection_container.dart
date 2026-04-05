@@ -23,9 +23,7 @@ import 'package:finance_companion/data/services/alert_service.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // ── Features ──────────────────────────────────────────────────────────────
 
-  // Repositories
   sl.registerLazySingleton<AuthRepository>(() => AuthRepository());
   sl.registerLazySingleton<TransactionRepository>(
       () => TransactionRepository());
@@ -44,13 +42,10 @@ Future<void> init() async {
   sl.registerLazySingleton<NotificationRepository>(
       () => NotificationRepository());
 
-  // Services
   sl.registerLazySingleton<RecurringProcessorService>(
     () => RecurringProcessorService(sl(), sl()),
   );
   sl.registerLazySingleton<AlertService>(() => AlertService(sl()));
-
-  // ── External ──────────────────────────────────────────────────────────────
 
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);

@@ -50,12 +50,18 @@ class _SplashLoadingDotsState extends State<SplashLoadingDots>
                 width: 7,
                 height: 7,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: opacity),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: opacity),
                   borderRadius: BorderRadius.circular(2),
                   boxShadow: [
                     if (opacity > 0.7)
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3 * opacity),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.3 * opacity),
                         blurRadius: 4,
                         spreadRadius: 1,
                       ),

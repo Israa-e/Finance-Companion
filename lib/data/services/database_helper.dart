@@ -30,7 +30,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 11,
+      version: 11, 
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -200,17 +200,17 @@ class DatabaseHelper {
     final now = DateTime.now().toIso8601String();
     // Codepoints verified from iconsax-0.0.8 package source
     final defaults = [
-      ['Salary', 0xec7b, 0xFF4CAF50, 'income'], // wallet_money
-      ['Investment', 0xe9b8, 0xFF2196F3, 'income'], // chart_2
-      ['Gift', 0xea83, 0xFFFF9800, 'income'], // gift
-      ['Freelance', 0xeb6e, 0xFF9C27B0, 'income'], // personalcard
-      ['Food', 0xe9db, 0xFFFF5252, 'expense'], // coffee
-      ['Rent', 0xeab8, 0xFF795548, 'expense'], // house
-      ['Shopping', 0xebee, 0xFFE91E63, 'expense'], // shopping_bag
-      ['Transport', 0xe9a5, 0xFF607D8B, 'expense'], // car
-      ['Entertainment', 0xea7d, 0xFF673AB7, 'expense'], // game
-      ['Bills', 0xeb93, 0xFFFFC107, 'expense'], // receipt_2
-      ['Health', 0xeaa1, 0xFF00BCD4, 'expense'], // health
+      ['Salary', 0xec7b, 0xFF4CAF50, 'income'],
+      ['Investment', 0xe9b8, 0xFF2196F3, 'income'],
+      ['Gift', 0xea83, 0xFFFF9800, 'income'],
+      ['Freelance', 0xeb6e, 0xFF9C27B0, 'income'],
+      ['Food', 0xe9db, 0xFFFF5252, 'expense'],
+      ['Rent', 0xeab8, 0xFF795548, 'expense'],
+      ['Shopping', 0xebee, 0xFFE91E63, 'expense'],
+      ['Transport', 0xe9a5, 0xFF607D8B, 'expense'],
+      ['Entertainment', 0xea7d, 0xFF673AB7, 'expense'],
+      ['Bills', 0xeb93, 0xFFFFC107, 'expense'],
+      ['Health', 0xeaa1, 0xFF00BCD4, 'expense'],
     ];
 
     for (var cat in defaults) {
