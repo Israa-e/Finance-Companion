@@ -13,10 +13,14 @@ void main() {
   testWidgets('App launches without crashing', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    await tester.pumpWidget(FinanceApp(prefs: prefs));
+    
+    // Use isTestMode: true to disable infinite animations for testing
+    await tester.pumpWidget(FinanceApp(prefs: prefs, isTestMode: true));
     await tester.pump(); // build frame
-    await tester.pump(const Duration(seconds: 4)); // drain splash timers
-    // Do NOT call pumpAndSettle — floatController repeats indefinitely
+    
+    // Now we can safely use pumpAndSettle
+    await tester.pumpAndSettle();
+    
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 

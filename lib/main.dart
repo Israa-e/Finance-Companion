@@ -20,16 +20,34 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  try {
+    // Check if configuration is actually provided (not just the example template)
+    if (DefaultFirebaseOptions.android.apiKey != 'REPLACE_ME') {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    } else {
+      debugPrint('Firebase: Running in Local Mode (Config uninitialized)');
+    }
+  } catch (e) {
+    debugPrint('Firebase initialization failed: \$e. Running in Local Mode.');
+  }
+
+  // Initialize notifications — handles its own "No Firebase" logic
   await NotificationService.instance.initialize();
+  
   final prefs = await SharedPreferences.getInstance();
   runApp(FinanceApp(prefs: prefs));
 }
 
 class FinanceApp extends StatefulWidget {
   final SharedPreferences prefs;
+  final bool isTestMode;
 
-  const FinanceApp({required this.prefs, super.key});
+  const FinanceApp({
+    required this.prefs,
+    this.isTestMode = false,
+    super.key,
+  });
 
   @override
   State<FinanceApp> createState() => _FinanceAppState();
@@ -74,6 +92,7 @@ class _FinanceAppState extends State<FinanceApp> {
             _navigatorKey.currentState?.pushAndRemoveUntil(
               PageRouteBuilder(
                 pageBuilder: (_, __, ___) => SplashScreen(
+                  isTestMode: widget.isTestMode,
                   onFinished: () {
                     _navigatorKey.currentState?.pushReplacement(
                       MaterialPageRoute(
@@ -120,6 +139,7 @@ class _FinanceAppState extends State<FinanceApp> {
                 Locale('ar'),
               ],
               home: SplashScreen(
+                isTestMode: widget.isTestMode,
                 onFinished: () {
                   final nav = _navigatorKey.currentState;
                   if (nav != null) {

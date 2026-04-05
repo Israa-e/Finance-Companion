@@ -101,4 +101,40 @@ void main() {
     expect(available, 600.0);
     expect(available, isNot(1000.0));
   });
+
+  test('Over-spending: Available balance becomes negative if expenses exceed income - locked', () async {
+    // 1. Arrange: 500 income
+    final income = TransactionModel(
+      id: '1', userId: 0, amount: 500, type: TransactionType.income,
+      category: 'Salary', date: DateTime.now(), title: 'Pay', lastUpdated: DateTime.now(),
+    );
+    when(() => mockTransactionRepo.getAll()).thenAnswer((_) async => [income]);
+    when(() => mockTransactionRepo.getTotalIncome()).thenAnswer((_) async => 500.0);
+    when(() => mockTransactionRepo.getTotalExpense()).thenAnswer((_) async => 0.0);
+    when(() => mockGoalRepo.getAll(any())).thenAnswer((_) async => []);
+    when(() => mockGoalRepo.getActive(any())).thenAnswer((_) async => []);
+
+    await transactionCubit.loadTransactions();
+    await goalCubit.loadGoals();
+
+    // 2. Act: Add heavy expense of 600
+    final expense = TransactionModel(
+      id: '2', userId: 1, amount: 600, type: TransactionType.expense,
+      category: 'Rent', date: DateTime.now(), title: 'Rent', lastUpdated: DateTime.now(),
+    );
+    when(() => mockTransactionRepo.getAll()).thenAnswer((_) async => [income, expense]);
+    when(() => mockTransactionRepo.getTotalExpense()).thenAnswer((_) async => 600.0);
+
+    await transactionCubit.addTransaction(
+      amount: 600, type: TransactionType.expense, category: 'Rent',
+      date: DateTime.now(), title: 'Rent',
+    );
+
+    // 3. Assert: Available balance is negative 100
+    final totalBalance = (transactionCubit.state as TransactionLoaded).balance;
+    final lockedAmount = (goalCubit.state as GoalLoaded).goals.fold(0.0, (sum, g) => sum + g.savedAmount);
+    
+    expect(totalBalance, -100.0);
+    expect(totalBalance - lockedAmount, -100.0);
+  });
 }

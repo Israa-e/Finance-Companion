@@ -110,23 +110,29 @@ lib/
 
 - Flutter SDK `^3.10.7`
 - Dart SDK `^3.0`
-- Firebase project (see setup below)
 
-### Installation
+### 1. Firebase Setup & Demo Mode
+To make this project easily reviewable, I have implemented a **"Demo Mode" (SQLite-Only)**.
+- **If you just want a quick look**: You don't need to do anything! If the app detects that Firebase is unconfigured, it will automatically run in local-only mode using SQLite.
+- **To enable full Firebase Sync**:
+  1. Create a project at [console.firebase.google.com](https://console.firebase.google.com/).
+  2. Copy `lib/firebase_options_example.dart` to `lib/firebase_options.dart`.
+  3. Replace the `REPLACE_ME` placeholders with your actual project credentials.
+  4. Run `flutterfire configure` (optional, if you have the CLI).
 
-```bash
-git clone https://github.com/Israa-e/Finance-Companion.git
-cd finance-companion
-flutter pub get
-flutter run
-```
-
-### Firebase Setup
-
-1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
-2. Enable **Authentication** (Email/Password) and **Firestore Database**
-3. Run `flutterfire configure` to generate `firebase_options.dart`
-4. Replace `lib/firebase_options.dart` with your generated file
+### 2. Basic Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Israa-e/Finance-Companion.git
+   ```
+2. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Run the app:
+   ```bash
+   flutter run
+   ```
 
 ---
 

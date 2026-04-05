@@ -14,7 +14,15 @@ class SplashScreen extends StatefulWidget {
   /// Called when the animation finishes — navigate to the next screen here.
   final VoidCallback onFinished;
 
-  const SplashScreen({super.key, required this.onFinished});
+  /// If true, disables the infinite floating animation, allowing
+  /// widget tests (pumpAndSettle) to complete.
+  final bool isTestMode;
+
+  const SplashScreen({
+    super.key,
+    required this.onFinished,
+    this.isTestMode = false,
+  });
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -99,7 +107,11 @@ class _SplashScreenState extends State<SplashScreen>
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
+    );
+
+    if (!widget.isTestMode) {
+      _floatController.repeat(reverse: true);
+    }
   }
 
   void _runUiSequence() {

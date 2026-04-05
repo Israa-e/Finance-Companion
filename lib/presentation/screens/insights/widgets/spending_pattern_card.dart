@@ -1,4 +1,8 @@
+import 'package:finance_companion/logic/auth/auth_cubit.dart';
+import 'package:finance_companion/logic/auth/auth_state.dart';
+import 'package:finance_companion/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -142,6 +146,12 @@ class _PatternBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ratio = maxAvg > 0 ? (avg / maxAvg).clamp(0.0, 1.0) : 0.0;
+    
+    // Multi-currency support fix: use dynamic formatter
+    final formatter = context.select<AuthCubit, CurrencyFormatter>((c) =>
+        c.state is AuthAuthenticated
+            ? (c.state as AuthAuthenticated).formatter
+            : const CurrencyFormatter());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +182,7 @@ class _PatternBar extends StatelessWidget {
         ),
         const Gap(6),
         Text(
-          '\$${avg.toStringAsFixed(2)} / txn',
+          '${formatter.format(avg)} / txn',
           style: AppTextStyles.caption.copyWith(
             color: color,
             fontWeight: FontWeight.w700,
